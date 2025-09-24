@@ -38,3 +38,29 @@ func (s Store) CreateNewSet(qSet *models.Set) (*models.Set, error) {
 	}
 	return &set, err
 }
+
+func (s Store) GetASet(qSet *models.Set) (*models.Set, error) {
+	var set models.Set
+	err := s.txDB(func(tx pgx.Tx) error {
+		getASet := `SELECT * FROM sets WHERE id = $1 AND user_id = $2`
+
+		row, err := tx.Query(
+			context.Background(),
+			getASet,
+			qSet.ID,
+			qSet.UserId,
+		)
+
+		set, err = pgx.CollectOneRow(row, pgx.RowToStructByName[models.Set])
+
+		if err != nil {
+			return fmt.Errorf("failed to map row to struct: %w", err)
+		}
+		slog.Info("Success :  fetched a set from sets Table in DB ", "Fetched", set)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &set, err
+}

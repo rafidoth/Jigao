@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/rafidoth/onlyexams/models"
@@ -10,6 +11,7 @@ import (
 
 type Storage interface {
 	CreateNewSet(*models.Set) (*models.Set, error)
+	GetASet(*models.Set) (*models.Set, error)
 }
 
 type Handler struct {
@@ -41,4 +43,12 @@ func (h *Handler) rcvJson(r *http.Request, container any) error {
 func (h *Handler) sendJson(w http.ResponseWriter, obj any) error {
 	w.Header().Set("Content-Type", "application/json")
 	return json.NewEncoder(w).Encode(obj)
+}
+
+func (h *Handler) extractUserId(r *http.Request) (string, error) {
+	uid, ok := r.Context().Value("user-id").(string)
+	if !ok {
+		return "", errors.New("Unable to extract user id from http.Request")
+	}
+	return uid, nil
 }

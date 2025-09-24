@@ -12,6 +12,7 @@ import (
 
 type Handler interface {
 	CreateNewSet(w http.ResponseWriter, r *http.Request)
+	GetASet(w http.ResponseWriter, r *http.Request)
 }
 
 type Server struct {
@@ -31,6 +32,7 @@ func NewServer(h Handler, cfg *config.Config) *Server {
 func (s *Server) registerRoutes() {
 	s.router.Route("/api/v1/", func(r chi.Router) {
 		r.Post("/sets", s.handlers.CreateNewSet)
+		r.Get("/sets/{set_id}", s.handlers.GetASet)
 	})
 }
 
