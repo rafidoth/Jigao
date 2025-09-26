@@ -1,0 +1,47 @@
+package handlers
+
+import (
+	"log/slog"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/rafidoth/onlyexams/models"
+)
+
+// UpdateASet updates visibility and title for a set owned by the user.
+func (h *Handler) UpdateASet(w http.ResponseWriter, r *http.Request) {
+	uid, err := h.extractUserId(r)
+	if err != nil {
+		http.Error(w, "Internal Server Error: user not found", http.StatusInternalServerError)
+		return
+	}
+
+	set_id := chi.URLParam(r, "set_id")
+
+	var req CreateSetReq
+	if err := h.rcvJson(r, &req); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	qSet := &models.Set{
+		ID:         set_id,
+		Visibility: req.Visibility,
+		Title:      req.Title,
+		UserId:     uid,
+	}
+
+	qSet, err = h.store.UpdateASet(qSet)
+	if err != nil {
+		slog.Warn("failed to update set DB issue", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if err := h.sendJson(w, qSet); err != nil {
+		slog.Warn("failed json conversion issue")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}

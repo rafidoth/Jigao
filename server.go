@@ -13,6 +13,10 @@ import (
 type Handler interface {
 	CreateNewSet(w http.ResponseWriter, r *http.Request)
 	GetASet(w http.ResponseWriter, r *http.Request)
+	UpdateASet(w http.ResponseWriter, r *http.Request)
+	DeleteASet(w http.ResponseWriter, r *http.Request)
+	GetRecentSets(w http.ResponseWriter, r *http.Request)
+	GetSetContext(w http.ResponseWriter, r *http.Request)
 }
 
 type Server struct {
@@ -31,8 +35,18 @@ func NewServer(h Handler, cfg *config.Config) *Server {
 
 func (s *Server) registerRoutes() {
 	s.router.Route("/api/v1/", func(r chi.Router) {
-		r.Post("/sets", s.handlers.CreateNewSet)
-		r.Get("/sets/{set_id}", s.handlers.GetASet)
+		r.Route("/sets", func(r chi.Router) {
+			r.Get("/", s.handlers.GetRecentSets)
+			r.Get("/{set_id}/context", s.handlers.GetSetContext)
+			r.Post("/", s.handlers.CreateNewSet)
+			r.Get("/{set_id}", s.handlers.GetASet)
+			r.Put("/{set_id}", s.handlers.UpdateASet)
+			r.Delete("/{set_id}", s.handlers.DeleteASet)
+		})
+
+		// r.Route("questions/", func(r chi.Router) {
+		//
+		// })
 	})
 }
 

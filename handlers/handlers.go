@@ -12,6 +12,11 @@ import (
 type Storage interface {
 	CreateNewSet(*models.Set) (*models.Set, error)
 	GetASet(*models.Set) (*models.Set, error)
+	UpdateASet(*models.Set) (*models.Set, error)
+	DeleteASet(*models.Set) (*models.Set, error)
+	SaveContext(string, string) (*models.SetContext, error)
+	GetRecentSets(int, string) ([]*models.Set, error)
+	GetSetContext(string) (*models.SetContext, error)
 }
 
 type Handler struct {

@@ -10,3 +10,9 @@ type Set struct {
 	UpdatedAt  *pgtype.Timestamptz `db:"updated_at"`
 	UserId     string              `db:"user_id"`
 }
+
+type SetContext struct {
+	ID         string `db:"id"`
+	Setcontext string `db:"context"`
+	SetId      string `db:"set_id"`
+}

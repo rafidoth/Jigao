@@ -1,0 +1,20 @@
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "tmp"
+
+[build]
+  cmd = "CGO_ENABLED=0 go build -ldflags='-s -w' -o main main.go"
+  bin = "./main"
+  delay = 1000
+  dir = "."
+  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  include_ext = ["go"]
+  run_after_build = "chmod +x main"
+
+[color]
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
