@@ -38,5 +38,4 @@ func main() {
 	handler := handlers.NewHandler(store)
 	application := NewServer(handler, cfg)
 	application.Start(cfg.Port)
-
 }

@@ -8,7 +8,11 @@ import (
 	"github.com/rafidoth/onlyexams/models"
 )
 
-// DeleteASet deletes a set owned by the user.
+type DeleteSetRes struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+}
+
 func (h *Handler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 	uid, err := h.extractUserId(r)
 	if err != nil {
@@ -23,6 +27,7 @@ func (h *Handler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 		UserId: uid,
 	}
 
+	// deleting from sets table
 	qSet, err = h.store.DeleteASet(qSet)
 	if err != nil {
 		slog.Warn("failed to delete set DB issue", "error", err)
@@ -30,8 +35,21 @@ func (h *Handler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// deleting the context
+	err = h.store.DeleteSetContext(set_id)
+	if err != nil {
+		slog.Warn("failed to delete set DB issue", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	res := &DeleteSetRes{
+		ID:    set_id,
+		Title: qSet.Title,
+	}
+
 	w.WriteHeader(http.StatusOK)
-	if err := h.sendJson(w, qSet); err != nil {
+	if err := h.sendJson(w, res); err != nil {
 		slog.Warn("failed json conversion issue")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

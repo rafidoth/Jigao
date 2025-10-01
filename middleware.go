@@ -16,9 +16,12 @@ func addCorsMiddleware(router *chi.Mux, cfg *config.Config) {
 		slog.Warn("Cors origin not found")
 	}
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{origin},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"*"},
+		AllowedOrigins:   []string{origin},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
 	}))
 }
 

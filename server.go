@@ -17,6 +17,8 @@ type Handler interface {
 	DeleteASet(w http.ResponseWriter, r *http.Request)
 	GetRecentSets(w http.ResponseWriter, r *http.Request)
 	GetSetContext(w http.ResponseWriter, r *http.Request)
+	CreateANewQuestionInASet(w http.ResponseWriter, r *http.Request)
+	GetAllQuestionsInASet(w http.ResponseWriter, r *http.Request)
 }
 
 type Server struct {
@@ -37,16 +39,15 @@ func (s *Server) registerRoutes() {
 	s.router.Route("/api/v1/", func(r chi.Router) {
 		r.Route("/sets", func(r chi.Router) {
 			r.Get("/", s.handlers.GetRecentSets)
-			r.Get("/{set_id}/context", s.handlers.GetSetContext)
 			r.Post("/", s.handlers.CreateNewSet)
 			r.Get("/{set_id}", s.handlers.GetASet)
 			r.Put("/{set_id}", s.handlers.UpdateASet)
 			r.Delete("/{set_id}", s.handlers.DeleteASet)
 		})
-
-		// r.Route("questions/", func(r chi.Router) {
-		//
-		// })
+		r.Route("/questions", func(r chi.Router) {
+			r.Post("/", s.handlers.CreateANewQuestionInASet)
+			r.Get("/", s.handlers.GetAllQuestionsInASet)
+		})
 	})
 }
 
@@ -64,13 +65,14 @@ func (s *Server) useMiddlewares() {
 
 	s.router.Use(AuthMiddleware)
 	s.router.Use(LogRequestMiddleware)
+
 }
 
 func (s *Server) Start(addr string) {
 	s.useMiddlewares()
 	s.registerRoutes()
 	if addr == "" {
-		addr = "8888"
+		addr = "3000"
 	}
 	fmt.Printf("Server is starting at %v \n", addr)
 	err := http.ListenAndServe(":"+addr, s.router)

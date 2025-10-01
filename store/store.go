@@ -37,5 +37,4 @@ func (s *Store) txDB(fn func(tx pgx.Tx) error) error {
 	}
 
 	return nil
-
 }

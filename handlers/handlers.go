@@ -17,6 +17,12 @@ type Storage interface {
 	SaveContext(string, string) (*models.SetContext, error)
 	GetRecentSets(int, string) ([]*models.Set, error)
 	GetSetContext(string) (*models.SetContext, error)
+	UpdateSetContext(string, string) (*models.SetContext, error)
+	DeleteSetContext(string) error
+	CreateANewQuestionInASet(models.Question,
+		[]models.Choice, models.Answer, string) error
+	CreateSetWithContext(*models.Set, string) error
+	GetAllQuestionsInASet(string) ([]models.CompleteQuestion, error)
 }
 
 type Handler struct {

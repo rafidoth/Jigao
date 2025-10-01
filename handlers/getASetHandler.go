@@ -8,11 +8,20 @@ import (
 	"github.com/rafidoth/onlyexams/models"
 )
 
-type GetASetRes struct {
-	ID         string
-	Visibility string
-	Title      string
-	Context    string
+type response struct {
+	ID         string `json:"id"`
+	Visibility string `json:"visibility"`
+	Title      string `json:"title"`
+	Context    string `json:"context"`
+}
+
+func newResponse(id, visibility, title, context string) *response {
+	return &response{
+		ID:         id,
+		Visibility: visibility,
+		Title:      title,
+		Context:    context,
+	}
 }
 
 func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
@@ -40,21 +49,22 @@ func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
 	setContext, err := h.store.GetSetContext(set_id)
 	if err != nil {
 		slog.Warn("failed to fetch Context of a Set", "set-id", set_id, "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
 	}
 
-	res := &GetASetRes{
-		ID:         QuestionSet.ID,
-		Visibility: QuestionSet.Visibility,
-		Title:      QuestionSet.Title,
-		Context:    setContext.Setcontext,
+	set_ctx := ""
+	if setContext != nil {
+		set_ctx = setContext.Setcontext
 	}
+	res := newResponse(
+		QuestionSet.ID,
+		QuestionSet.Visibility,
+		QuestionSet.Title,
+		set_ctx,
+	)
 
 	w.WriteHeader(http.StatusOK)
-	err = h.sendJson(w, res)
-	if err != nil {
-		slog.Warn("failed json convertion issue")
+	if err := h.sendJson(w, res); err != nil {
+		slog.Warn("failed json conversion issue")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
