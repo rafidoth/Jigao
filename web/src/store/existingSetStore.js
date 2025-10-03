@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 const existingSetStore = (set) => ({
-  showAnswer: true,
+  showAnswer: false,
   toggleShowAnswer: () => set((state) => ({ showAnswer: !state.showAnswer })),
 });
 

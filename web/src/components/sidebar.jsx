@@ -9,6 +9,7 @@ function Sidebar() {
   const themeIcon = theme === "light" ? <MoonIcon /> : <SunIcon />;
 
   const location = useLocation();
+
   const navItems = [
     { to: "/", label: "New Set" },
     { to: "/sets/", label: "My Sets" },
@@ -21,7 +22,15 @@ function Sidebar() {
     matchPath({ path: to, end: true }, location.pathname) !== null;
 
   return (
-    <Flex direction="column" width="250px" px="4">
+    <Flex
+      direction="column"
+      width="300px"
+      px="4"
+      display={{
+        initial: "none",
+        lg: "flex",
+      }}
+    >
       <Flex as="span" align="center" justify="between">
         <Box as="span">
           <Text weight="bold" size="6" align="center" mt="4">

@@ -5,7 +5,6 @@ type CompleteQuestion struct {
 	Question          string   `json:"text"`
 	QuestionType      string   `json:"type"`
 	Difficulty        string   `json:"difficulty"`
-	Position          int      `json:"position"`
 	Choices           []string `json:"choices"`
 	Answer            string   `json:"answer"`
 	AnswerChoiceIndex int8     `json:"answerIdx"`
@@ -31,7 +30,6 @@ func NewCompleteQuestion(
 		Question:          Q.Question,
 		QuestionType:      Q.QuestionType,
 		Difficulty:        Q.Difficulty,
-		Position:          int(Q.Position),
 		Answer:            a.AnswerText,
 		Choices:           choices,
 		AnswerChoiceIndex: answerChoiceIndex,

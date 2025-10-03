@@ -22,7 +22,6 @@ type Question struct {
 	Difficulty   string             `db:"difficulty" json:"difficulty"`
 	QuestionType string             `db:"question_type" json:"question_type"`
 	Question     string             `db:"question" json:"question"`
-	Position     int16              `db:"position" json:"position"`
 	SetId        string             `db:"set_id" json:"set_id"`
 	CreatedAt    pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
@@ -31,7 +30,6 @@ type Choice struct {
 	Id         string             `db:"id" json:"id"`
 	QuestionId string             `db:"question_id" json:"question_id"`
 	ChoiceText string             `db:"choice" json:"choice_text"`
-	Position   int16              `db:"position" json:"position"`
 	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
 

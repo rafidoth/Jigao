@@ -12,11 +12,6 @@ import {
   differenceInYears,
 } from "date-fns";
 
-const getRecentSets = async () => {
-  const res = await axios.get("http://localhost:9999/api/v1/sets?recent=10");
-  return res.data;
-};
-
 const lastModified = (dateString) => {
   const date = new Date(dateString);
   const now = new Date();
@@ -33,6 +28,11 @@ const lastModified = (dateString) => {
   if (months < 12) return `${months} months ago`;
   const years = differenceInYears(now, date);
   return `${years} years ago`;
+};
+
+const getRecentSets = async () => {
+  const res = await axios.get("http://localhost:9999/api/v1/sets?recent=10");
+  return res.data;
 };
 
 const getVisibilityIcon = (visibility) => {

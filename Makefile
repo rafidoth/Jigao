@@ -8,6 +8,9 @@ build:
 	docker build -t onlyexams .
 
 air:
-	docker run -p 3000:3000 -v "$(shell pwd)":/app onlyexams 
+	docker run -p 9999:9999 -v "$(shell pwd)":/app onlyexams 
 
+
+frontend:
+	cd web && npm run dev
 

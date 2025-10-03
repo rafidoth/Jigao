@@ -20,7 +20,6 @@ func (s Store) GetAllQuestionsInASet(
 		SELECT *
 		FROM questions
 		WHERE set_id = $1
-		ORDER BY position ASC
 	`, setID)
 	if err != nil {
 		return nil, err
@@ -38,7 +37,6 @@ func (s Store) GetAllQuestionsInASet(
 			SELECT *
 			FROM choices
 			WHERE question_id = $1
-			ORDER BY position ASC
 		`, q.Id)
 		if err != nil {
 			return nil, err
