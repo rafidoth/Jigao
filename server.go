@@ -10,7 +10,7 @@ import (
 	"github.com/rafidoth/onlyexams/config"
 )
 
-type Handler interface {
+type QuestionsHandler interface {
 	CreateNewSet(w http.ResponseWriter, r *http.Request)
 	GetASet(w http.ResponseWriter, r *http.Request)
 	UpdateASet(w http.ResponseWriter, r *http.Request)
@@ -22,31 +22,31 @@ type Handler interface {
 }
 
 type Server struct {
-	router   *chi.Mux
-	handlers Handler
-	cfg      *config.Config
+	router           *chi.Mux
+	questionsHandler QuestionsHandler
+	cfg              *config.Config
 }
 
-func NewServer(h Handler, cfg *config.Config) *Server {
+func NewServer(h QuestionsHandler, cfg *config.Config) *Server {
 	return &Server{
-		router:   chi.NewRouter(),
-		handlers: h,
-		cfg:      cfg,
+		router:           chi.NewRouter(),
+		questionsHandler: h,
+		cfg:              cfg,
 	}
 }
 
 func (s *Server) registerRoutes() {
 	s.router.Route("/api/v1/", func(r chi.Router) {
 		r.Route("/sets", func(r chi.Router) {
-			r.Get("/", s.handlers.GetRecentSets)
-			r.Post("/", s.handlers.CreateNewSet)
-			r.Get("/{set_id}", s.handlers.GetASet)
-			r.Put("/{set_id}", s.handlers.UpdateASet)
-			r.Delete("/{set_id}", s.handlers.DeleteASet)
+			r.Get("/", s.questionsHandler.GetRecentSets)
+			r.Post("/", s.questionsHandler.CreateNewSet)
+			r.Get("/{set_id}", s.questionsHandler.GetASet)
+			r.Put("/{set_id}", s.questionsHandler.UpdateASet)
+			r.Delete("/{set_id}", s.questionsHandler.DeleteASet)
 		})
 		r.Route("/questions", func(r chi.Router) {
-			r.Post("/", s.handlers.CreateANewQuestionInASet)
-			r.Get("/", s.handlers.GetAllQuestionsInASet)
+			r.Post("/", s.questionsHandler.CreateANewQuestionInASet)
+			r.Get("/", s.questionsHandler.GetAllQuestionsInASet)
 		})
 	})
 }

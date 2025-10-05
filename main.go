@@ -6,8 +6,8 @@ import (
 
 	"github.com/rafidoth/onlyexams/config"
 	"github.com/rafidoth/onlyexams/db"
-	"github.com/rafidoth/onlyexams/handlers"
-	"github.com/rafidoth/onlyexams/store"
+	"github.com/rafidoth/onlyexams/internal/questions/handlers"
+	"github.com/rafidoth/onlyexams/internal/questions/store"
 )
 
 func init() {
@@ -34,8 +34,9 @@ func main() {
 		slog.Error("unable to configure db : ", "error", err)
 	}
 
-	store := store.NewStore(db.GetPgxPool())
-	handler := handlers.NewHandler(store)
-	application := NewServer(handler, cfg)
+	questionsStore := store.NewStore(db.GetPgxPool())
+	questionsHandler := handlers.NewHandler(questionsStore)
+
+	application := NewServer(questionsHandler, cfg)
 	application.Start(cfg.Port)
 }
