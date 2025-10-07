@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/rafidoth/onlyexams/models"
+	"github.com/rafidoth/onlyexams/internal/questions/models"
 )
 
 type UpdateSetReq struct {

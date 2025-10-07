@@ -6,6 +6,7 @@ import (
 
 	"github.com/rafidoth/onlyexams/config"
 	"github.com/rafidoth/onlyexams/db"
+	"github.com/rafidoth/onlyexams/internal/exams"
 	"github.com/rafidoth/onlyexams/internal/questions/handlers"
 	"github.com/rafidoth/onlyexams/internal/questions/store"
 )
@@ -37,6 +38,10 @@ func main() {
 	questionsStore := store.NewStore(db.GetPgxPool())
 	questionsHandler := handlers.NewHandler(questionsStore)
 
-	application := NewServer(questionsHandler, cfg)
+	eHub := exams.NewExamHub()
+	examsHandler := exams.NewHandler(eHub)
+	go eHub.Run()
+
+	application := NewServer(questionsHandler, examsHandler, cfg)
 	application.Start(cfg.Port)
 }

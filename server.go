@@ -21,16 +21,23 @@ type QuestionsHandler interface {
 	GetAllQuestionsInASet(w http.ResponseWriter, r *http.Request)
 }
 
+type ExamsHandler interface {
+	CreateRoom(w http.ResponseWriter, r *http.Request)
+	JoinRoom(w http.ResponseWriter, r *http.Request)
+}
+
 type Server struct {
 	router           *chi.Mux
 	questionsHandler QuestionsHandler
+	examsHandler     ExamsHandler
 	cfg              *config.Config
 }
 
-func NewServer(h QuestionsHandler, cfg *config.Config) *Server {
+func NewServer(qh QuestionsHandler, eh ExamsHandler, cfg *config.Config) *Server {
 	return &Server{
 		router:           chi.NewRouter(),
-		questionsHandler: h,
+		questionsHandler: qh,
+		examsHandler:     eh,
 		cfg:              cfg,
 	}
 }
@@ -47,6 +54,11 @@ func (s *Server) registerRoutes() {
 		r.Route("/questions", func(r chi.Router) {
 			r.Post("/", s.questionsHandler.CreateANewQuestionInASet)
 			r.Get("/", s.questionsHandler.GetAllQuestionsInASet)
+		})
+
+		r.Route("/exams", func(r chi.Router) {
+			r.Post("/rooms/{exam_id}", s.examsHandler.CreateRoom)
+			r.Get("/join-room/{roomId}", s.examsHandler.JoinRoom)
 		})
 	})
 }

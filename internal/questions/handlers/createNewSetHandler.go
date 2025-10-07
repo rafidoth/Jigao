@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/rafidoth/onlyexams/models"
+	"github.com/rafidoth/onlyexams/internal/questions/models"
 )
 
 type CreateSetReq struct {

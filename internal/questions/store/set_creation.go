@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rafidoth/onlyexams/models"
+	"github.com/rafidoth/onlyexams/internal/questions/models"
 )
 
 func (s Store) CreateSetWithContext(qSet *models.Set, qSetContext string) error {

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/rafidoth/onlyexams/models"
+	"github.com/rafidoth/onlyexams/internal/questions/models"
 )
 
 func (s Store) GetAllQuestionsInASet(

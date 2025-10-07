@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/rafidoth/onlyexams/models"
+	"github.com/rafidoth/onlyexams/internal/questions/models"
 )
 
 func (s Store) CreateANewQuestionInASet(Q models.Question,
