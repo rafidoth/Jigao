@@ -1,0 +1,30 @@
+function CreateNewQuestionPopover({ children, set_id }) {
+
+  return (
+    <Popover.Root>
+      <Popover.Trigger>{children}</Popover.Trigger>
+      <Popover.Content width="600px">
+        <Flex direction="column" gap="3">
+          <Heading size="5">Create New Question</Heading>
+          <QuestionChoiceRadioGroup />
+          {inputs}
+          <DifficultyRadioGroup />
+          <Flex justify="end" gap="2" mt="3">
+            <Text color="red">{error}</Text>
+            <Button
+              radius="large"
+              variant="soft"
+              onClick={handleCreateQuestion}
+            >
+              Create Question
+            </Button>
+          </Flex>
+        </Flex>
+      </Popover.Content>
+    </Popover.Root>
+  );
+}
+
+export default CreateNewQuestionPopover;
+
+export default ExamsPopover;

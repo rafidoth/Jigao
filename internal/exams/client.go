@@ -16,7 +16,7 @@ type Client struct {
 	RoomId     string `json:"roomId"`
 }
 
-func newClient(conn *websocket.Conn, clientType, id, roomId string) *Client {
+func NewClient(conn *websocket.Conn, clientType, id, roomId string) *Client {
 	if clientType != "controller" && clientType != "participant" {
 		log.Println("invalid client type:", clientType)
 		return nil
@@ -30,12 +30,12 @@ func newClient(conn *websocket.Conn, clientType, id, roomId string) *Client {
 	}
 }
 
-func (c *Client) write() {
+func (c *Client) Write() {
 	defer func() {
 		c.Conn.Close()
 	}()
-	fmt.Println("Client write routine started for client id:", c.Id, "in room:", c.RoomId)
 
+	fmt.Println("Starting write goroutine for client id:", c.Id, "in room:", c.RoomId)
 	for {
 		m, ok := <-c.Evt
 		if !ok {
@@ -47,9 +47,9 @@ func (c *Client) write() {
 	}
 }
 
-func (c *Client) read(eh *ExamHub) {
+func (c *Client) Read(eh *ExamHub) {
 	defer func() {
-		eh.unregister <- c
+		eh.Unregister <- c
 		c.Conn.Close()
 	}()
 
@@ -70,7 +70,6 @@ func (c *Client) read(eh *ExamHub) {
 			string(m),
 		)
 		evt := newEvent(c.RoomId, c.Id, "message", string(m))
-		eh.broadcast <- evt
+		eh.Broadcast <- evt
 	}
-
 }

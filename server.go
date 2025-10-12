@@ -24,6 +24,8 @@ type QuestionsHandler interface {
 type ExamsHandler interface {
 	CreateRoom(w http.ResponseWriter, r *http.Request)
 	JoinRoom(w http.ResponseWriter, r *http.Request)
+	CreateExamOnASet(w http.ResponseWriter, r *http.Request)
+	GetExamsOnASet(w http.ResponseWriter, r *http.Request)
 }
 
 type Server struct {
@@ -57,8 +59,10 @@ func (s *Server) registerRoutes() {
 		})
 
 		r.Route("/exams", func(r chi.Router) {
+			r.Post("/", s.examsHandler.CreateExamOnASet)
+			r.Get("/", s.examsHandler.GetExamsOnASet)
 			r.Post("/rooms/{exam_id}", s.examsHandler.CreateRoom)
-			r.Get("/join-room/{roomId}", s.examsHandler.JoinRoom)
+			r.Get("/join/{room_id}", s.examsHandler.JoinRoom)
 		})
 	})
 }

@@ -268,7 +268,7 @@ function TrueFalseCard({ question: q, position, showAnswer }) {
 
 function QuestionCard({ question: q, position }) {
   const showAnswer = useExistingSetStore((state) => state.showAnswer);
-  console.log(q.type);
+  // console.log(q.type);
   switch (q.type) {
     case "multiple_choice_questions":
       return (

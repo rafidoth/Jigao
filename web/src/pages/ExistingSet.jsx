@@ -18,6 +18,9 @@ import {
   TextField,
   ScrollArea,
   Grid,
+  Tooltip,
+  Tabs,
+  Button,
 } from "@radix-ui/themes";
 
 import {
@@ -31,6 +34,7 @@ import useExistingSetStore from "../store/existingSetStore.js";
 import QuestionCard from "../components/question_card.jsx";
 
 import CreateNewQuestionPopover from "../components/create_new_question_popover.jsx";
+import ExamsDialog from "../components/exams_dialog.jsx";
 
 const getVisibilityIcon = (visibility) => {
   switch (visibility) {
@@ -53,21 +57,23 @@ function ExistingSetHeader({ set, itemsLength, showAnswer, toggleShowAnswer }) {
         <Flex align="center" justify="center">
           {getVisibilityIcon(set.visibility)}
         </Flex>
+
+        <ExamsDialog set_id={set.id}>
+          <Button variant={"soft"}>Manage Exams</Button>
+        </ExamsDialog>
       </Flex>
 
-      <Text as="label" size="3">
-        <Flex gap="2" align="center">
+      <Flex align="center" gap="2">
+        <Tooltip content="Toggle Show Answer" side="top">
           <Switch
             size="1"
             checked={showAnswer}
             onCheckedChange={toggleShowAnswer}
-            variant="classic"
+            variant="soft"
+            color="teal"
           />
-          Show Answers
-        </Flex>
-      </Text>
+        </Tooltip>
 
-      <Flex align="center" gap="2">
         <CreateNewQuestionPopover set_id={set.id}>
           <IconButton variant="soft" color="teal">
             <PlusIcon />
