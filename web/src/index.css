@@ -1,0 +1,16 @@
+/* Ensure the app takes full viewport and removes scrollbars */
+html, body, #root {
+  height: 100%;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent page scrollbars */
+}
+
+/* Make main element inside layout fill and not scroll */
+main {
+  height: 100%;
+  overflow: hidden;
+}

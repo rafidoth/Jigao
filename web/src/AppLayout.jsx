@@ -1,11 +1,19 @@
 import { Outlet } from "react-router";
 import Sidebar from "./components/sidebar";
 import { Flex, Box, Separator } from "@radix-ui/themes";
-import { Toast } from "radix-ui";
 
 function AppLayout() {
   return (
-    <Flex height="100vh" overflow="hidden" position="fixed">
+    <Flex
+      height="100vh"
+      width="100vw"
+      overflow="hidden"
+      position="fixed"
+      top="0"
+      right="0"
+      bottom="0"
+      left="0"
+    >
       <Sidebar />
       <Box
         display={{
@@ -15,9 +23,11 @@ function AppLayout() {
       >
         <Separator orientation="vertical" size="4" />
       </Box>
-      <main>
-        <Outlet />
-      </main>
+      <Box asChild flexGrow="1" overflow="hidden">
+        <main>
+          <Outlet />
+        </main>
+      </Box>
     </Flex>
   );
 }
