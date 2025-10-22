@@ -3,6 +3,7 @@ package examsHandler
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -42,6 +43,12 @@ func (wh *ExamsHandler) JoinRoom(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+	userId, ok := r.Context().Value("user-id").(string)
+	if !ok || userId == "" {
+		slog.Error("user id not found in context")
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 
 	if err != nil {
@@ -54,18 +61,30 @@ func (wh *ExamsHandler) JoinRoom(
 		return
 	}
 
-	// /exams/join-room/{room_id}?user_id=user1&client_type=participant
+	// /exams/join-room/{room_id}?role=p(participant)/c(controller)
 	roomId := chi.URLParam(r, "room_id")
 	room := wh.hub.GetRoom(roomId)
 	if room == nil {
 		// no room found
+		slog.Info("no room found with id:", "room_id:", roomId)
 		// check if there is an exam with this id
+		err := wh.store.IsExamExists(roomId)
+		if err != nil {
+			slog.Info("no exam found with id:", "error:", err)
+			http.Error(w, "No room or exam found with given id", http.StatusNotFound)
+			return
+		}
+
 		// if yes, create a room
-		// else return error
+		slog.Info("exam found, creating room:", "exam_id:", roomId)
+		if err := wh.hub.CreateNewRoom(roomId); err != nil {
+			slog.Error("error creating new room:", "error:", err)
+			return
+		}
+		slog.Info("new room created successfully:", "room_id:", roomId)
 	}
 
-	userId := r.URL.Query().Get("user_id")
-	clientType := r.URL.Query().Get("client_type")
+	clientType := r.URL.Query().Get("role")
 
 	client := exams.NewClient(conn, clientType, userId, roomId)
 	if client == nil {

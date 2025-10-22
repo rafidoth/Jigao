@@ -17,7 +17,7 @@ type Client struct {
 }
 
 func NewClient(conn *websocket.Conn, clientType, id, roomId string) *Client {
-	if clientType != "controller" && clientType != "participant" {
+	if clientType != "c" && clientType != "p" {
 		log.Println("invalid client type:", clientType)
 		return nil
 	}
@@ -69,7 +69,7 @@ func (c *Client) Read(eh *ExamHub) {
 			c.RoomId, "message:",
 			string(m),
 		)
-		evt := newEvent(c.RoomId, c.Id, "message", string(m))
-		eh.Broadcast <- evt
+		// evt := newEvent(c.RoomId, c.Id, "message", string(m))
+		// eh.Broadcast <- evt
 	}
 }

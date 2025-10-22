@@ -88,7 +88,7 @@ func (s *Server) Start(addr string) {
 	s.useMiddlewares()
 	s.registerRoutes()
 	if addr == "" {
-		addr = "3000"
+		addr = "9999"
 	}
 	fmt.Printf("Server is starting at %v \n", addr)
 	err := http.ListenAndServe(":"+addr, s.router)

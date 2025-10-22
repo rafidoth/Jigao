@@ -14,6 +14,7 @@ type Storage interface {
 	) error
 
 	GetExamsBySetId(set_id string) ([]exams.Exam, error)
+	IsExamExists(exam_id string) error
 }
 
 // type ExamHub interface {

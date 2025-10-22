@@ -40,8 +40,8 @@ func main() {
 	qStore := store.NewStore(db.GetPgxPool())
 	qH := handlers.NewHandler(qStore)
 
-	eHub := exams.NewExamHub()
 	eStore := examsStore.NewStore(db.GetPgxPool())
+	eHub := exams.NewExamHub(eStore)
 	eH := examsHandler.NewHandler(eHub, eStore)
 	go eHub.Run()
 

@@ -4,13 +4,39 @@ server :
 	CGO_ENABLED=0 go build -ldflags="-s -w" -o main && ./main
 
 
-build:
-	docker build -t onlyexams .
+dev_build:
+	docker build -f Dockerfile.dev -t onlyexams .
 
-air:
+run:
 	docker run -p 9999:9999 -v "$(shell pwd)":/app onlyexams 
-
 
 frontend:
 	cd web && npm run dev
+
+prod_build:
+	docker build -f Dockerfile.prod -t onlyexams:prod .
+
+prod_run:
+	docker run -p 9999:9999 onlyexams:prod
+
+
+
+
+
+
+
+
+xm:
+	cd internal/exams/ && nvim .
+
+q:	
+	cd internal/questions/ && nvim .
+
+f:
+	cd web/ && nvim .
+
+
+
+
+
 

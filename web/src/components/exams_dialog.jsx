@@ -241,16 +241,12 @@ function ExamsList({ set_id }) {
                 )}
               </Flex>
               <Flex>
-                <Link
-                  href={`/exam/${exam.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <Button radius={"medium"} variant={"soft"}>
+                <a href={`/exam/${exam.id}`} target="_blank" rel="noreferrer">
+                  <Button radius="medium" variant="soft">
                     Open
                     <ArrowTopRightIcon />
                   </Button>
-                </Link>
+                </a>
               </Flex>
             </Flex>
           </Card>
