@@ -15,15 +15,72 @@ type HubStorage interface {
 }
 
 type Room struct {
-	Id      string             `json:"id"`
-	Name    string             `json:"name"`
-	Clients map[string]*Client `json:"clients"`
+	Id               string             `json:"id"`
+	Clients          map[string]*Client `json:"clients"`
+	StartSignalTimer *time.Timer        `json:"-"`
+	EndSignalTimer   *time.Timer        `json:"-"`
+	Exam             models.Exam        `json:"-"`
 }
 
-func NewRoom(id, name string) *Room {
+func makeStartTimer(xm models.Exam, eH *ExamHub) *time.Timer {
+	var t *time.Timer
+	duration := time.Until(xm.StartTime)
+	t = time.AfterFunc(duration, func() {
+		fmt.Println("Exam started for room:", xm.Id)
+		payload := struct {
+			EndTime time.Time `json:"end_time"`
+		}{
+			EndTime: xm.EndTime,
+		}
+		evt := makeEvent("exam-starts-now", xm.Id, payload)
+		eH.Broadcast <- evt
+	})
+	slog.Info("room timer set for exam start", "duration", duration)
+	return t
+}
+
+func makeEndTimer(xm models.Exam, eH *ExamHub) *time.Timer {
+	var t *time.Timer
+	duration := time.Until(xm.EndTime)
+	t = time.AfterFunc(duration, func() {
+		fmt.Println("Exam ended for room:", xm.Id)
+		payload := struct {
+			EndTime time.Time `json:"end_time"`
+		}{
+			EndTime: xm.EndTime,
+		}
+		evt := makeEvent("exam-ends-now", xm.Id, payload)
+		eH.Broadcast <- evt
+	})
+	slog.Info("room timer set for exam end", "duration", duration)
+	return t
+}
+
+func NewRoom(xm models.Exam, eH *ExamHub) *Room {
+	status := getExamStatus(xm.StartTime, xm.EndTime)
+	var t, t1 *time.Timer
+
+	switch status {
+	case "waiting":
+		t = makeStartTimer(xm, eH)
+		t1 = makeEndTimer(xm, eH)
+		slog.Info("exam hasn't started yet, timer set for both exam-start and exam-end", "room", xm.Id)
+	case "running":
+		t = nil
+		t1 = makeEndTimer(xm, eH)
+		slog.Info("exam is running, timer set for only exam-end")
+	case "ended":
+		t = nil
+		t1 = nil
+		slog.Info("exam already ended, no timer set for room")
+	}
+
 	return &Room{
-		Id:      id,
-		Clients: make(map[string]*Client),
+		Id:               xm.Id,
+		Clients:          make(map[string]*Client),
+		StartSignalTimer: t,
+		EndSignalTimer:   t1,
+		Exam:             xm,
 	}
 }
 
@@ -45,9 +102,21 @@ func NewExamHub(st HubStorage) *ExamHub {
 	}
 }
 
+func (eh *ExamHub) RemoveRoom(roomId string) error {
+	delete(eh.Rooms, roomId)
+	return nil
+}
+
 func (eh *ExamHub) CreateNewRoom(roomId string) error {
 	if _, ok := eh.Rooms[roomId]; !ok {
-		eh.Rooms[roomId] = NewRoom(roomId, roomId)
+		exam, err := eh.Storage.GetExamByExamId(roomId)
+		if err != nil {
+			slog.Info("error fetching exam for on-join event:", "error", err)
+			return err
+		}
+		fmt.Println(exam.StartTime)
+
+		eh.Rooms[roomId] = NewRoom(exam, eh)
 		return nil
 	}
 	return errors.New("room already exists")
@@ -77,7 +146,7 @@ func (eh *ExamHub) Run() {
 }
 
 func handleBroadcastEvent(eh *ExamHub, event *Event) {
-	fmt.Println("Broadcasting event to room:", event.RoomId)
+	// fmt.Println("Broadcasting event to room:", event.RoomId)
 	if r, exists := eh.Rooms[event.RoomId]; exists {
 		for _, client := range r.Clients {
 			select {
@@ -101,7 +170,7 @@ func handleUnregisterClient(eh *ExamHub, cl *Client) {
 				cl.Id,
 			)
 			if len(eh.Rooms[cl.RoomId].Clients) == 0 {
-				delete(eh.Rooms, cl.RoomId)
+				eh.RemoveRoom(cl.RoomId)
 				log.Println("room deleted as no clients are left:", cl.RoomId)
 			}
 		}
@@ -127,7 +196,7 @@ func handleRegisterClient(eh *ExamHub, cl *Client) {
 				"client id:",
 				cl.Id)
 
-			writeOnJoinEvent(cl, eh)
+			writeOnJoinEvent(cl, r)
 
 		} else {
 			log.Println("client already exists in room.")
@@ -137,21 +206,30 @@ func handleRegisterClient(eh *ExamHub, cl *Client) {
 	}
 }
 
-func writeOnJoinEvent(c *Client, eh *ExamHub) {
-	exam, err := eh.Storage.GetExamByExamId(c.RoomId)
-	if err != nil {
-		slog.Info("error fetching exam for on-join event:", "error", err)
-		return
+func writeOnJoinEvent(c *Client, r *Room) {
+	fmt.Println("sending Onjoin Event to client")
+	examStatus := getExamStatus(r.Exam.StartTime, r.Exam.EndTime)
+	var onJoinEvt *OnJoinEvent
+	switch examStatus {
+	case "waiting":
+		onJoinEvt = &OnJoinEvent{
+			ExamStatus: examStatus,
+			Time:       r.Exam.StartTime,
+		}
+	case "running":
+		onJoinEvt = &OnJoinEvent{
+			ExamStatus: examStatus,
+			Time:       r.Exam.EndTime,
+		}
+	case "ended":
+		onJoinEvt = &OnJoinEvent{
+			ExamStatus: examStatus,
+			Time:       r.Exam.EndTime,
+		}
 	}
-	slog.Info("Fetched exam for on-join event:", "examId", exam.Id)
-	examStatus := getExamStatus(exam.StartTime, exam.EndTime)
-	onJoinEvt := &OnJoinEvent{
-		EventType:  "on-join-room",
-		RoomId:     c.RoomId,
-		ExamStatus: examStatus,
-		StartTime:  exam.StartTime,
-	}
-	c.Conn.WriteJSON(onJoinEvt)
+	evt := makeEvent("on-join-room", c.RoomId, onJoinEvt)
+	fmt.Println("on-join-room event ", evt)
+	c.DirectSend(evt)
 }
 
 func getExamStatus(startTime, endTime time.Time) string {

@@ -30,6 +30,10 @@ func NewClient(conn *websocket.Conn, clientType, id, roomId string) *Client {
 	}
 }
 
+func (cl *Client) DirectSend(jsnObj any) {
+	cl.Conn.WriteJSON(jsnObj)
+}
+
 func (c *Client) Write() {
 	defer func() {
 		c.Conn.Close()

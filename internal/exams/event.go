@@ -3,24 +3,22 @@ package exams
 import "time"
 
 type Event struct {
-	EventType              string `json:"eventType"`
-	RoomId                 string `json:"roomId"`
-	ExamStatus             string `json:"examStatus"`
-	RemainingTimeInSeconds int    `json:"remainingTimeInSeconds"`
+	Type      string    `json:"type"`
+	Timestamp time.Time `json:"timestamp"`
+	Payload   any       `json:"payload"`
+	RoomId    string    `json:"room_id"`
 }
 
-func newEvent(rId, eStatus string, rTime int) *Event {
+func makeEvent(t, rId string, payload any) *Event {
 	return &Event{
-		EventType:              "on-join-room",
-		RoomId:                 rId,
-		ExamStatus:             eStatus,
-		RemainingTimeInSeconds: rTime,
+		Type:      t,
+		Timestamp: time.Now(),
+		RoomId:    rId,
+		Payload:   payload,
 	}
 }
 
 type OnJoinEvent struct {
-	EventType  string    `json:"eventType"`
-	RoomId     string    `json:"roomId"`
 	ExamStatus string    `json:"examStatus"`
-	StartTime  time.Time `json:"startTime"`
+	Time       time.Time `json:"time"`
 }
