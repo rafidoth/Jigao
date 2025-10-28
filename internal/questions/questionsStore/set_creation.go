@@ -1,13 +1,13 @@
-package store
+package questionsStore
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
-func (s Store) CreateSetWithContext(qSet *models.Set, qSetContext string) error {
+func (s Store) CreateSetWithContext(qSet *questionsModels.Set, qSetContext string) error {
 	tx, err := s.db.Begin(context.Background())
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)

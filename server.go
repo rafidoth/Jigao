@@ -26,6 +26,8 @@ type ExamsHandler interface {
 	JoinRoom(w http.ResponseWriter, r *http.Request)
 	CreateExamOnASet(w http.ResponseWriter, r *http.Request)
 	GetExamsOnASet(w http.ResponseWriter, r *http.Request)
+	GetExamById(w http.ResponseWriter, r *http.Request)
+	GetQuestionsOfAnExam(w http.ResponseWriter, r *http.Request)
 }
 
 type Server struct {
@@ -59,6 +61,8 @@ func (s *Server) registerRoutes() {
 		})
 
 		r.Route("/exams", func(r chi.Router) {
+			r.Get("/q/{exam_id}", s.examsHandler.GetQuestionsOfAnExam)
+			r.Get("/{exam_id}", s.examsHandler.GetExamById)
 			r.Post("/", s.examsHandler.CreateExamOnASet)
 			r.Get("/", s.examsHandler.GetExamsOnASet)
 			r.Post("/rooms/{exam_id}", s.examsHandler.CreateRoom)
@@ -68,7 +72,6 @@ func (s *Server) registerRoutes() {
 }
 
 func (s *Server) useMiddlewares() {
-
 	s.router.Use(middleware.RequestID)
 	s.router.Use(middleware.RealIP)
 	s.router.Use(middleware.Recoverer)

@@ -1,7 +1,12 @@
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { Card, Text, Flex, Grid, IconButton } from "@radix-ui/themes";
-import { GlobeIcon, LockClosedIcon, EyeOpenIcon } from "@radix-ui/react-icons";
+import {
+  PlusIcon,
+  GlobeIcon,
+  LockClosedIcon,
+  EyeOpenIcon,
+} from "@radix-ui/react-icons";
 import { Link } from "react-router";
 import {
   differenceInMinutes,
@@ -38,11 +43,11 @@ const getRecentSets = async () => {
 const getVisibilityIcon = (visibility) => {
   switch (visibility) {
     case "public":
-      return <GlobeIcon />;
+      return <GlobeIcon style={{ height: "24px", width: "24px" }} />;
     case "private":
-      return <LockClosedIcon />;
+      return <LockClosedIcon style={{ height: "24px", width: "24px" }} />;
     case "restricted":
-      return <EyeOpenIcon />;
+      return <EyeOpenIcon style={{ height: "24px", width: "24px" }} />;
   }
 };
 
@@ -63,6 +68,19 @@ function SetList() {
         Recent Sets
       </Text>
       <Flex gap="5" wrap="wrap">
+        <Card>
+          <Flex direction="column" gap="2" width="400px" p="4" height="100px">
+            <Flex direction="column">
+              <Flex direction={"column"} gap="2" style={{ color: "GrayText" }}>
+                <Flex align="center" gap="2">
+                  <PlusIcon style={{ width: "24px", height: "24px" }} />
+                  <Text size={"6"}>New</Text>
+                </Flex>
+                <Text>Create an empty new set of questions.</Text>
+              </Flex>
+            </Flex>
+          </Flex>
+        </Card>
         {sets?.map((set) => (
           <Link
             key={set.id}
@@ -70,13 +88,19 @@ function SetList() {
             style={{ textDecoration: "none" }}
           >
             <Card>
-              <Flex direction="column" gap="2" width="400px" p="4">
+              <Flex
+                direction="column"
+                gap="2"
+                width="400px"
+                p="4"
+                height="100px"
+              >
                 <Flex direction="column">
                   <Flex align="center" gap="2">
                     <Text size="6" weight="medium" color="teal">
                       {set.title}
                     </Text>
-                    <IconButton variant="ghost">
+                    <IconButton variant="ghost" color="gray">
                       {getVisibilityIcon(set.visibility)}
                     </IconButton>
                   </Flex>

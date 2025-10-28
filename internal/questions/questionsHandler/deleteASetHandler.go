@@ -1,11 +1,11 @@
-package handlers
+package questionsHandler
 
 import (
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
 type DeleteSetRes struct {
@@ -22,7 +22,7 @@ func (h *Handler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 
 	set_id := chi.URLParam(r, "set_id")
 
-	qSet := &models.Set{
+	qSet := &questionsModels.Set{
 		ID:     set_id,
 		UserId: uid,
 	}

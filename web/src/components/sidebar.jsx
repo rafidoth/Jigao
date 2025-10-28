@@ -1,5 +1,10 @@
 import { Flex, Text, Box, IconButton } from "@radix-ui/themes";
-import { SunIcon, MoonIcon, ViewVerticalIcon } from "@radix-ui/react-icons";
+import {
+  SunIcon,
+  MoonIcon,
+  MagicWandIcon,
+  ViewVerticalIcon,
+} from "@radix-ui/react-icons";
 import useThemeStore from "../store/themeStore";
 import { NavLink, useLocation, matchPath } from "react-router";
 
@@ -11,11 +16,17 @@ function Sidebar() {
   const location = useLocation();
 
   const navItems = [
-    { to: "/", label: "New Set" },
+    {
+      to: "/",
+      label: (
+        <Flex align={"center"} gap="2">
+          <MagicWandIcon /> Jigao AI
+        </Flex>
+      ),
+    },
     { to: "/sets/", label: "My Sets" },
-    { to: "/sets/beta", label: "Set Beta" },
-    { to: "/sets/gamma", label: "Set Gamma" },
-    { to: "/sets/delta", label: "Set Delta" },
+    { to: "/sets/beta", label: "Question Bank" },
+    { to: "/sets/gamma", label: "Exams" },
   ];
 
   const isActive = (to) =>
@@ -34,8 +45,7 @@ function Sidebar() {
       <Flex as="span" align="center" justify="between">
         <Box as="span">
           <Text weight="bold" size="6" align="center" mt="4">
-            <Text color="teal">Only</Text>
-            Exams
+            <Text color="teal">Jigao</Text>
           </Text>
         </Box>
         <Flex align="center" gap="2">

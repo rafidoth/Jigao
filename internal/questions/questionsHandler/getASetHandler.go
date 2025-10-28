@@ -1,11 +1,11 @@
-package handlers
+package questionsHandler
 
 import (
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
 type response struct {
@@ -25,7 +25,6 @@ func newResponse(id, visibility, title, context string) *response {
 }
 
 func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
-
 	uid, err := h.extractUserId(r)
 	if err != nil {
 		http.Error(w, "Internal Server Error: user not found", http.StatusInternalServerError)
@@ -34,7 +33,7 @@ func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
 
 	set_id := chi.URLParam(r, "set_id")
 
-	QuestionSet := &models.Set{
+	QuestionSet := &questionsModels.Set{
 		ID:     set_id,
 		UserId: uid,
 	}
@@ -50,7 +49,6 @@ func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Warn("failed to fetch Context of a Set", "set-id", set_id, "error", err)
 	}
-
 	set_ctx := ""
 	if setContext != nil {
 		set_ctx = setContext.Setcontext

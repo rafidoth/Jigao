@@ -1,4 +1,4 @@
-package models
+package questionsModels
 
 type CompleteQuestion struct {
 	Id                string   `json:"id"`

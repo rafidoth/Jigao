@@ -9,8 +9,8 @@ import (
 	"github.com/rafidoth/onlyexams/internal/exams"
 	"github.com/rafidoth/onlyexams/internal/exams/examsHandler"
 	"github.com/rafidoth/onlyexams/internal/exams/examsStore"
-	"github.com/rafidoth/onlyexams/internal/questions/handlers"
-	"github.com/rafidoth/onlyexams/internal/questions/store"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsHandler"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsStore"
 )
 
 func init() {
@@ -37,12 +37,12 @@ func main() {
 		slog.Error("unable to configure db : ", "error", err)
 	}
 
-	qStore := store.NewStore(db.GetPgxPool())
-	qH := handlers.NewHandler(qStore)
+	qStore := questionsStore.NewStore(db.GetPgxPool())
+	qH := questionsHandler.NewHandler(qStore)
 
 	eStore := examsStore.NewStore(db.GetPgxPool())
 	eHub := exams.NewExamHub(eStore)
-	eH := examsHandler.NewHandler(eHub, eStore)
+	eH := examsHandler.NewHandler(eHub, eStore, qStore)
 	go eHub.Run()
 
 	application := NewServer(qH, eH, cfg)

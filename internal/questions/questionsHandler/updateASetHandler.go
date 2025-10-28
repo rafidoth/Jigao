@@ -1,11 +1,11 @@
-package handlers
+package questionsHandler
 
 import (
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
 type UpdateSetReq struct {
@@ -37,7 +37,7 @@ func (h *Handler) UpdateASet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qSet := &models.Set{
+	qSet := &questionsModels.Set{
 		ID:         set_id,
 		Visibility: req.Visibility,
 		Title:      req.Title,

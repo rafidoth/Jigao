@@ -1,4 +1,4 @@
-package handlers
+package questionsHandler
 
 import (
 	"context"
@@ -6,23 +6,23 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
 type Storage interface {
-	CreateNewSet(*models.Set) (*models.Set, error)
-	GetASet(*models.Set) (*models.Set, error)
-	UpdateASet(*models.Set) (*models.Set, error)
-	DeleteASet(*models.Set) (*models.Set, error)
-	SaveContext(string, string) (*models.SetContext, error)
-	GetRecentSets(int, string) ([]*models.Set, error)
-	GetSetContext(string) (*models.SetContext, error)
-	UpdateSetContext(string, string) (*models.SetContext, error)
+	CreateNewSet(*questionsModels.Set) (*questionsModels.Set, error)
+	GetASet(*questionsModels.Set) (*questionsModels.Set, error)
+	UpdateASet(*questionsModels.Set) (*questionsModels.Set, error)
+	DeleteASet(*questionsModels.Set) (*questionsModels.Set, error)
+	SaveContext(string, string) (*questionsModels.SetContext, error)
+	GetRecentSets(int, string) ([]*questionsModels.Set, error)
+	GetSetContext(string) (*questionsModels.SetContext, error)
+	UpdateSetContext(string, string) (*questionsModels.SetContext, error)
 	DeleteSetContext(string) error
-	CreateANewQuestionInASet(models.Question,
-		[]models.Choice, models.Answer, string) error
-	CreateSetWithContext(*models.Set, string) error
-	GetAllQuestionsInASet(string) ([]models.CompleteQuestion, error)
+	CreateANewQuestionInASet(questionsModels.Question,
+		[]questionsModels.Choice, questionsModels.Answer, string) error
+	CreateSetWithContext(*questionsModels.Set, string) error
+	GetAllQuestionsInASet(string) ([]questionsModels.CompleteQuestion, error)
 }
 
 type Handler struct {

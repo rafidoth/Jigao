@@ -1,4 +1,4 @@
-package store
+package questionsStore
 
 import (
 	"context"

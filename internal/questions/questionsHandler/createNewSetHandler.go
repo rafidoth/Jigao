@@ -1,10 +1,10 @@
-package handlers
+package questionsHandler
 
 import (
 	"log/slog"
 	"net/http"
 
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
 type CreateSetReq struct {
@@ -14,7 +14,6 @@ type CreateSetReq struct {
 }
 
 type CreateSetRes struct {
-	ID         string `json:"id"`
 	Visibility string `json:"visibility"`
 	Title      string `json:"title"`
 	Context    string `json:"context"`
@@ -24,7 +23,7 @@ func (h *Handler) CreateNewSet(w http.ResponseWriter, r *http.Request) {
 	uid, err := h.extractUserId(r)
 	if err != nil {
 		http.Error(w, "Internal Server Error: user not found", http.StatusInternalServerError)
-		return
+
 	}
 
 	var req CreateSetReq
@@ -34,7 +33,7 @@ func (h *Handler) CreateNewSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	QuestionSet := &models.Set{
+	QuestionSet := &questionsModels.Set{
 		Visibility: req.Visibility,
 		Title:      req.Title,
 		UserId:     uid,

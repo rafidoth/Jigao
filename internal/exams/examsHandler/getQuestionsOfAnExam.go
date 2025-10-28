@@ -1,22 +1,30 @@
-package handlers
+package examsHandler
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
-// GET /api/v1/questions?set_id=<id>
-func (h *Handler) GetAllQuestionsInASet(w http.ResponseWriter, r *http.Request) {
-
-	setId := r.URL.Query().Get("set_id")
-	if setId == "" {
-		http.Error(w, "Bad Request: set_id is required", http.StatusBadRequest)
+func (eh ExamsHandler) GetQuestionsOfAnExam(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	examId := chi.URLParam(r, "exam_id")
+	if examId == "" {
+		http.Error(w, "exam_id is required", http.StatusBadRequest)
 		return
 	}
 
-	questions, err := h.store.GetAllQuestionsInASet(setId)
+	set_id, err := eh.store.GetExamSetId(examId)
+	if err != nil {
+		http.Error(w, "set not found", http.StatusInternalServerError)
+		return
+	}
+
+	questions, err := eh.qStore.GetAllQuestionsInASet(set_id)
 	if err != nil {
 		slog.Warn("failed to get all questions in a set DB issue", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -29,7 +37,6 @@ func (h *Handler) GetAllQuestionsInASet(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(string(jsonRes))
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")

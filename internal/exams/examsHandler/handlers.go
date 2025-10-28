@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/rafidoth/onlyexams/internal/exams"
+	"github.com/rafidoth/onlyexams/internal/exams/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
 type Storage interface {
@@ -15,6 +17,12 @@ type Storage interface {
 
 	GetExamsBySetId(set_id string) ([]exams.Exam, error)
 	IsExamExists(exam_id string) error
+	GetExamSetId(exam_id string) (string, error)
+	GetExamByExamId(examId string) (models.Exam, error)
+}
+
+type QuestionsStore interface {
+	GetAllQuestionsInASet(setID string) ([]questionsModels.CompleteQuestion, error)
 }
 
 // type ExamHub interface {
@@ -22,13 +30,15 @@ type Storage interface {
 // }
 
 type ExamsHandler struct {
-	hub   *exams.ExamHub
-	store Storage
+	hub    *exams.ExamHub
+	store  Storage
+	qStore QuestionsStore
 }
 
-func NewHandler(eh *exams.ExamHub, store Storage) *ExamsHandler {
+func NewHandler(eh *exams.ExamHub, store Storage, qS QuestionsStore) *ExamsHandler {
 	return &ExamsHandler{
-		hub:   eh,
-		store: store,
+		hub:    eh,
+		store:  store,
+		qStore: qS,
 	}
 }

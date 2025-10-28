@@ -10,6 +10,7 @@ import {
   TextArea,
   Badge,
   Card,
+  ScrollArea,
 } from "@radix-ui/themes";
 import { CalendarIcon, ArrowTopRightIcon } from "@radix-ui/react-icons";
 import { create } from "zustand";
@@ -204,55 +205,57 @@ function ExamsList({ set_id }) {
   }
 
   return (
-    <Flex direction="column" gap="3">
-      {exams.map((exam) => {
-        const startTime = exam.start_time;
-        const start = startTime ? new Date(startTime) : null;
-        const isPast = start ? start < new Date() : false;
-        const duration = exam.duration_in_minutes;
-        return (
-          <Card
-            key={exam.id ?? `${exam.set_id}-${exam.title}-${startTime}`}
-            variant="classic"
-          >
-            <Flex
-              justify="between"
-              align="center"
-              style={{ opacity: isPast ? 0.65 : 1 }}
+    <ScrollArea type="always" scrollbars="vertical" style={{ height: 400 }}>
+      <Flex direction="column" gap="3" mr={"5"}>
+        {exams.map((exam) => {
+          const startTime = exam.start_time;
+          const start = startTime ? new Date(startTime) : null;
+          const isPast = start ? start < new Date() : false;
+          const duration = exam.duration_in_minutes;
+          return (
+            <Card
+              key={exam.id ?? `${exam.set_id}-${exam.title}-${startTime}`}
+              vari
             >
-              <Flex direction="column">
-                <Flex direction="row" gap="1">
-                  <Text weight="bold">{exam.title}</Text>
+              <Flex
+                justify="between"
+                align="center"
+                style={{ opacity: isPast ? 0.65 : 1 }}
+              >
+                <Flex direction="column">
+                  <Flex direction="row" gap="1">
+                    <Text weight="bold">{exam.title}</Text>
 
-                  <Badge variant="soft" color={isPast ? "gray" : "green"}>
-                    {isPast ? "Past" : "Upcoming"}
-                  </Badge>
-                </Flex>
-                {start && (
+                    <Badge variant="soft" color={isPast ? "gray" : "green"}>
+                      {isPast ? "Past" : "Upcoming"}
+                    </Badge>
+                  </Flex>
+
                   <Text size="2" color="gray">
                     {start.toLocaleString()}{" "}
                     {duration ? `• ${duration} min` : ""}
                   </Text>
-                )}
-                {exam.description && (
-                  <Text size="2" color="gray">
-                    {exam.description}
-                  </Text>
-                )}
+
+                  {exam.description && (
+                    <Text size="2" color="gray">
+                      {exam.description}
+                    </Text>
+                  )}
+                </Flex>
+                <Flex>
+                  <a href={`/exam/${exam.id}`} target="_blank" rel="noreferrer">
+                    <Button radius="medium" variant="soft">
+                      Open
+                      <ArrowTopRightIcon />
+                    </Button>
+                  </a>
+                </Flex>
               </Flex>
-              <Flex>
-                <a href={`/exam/${exam.id}`} target="_blank" rel="noreferrer">
-                  <Button radius="medium" variant="soft">
-                    Open
-                    <ArrowTopRightIcon />
-                  </Button>
-                </a>
-              </Flex>
-            </Flex>
-          </Card>
-        );
-      })}
-    </Flex>
+            </Card>
+          );
+        })}
+      </Flex>
+    </ScrollArea>
   );
 }
 
@@ -300,8 +303,9 @@ function ExamsDialog({ children, set_id }) {
         start_time_iso: toISOFromLocal(startTimeLocal),
         duration_in_minutes: durationInMinutes,
       });
-    } catch (_) {
+    } catch (error) {
       // Handled in onError
+      console.log(error);
     }
   };
 

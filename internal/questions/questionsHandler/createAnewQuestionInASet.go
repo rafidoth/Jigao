@@ -1,4 +1,4 @@
-package handlers
+package questionsHandler
 
 import (
 	"encoding/json"
@@ -7,13 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
 type requestCreateNewQuestion struct {
-	Question models.Question `json:"question"`
-	Choices  []models.Choice `json:"choices"`
-	Answer   models.Answer   `json:"answer"`
+	Question questionsModels.Question `json:"question"`
+	Choices  []questionsModels.Choice `json:"choices"`
+	Answer   questionsModels.Answer   `json:"answer"`
 }
 
 func (h *Handler) CreateANewQuestionInASet(w http.ResponseWriter, r *http.Request) {

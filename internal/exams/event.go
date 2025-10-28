@@ -21,4 +21,5 @@ func makeEvent(t, rId string, payload any) *Event {
 type OnJoinEvent struct {
 	ExamStatus string    `json:"examStatus"`
 	Time       time.Time `json:"time"`
+	Title      string    `json:"title"`
 }

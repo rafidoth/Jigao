@@ -1,14 +1,14 @@
-package store
+package questionsStore
 
 import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
 func (s Store) GetAllQuestionsInASet(
-	setID string) ([]models.CompleteQuestion, error) {
+	setID string) ([]questionsModels.CompleteQuestion, error) {
 	tx, err := s.db.Begin(context.Background())
 	if err != nil {
 		return nil, err
@@ -26,12 +26,12 @@ func (s Store) GetAllQuestionsInASet(
 	}
 
 	dbQuestions, err := pgx.CollectRows(qRows,
-		pgx.RowToStructByName[models.Question])
+		pgx.RowToStructByName[questionsModels.Question])
 	if err != nil {
 		return nil, err
 	}
 
-	results := make([]models.CompleteQuestion, 0, len(dbQuestions))
+	results := make([]questionsModels.CompleteQuestion, 0, len(dbQuestions))
 	for _, q := range dbQuestions {
 		cRows, err := tx.Query(context.Background(), `
 			SELECT *
@@ -43,7 +43,7 @@ func (s Store) GetAllQuestionsInASet(
 		}
 
 		choices, err := pgx.CollectRows(cRows,
-			pgx.RowToStructByName[models.Choice])
+			pgx.RowToStructByName[questionsModels.Choice])
 		if err != nil {
 			return nil, err
 		}
@@ -58,14 +58,14 @@ func (s Store) GetAllQuestionsInASet(
 			return nil, err
 		}
 
-		var answer models.Answer
+		var answer questionsModels.Answer
 		answer, err = pgx.CollectOneRow(aRows,
-			pgx.RowToStructByName[models.Answer])
+			pgx.RowToStructByName[questionsModels.Answer])
 		if err != nil && err != pgx.ErrNoRows {
 			return nil, err
 		}
 
-		newCompleteQuestion := models.NewCompleteQuestion(q, choices, answer)
+		newCompleteQuestion := questionsModels.NewCompleteQuestion(q, choices, answer)
 		results = append(results, newCompleteQuestion)
 	}
 

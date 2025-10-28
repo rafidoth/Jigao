@@ -215,16 +215,19 @@ func writeOnJoinEvent(c *Client, r *Room) {
 		onJoinEvt = &OnJoinEvent{
 			ExamStatus: examStatus,
 			Time:       r.Exam.StartTime,
+			Title:      r.Exam.Title,
 		}
 	case "running":
 		onJoinEvt = &OnJoinEvent{
 			ExamStatus: examStatus,
 			Time:       r.Exam.EndTime,
+			Title:      r.Exam.Title,
 		}
 	case "ended":
 		onJoinEvt = &OnJoinEvent{
 			ExamStatus: examStatus,
 			Time:       r.Exam.EndTime,
+			Title:      r.Exam.Title,
 		}
 	}
 	evt := makeEvent("on-join-room", c.RoomId, onJoinEvt)

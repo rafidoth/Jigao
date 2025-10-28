@@ -1,15 +1,15 @@
-package store
+package questionsStore
 
 import (
 	"context"
 	"fmt"
 	"log/slog"
 
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
-func (s Store) CreateANewQuestionInASet(Q models.Question,
-	choices []models.Choice, answer models.Answer, set_id string) error {
+func (s Store) CreateANewQuestionInASet(Q questionsModels.Question,
+	choices []questionsModels.Choice, answer questionsModels.Answer, set_id string) error {
 
 	tx, err := s.db.Begin(context.Background())
 	if err != nil {
@@ -48,9 +48,9 @@ func (s Store) CreateANewQuestionInASet(Q models.Question,
 		`
 	// choices len zero means it's a descriptive question (short question)
 	if len(choices) != 0 {
-		choice := make([]models.Choice, len(choices))
+		choice := make([]questionsModels.Choice, len(choices))
 		for i, c := range choices {
-			var insertedChoice models.Choice
+			var insertedChoice questionsModels.Choice
 			err := tx.QueryRow(context.Background(), insertChoiceSQL,
 				c.ChoiceText,
 				questionID,

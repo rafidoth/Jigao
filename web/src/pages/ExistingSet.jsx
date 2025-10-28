@@ -31,10 +31,11 @@ import {
   PlusIcon,
 } from "@radix-ui/react-icons";
 import useExistingSetStore from "../store/existingSetStore.js";
-import QuestionCard from "../components/question_card.jsx";
+import QuestionCard from "../components/question_cards/question_card.jsx";
 
 import CreateNewQuestionPopover from "../components/create_new_question_popover.jsx";
 import ExamsDialog from "../components/exams_dialog.jsx";
+import { useState } from "react";
 
 const getVisibilityIcon = (visibility) => {
   switch (visibility) {
@@ -88,6 +89,13 @@ function ExistingSetHeader({ set, itemsLength, showAnswer, toggleShowAnswer }) {
 }
 
 function QuestionsList({ items }) {
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const handleSelectingAnswer = (qId, ans) => {
+    setSelectedAnswers((prev) => ({
+      ...prev,
+      [qId]: ans,
+    }));
+  };
   return (
     <ScrollArea
       type="hover"
@@ -101,7 +109,13 @@ function QuestionsList({ items }) {
         pr="3"
       >
         {items.map((q, i) => (
-          <QuestionCard key={q.id} question={q} position={i + 1} />
+          <QuestionCard
+            key={q.id}
+            question={q}
+            position={i + 1}
+            selected={selectedAnswers[q.id] || ""}
+            selectAnswer={handleSelectingAnswer}
+          />
         ))}
 
         {items.length === 0 && (

@@ -15,15 +15,15 @@ func (s Store) GetExamsBySetId(set_id string) ([]exams.Exam, error) {
 		return nil, err
 	}
 	defer tx.Rollback(context.Background())
-	// TODO: I should change the db scema for description to have a default value of ''
+	// TODO:  change the db scema for description to have a default value of ''
 	// for now I am using COALESCE to handle null values -_-
 	rows, err := tx.Query(
 		context.Background(),
-		`SELECT 
+		`SELECT
 			id,
 			set_id,
 			title,
-			COALESCE(description, '') AS description, 
+			COALESCE(description, '') AS description,
 			start_time,
 			(EXTRACT(EPOCH FROM duration)/60)::int AS duration,
 			(start_time + duration) AS end_time,

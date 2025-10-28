@@ -1,4 +1,4 @@
-package store
+package questionsStore
 
 import (
 	"context"
@@ -6,17 +6,17 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
-func (s Store) GetRecentSets(limit int, user_id string) ([]*models.Set, error) {
-	var recentSets []*models.Set
+func (s Store) GetRecentSets(limit int, user_id string) ([]*questionsModels.Set, error) {
+	var recentSets []*questionsModels.Set
 
 	err := s.txDB(func(tx pgx.Tx) error {
 		getRecentSetsSql := `
 			SELECT *
 			FROM sets
-			WHERE user_id = $1 
+			WHERE user_id = $1
 			ORDER BY updated_at DESC
 			LIMIT $2`
 
@@ -25,7 +25,7 @@ func (s Store) GetRecentSets(limit int, user_id string) ([]*models.Set, error) {
 			return fmt.Errorf("query recent sets: %w", err)
 		}
 
-		sets, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Set])
+		sets, err := pgx.CollectRows(rows, pgx.RowToStructByName[questionsModels.Set])
 		if err != nil {
 			return fmt.Errorf("collect recent sets: %w", err)
 		}
@@ -44,8 +44,8 @@ func (s Store) GetRecentSets(limit int, user_id string) ([]*models.Set, error) {
 	return recentSets, nil
 }
 
-func (s Store) CreateNewSet(qSet *models.Set) (*models.Set, error) {
-	var set models.Set
+func (s Store) CreateNewSet(qSet *questionsModels.Set) (*questionsModels.Set, error) {
+	var set questionsModels.Set
 	err := s.txDB(func(tx pgx.Tx) error {
 		createNewSet := `
 			INSERT INTO sets (visibility, title, user_id)
@@ -63,7 +63,7 @@ func (s Store) CreateNewSet(qSet *models.Set) (*models.Set, error) {
 			return fmt.Errorf("insert set: %w", err)
 		}
 
-		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Set])
+		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[questionsModels.Set])
 		if err != nil {
 			return fmt.Errorf("collect inserted set: %w", err)
 		}
@@ -77,8 +77,8 @@ func (s Store) CreateNewSet(qSet *models.Set) (*models.Set, error) {
 	return &set, nil
 }
 
-func (s Store) GetASet(qSet *models.Set) (*models.Set, error) {
-	var set models.Set
+func (s Store) GetASet(qSet *questionsModels.Set) (*questionsModels.Set, error) {
+	var set questionsModels.Set
 	err := s.txDB(func(tx pgx.Tx) error {
 		getASet := `SELECT * FROM sets WHERE id = $1 AND user_id = $2`
 
@@ -92,7 +92,7 @@ func (s Store) GetASet(qSet *models.Set) (*models.Set, error) {
 			return fmt.Errorf("select set: %w", err)
 		}
 
-		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Set])
+		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[questionsModels.Set])
 		if err != nil {
 			return fmt.Errorf("collect set: %w", err)
 		}
@@ -106,8 +106,8 @@ func (s Store) GetASet(qSet *models.Set) (*models.Set, error) {
 	return &set, nil
 }
 
-func (s Store) UpdateASet(qSet *models.Set) (*models.Set, error) {
-	var set models.Set
+func (s Store) UpdateASet(qSet *questionsModels.Set) (*questionsModels.Set, error) {
+	var set questionsModels.Set
 	err := s.txDB(func(tx pgx.Tx) error {
 		updateSet := `UPDATE sets SET visibility = $1, title = $2 WHERE id = $3 AND user_id = $4 RETURNING *`
 
@@ -123,7 +123,7 @@ func (s Store) UpdateASet(qSet *models.Set) (*models.Set, error) {
 			return fmt.Errorf("update set: %w", err)
 		}
 
-		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Set])
+		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[questionsModels.Set])
 		if err != nil {
 			return fmt.Errorf("collect updated set: %w", err)
 		}
@@ -137,8 +137,8 @@ func (s Store) UpdateASet(qSet *models.Set) (*models.Set, error) {
 	return &set, nil
 }
 
-func (s Store) DeleteASet(qSet *models.Set) (*models.Set, error) {
-	var set models.Set
+func (s Store) DeleteASet(qSet *questionsModels.Set) (*questionsModels.Set, error) {
+	var set questionsModels.Set
 	err := s.txDB(func(tx pgx.Tx) error {
 		deleteSet := `DELETE FROM sets WHERE id = $1 AND user_id = $2 RETURNING *`
 
@@ -152,7 +152,7 @@ func (s Store) DeleteASet(qSet *models.Set) (*models.Set, error) {
 			return fmt.Errorf("delete set: %w", err)
 		}
 
-		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Set])
+		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[questionsModels.Set])
 		if err != nil {
 			return fmt.Errorf("collect deleted set: %w", err)
 		}

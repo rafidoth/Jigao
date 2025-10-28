@@ -1,7 +1,11 @@
 import { useParams } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import { differenceInSeconds } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import QuestionCard from "../components/question_cards/question_card";
+import { Card, Text, ScrollArea, Grid } from "@radix-ui/themes";
 
 function formatDuration(seconds) {
   if (seconds <= 0) return "00:00:00";
@@ -73,6 +77,59 @@ function ExamPageEndedUI({ endTime }) {
   );
 }
 
+async function getQuestionsByExamId(exam_id) {
+  const res = await axios.get(
+    `http://localhost:9999/api/v1/exams/q/${exam_id}`,
+  );
+  return res.data;
+}
+
+// async function getExamDetails(exam_id) {
+//   const res = await axios.get(`http://localhost:9999/api/v1/exams/${exam_id}`);
+//   return res.data;
+// }
+
+function ExamPageQuestionsUI({ items }) {
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const handleSelectingAnswer = (qId, ans) => {
+    setSelectedAnswers((prev) => ({
+      ...prev,
+      [qId]: ans,
+    }));
+  };
+
+  return (
+    <ScrollArea
+      type="hover"
+      scrollbars="vertical"
+      style={{ height: "calc(100vh - 100px)" }}
+    >
+      <Grid
+        gap="3"
+        columns={{ initial: "1", sm: "2", md: "3", lg: "4", xl: "5" }}
+        align="baseline"
+        pr="3"
+      >
+        {items.map((q, i) => (
+          <QuestionCard
+            key={q.id}
+            question={q}
+            position={i + 1}
+            selected={selectedAnswers[q.id]}
+            selectAnswer={handleSelectingAnswer}
+          />
+        ))}
+
+        {items.length === 0 && (
+          <Card size="3">
+            <Text color="gray">No questions in this set yet.</Text>
+          </Card>
+        )}
+      </Grid>
+    </ScrollArea>
+  );
+}
+
 function ExamPage() {
   const { exam_id } = useParams();
 
@@ -83,11 +140,20 @@ function ExamPage() {
       console.log("Received:", data);
     },
   });
-
+  const [title, setTitle] = useState("");
   const [examStatus, setExamStatus] = useState("");
+
+  const { data: questions, isLoading } = useQuery({
+    queryKey: ["exam_id", exam_id],
+    queryFn: () => getQuestionsByExamId(exam_id),
+    enabled: examStatus === "running",
+  });
+
+  const items = useMemo(() => questions || [], [questions]);
+  console.log(items);
+
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
-  const [examUI, setExamUI] = useState(null);
 
   let examUi;
   switch (examStatus) {
@@ -114,7 +180,10 @@ function ExamPage() {
       if (type === "on-join-room") {
         const status = payload.examStatus;
         const time = payload.time;
+        const title = payload.title;
+        setTitle(title);
         setExamStatus(status);
+
         if (status === "waiting" && time) {
           setStartTime(time);
         } else if (status === "running" && time) {
@@ -135,11 +204,12 @@ function ExamPage() {
   return (
     <div>
       <div> Exam Page for {exam_id}</div>
-
+      <h1>{title}</h1>
       <div style={{ marginTop: 12 }}>
         <div> WebSocket Status: {ReadyState[readyState]} </div>
       </div>
       {examUi}
+      {items.length > 0 && !isLoading && <ExamPageQuestionsUI items={items} />}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-package store
+package questionsStore
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/rafidoth/onlyexams/internal/questions/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
 func (s Store) DeleteSetContext(set_id string) error {
@@ -31,8 +31,8 @@ func (s Store) DeleteSetContext(set_id string) error {
 	return err
 }
 
-func (s Store) UpdateSetContext(set_id string, newContext string) (*models.SetContext, error) {
-	var setContext models.SetContext
+func (s Store) UpdateSetContext(set_id string, newContext string) (*questionsModels.SetContext, error) {
+	var setContext questionsModels.SetContext
 
 	err := s.txDB(func(tx pgx.Tx) error {
 		updateContextSql := `
@@ -51,7 +51,7 @@ func (s Store) UpdateSetContext(set_id string, newContext string) (*models.SetCo
 			return err
 		}
 
-		setContext, err = pgx.CollectOneRow(row, pgx.RowToStructByName[models.SetContext])
+		setContext, err = pgx.CollectOneRow(row, pgx.RowToStructByName[questionsModels.SetContext])
 		if err != nil {
 			return fmt.Errorf("failed to map row to struct: %w", err)
 		}
@@ -66,14 +66,14 @@ func (s Store) UpdateSetContext(set_id string, newContext string) (*models.SetCo
 	return &setContext, nil
 }
 
-func (s Store) GetSetContext(set_id string) (*models.SetContext, error) {
-	var setContext models.SetContext
+func (s Store) GetSetContext(set_id string) (*questionsModels.SetContext, error) {
+	var setContext questionsModels.SetContext
 
 	err := s.txDB(func(tx pgx.Tx) error {
 		getContextOfSet := `
 			SELECT *
-			FROM contexts 
-			WHERE set_id = $1 
+			FROM contexts
+			WHERE set_id = $1
 			`
 
 		rows, err := tx.Query(context.Background(), getContextOfSet, set_id)
@@ -81,7 +81,7 @@ func (s Store) GetSetContext(set_id string) (*models.SetContext, error) {
 			return err
 		}
 
-		setContext, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[models.SetContext])
+		setContext, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[questionsModels.SetContext])
 		if err != nil {
 			return fmt.Errorf("failed to map rows to struct: %w", err)
 		}
@@ -96,8 +96,8 @@ func (s Store) GetSetContext(set_id string) (*models.SetContext, error) {
 	return &setContext, nil
 }
 
-func (s Store) SaveContext(set_context, set_id string) (*models.SetContext, error) {
-	var setContext models.SetContext
+func (s Store) SaveContext(set_context, set_id string) (*questionsModels.SetContext, error) {
+	var setContext questionsModels.SetContext
 
 	err := s.txDB(func(tx pgx.Tx) error {
 		saveContextSql := `
@@ -112,7 +112,7 @@ func (s Store) SaveContext(set_context, set_id string) (*models.SetContext, erro
 			set_id,
 		)
 
-		setContext, err = pgx.CollectOneRow(row, pgx.RowToStructByName[models.SetContext])
+		setContext, err = pgx.CollectOneRow(row, pgx.RowToStructByName[questionsModels.SetContext])
 
 		if err != nil {
 			return fmt.Errorf("failed to map row to struct: %w", err)
