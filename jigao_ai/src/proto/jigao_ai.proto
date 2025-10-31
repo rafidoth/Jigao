@@ -1,0 +1,39 @@
+syntax = "proto3";
+package jigao_ai;
+
+service JigaoAI{
+    rpc GenerateQuestions(GenerateQuestionsRequest) returns (GenerateQuestionsResponse) {}
+}
+
+
+message GenerateQuestionsRequest{
+    int32 quantity = 1;
+    string context = 2;
+    string instructions = 3;
+    string question_type = 4;
+}
+
+message GenerateQuestionsResponse{
+    repeated GeneratedQuestion questions = 1;
+}
+
+message GeneratedQuestion {
+    Question question = 1;
+    repeated Choice choices = 2;
+    Answer answer = 3;
+}
+
+message Question{
+    string difficulty = 1;
+    string question_type = 2;
+    string question = 3;
+}
+
+message Choice{
+    string choice_text = 1;
+}
+
+message Answer {
+    string answer = 1;
+    string explanation = 2;
+}

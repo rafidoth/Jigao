@@ -2,7 +2,6 @@ package questionsStore
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
@@ -16,10 +15,10 @@ func (s Store) CreateANewQuestionInASet(Q questionsModels.Question,
 		return err
 	}
 
-	fmt.Println(Q)
-	fmt.Println(answer)
-	fmt.Println(choices)
-	fmt.Println(set_id)
+	// fmt.Println(Q)
+	// fmt.Println(answer)
+	// fmt.Println(choices)
+	// fmt.Println(set_id)
 
 	defer tx.Rollback(context.Background())
 

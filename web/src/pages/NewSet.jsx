@@ -4,6 +4,7 @@ import { PaperPlaneIcon } from "@radix-ui/react-icons";
 import styles from "./NewSet.module.css";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 
 async function generateQuestionsApiPost(variables) {
   const { numQuestions, questionType, texualContext } = variables;
@@ -12,7 +13,8 @@ async function generateQuestionsApiPost(variables) {
     type: questionType,
     context: texualContext,
   };
-  const res = await axios.post("url", body);
+  const res = await axios.post("http://localhost:9999/api/v1/sets/gen", body);
+
   return res.data;
 }
 
@@ -20,11 +22,15 @@ function NewSet() {
   const [selectedValue, setSelectedValue] = useState("5");
   const [selectedType, setSelectedType] = useState("MultipleChoice");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const { mutateAsync } = useMutation({
     mutationFn: generateQuestionsApiPost,
-    onSuccess: () => {
-      console.log("Success");
+    onSuccess: (data) => {
+      setMessage("");
+      if (data.set_id) {
+        navigate(`/sets/${data.set_id}`);
+      }
     },
     onError: (error) => {
       console.log(error);
@@ -120,7 +126,9 @@ function NewSet() {
           size="3"
           variant="soft"
           radius="full"
-          onClick={handleSend}
+          onClick={() => {
+            handleSend();
+          }}
           style={{ position: "absolute", right: 8, bottom: 8 }}
           type="button"
           aria-label="Send"

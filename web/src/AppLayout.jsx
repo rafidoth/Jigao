@@ -18,7 +18,7 @@ function AppLayout() {
       bottom="0"
       left="0"
     >
-      {show && <Sidebar />}
+      <div style={{ width: "300px" }}>{show && <Sidebar />}</div>
       {/* <Box
         display={{
           initial: "none",

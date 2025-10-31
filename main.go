@@ -11,6 +11,7 @@ import (
 	"github.com/rafidoth/onlyexams/internal/exams/examsStore"
 	"github.com/rafidoth/onlyexams/internal/questions/questionsHandler"
 	"github.com/rafidoth/onlyexams/internal/questions/questionsStore"
+	"github.com/rafidoth/onlyexams/proto"
 )
 
 func init() {
@@ -37,8 +38,11 @@ func main() {
 		slog.Error("unable to configure db : ", "error", err)
 	}
 
+	aiSvc := proto.NewAiServiceClient()
+	defer aiSvc.Close()
+
 	qStore := questionsStore.NewStore(db.GetPgxPool())
-	qH := questionsHandler.NewHandler(qStore)
+	qH := questionsHandler.NewHandler(qStore, aiSvc.Client)
 
 	eStore := examsStore.NewStore(db.GetPgxPool())
 	eHub := exams.NewExamHub(eStore)

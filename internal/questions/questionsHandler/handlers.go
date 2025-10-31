@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
+	"github.com/rafidoth/onlyexams/proto"
 )
 
 type Storage interface {
@@ -23,17 +24,20 @@ type Storage interface {
 		[]questionsModels.Choice, questionsModels.Answer, string) error
 	CreateSetWithContext(*questionsModels.Set, string) error
 	GetAllQuestionsInASet(string) ([]questionsModels.CompleteQuestion, error)
+	CreateSetWithContextRetSetId(*questionsModels.Set, string) (string, error)
 }
 
 type Handler struct {
-	ctx   context.Context
-	store Storage
+	ctx             context.Context
+	store           Storage
+	aiServiceClient proto.JigaoAIClient
 }
 
-func NewHandler(store Storage) *Handler {
+func NewHandler(store Storage, ai proto.JigaoAIClient) *Handler {
 	return &Handler{
-		ctx:   context.Background(),
-		store: store,
+		ctx:             context.Background(),
+		store:           store,
+		aiServiceClient: ai,
 	}
 }
 

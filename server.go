@@ -19,6 +19,7 @@ type QuestionsHandler interface {
 	GetSetContext(w http.ResponseWriter, r *http.Request)
 	CreateANewQuestionInASet(w http.ResponseWriter, r *http.Request)
 	GetAllQuestionsInASet(w http.ResponseWriter, r *http.Request)
+	GenerateNewQuestionSet(w http.ResponseWriter, r *http.Request)
 }
 
 type ExamsHandler interface {
@@ -51,6 +52,7 @@ func (s *Server) registerRoutes() {
 		r.Route("/sets", func(r chi.Router) {
 			r.Get("/", s.questionsHandler.GetRecentSets)
 			r.Post("/", s.questionsHandler.CreateNewSet)
+			r.Post("/gen", s.questionsHandler.GenerateNewQuestionSet)
 			r.Get("/{set_id}", s.questionsHandler.GetASet)
 			r.Put("/{set_id}", s.questionsHandler.UpdateASet)
 			r.Delete("/{set_id}", s.questionsHandler.DeleteASet)
