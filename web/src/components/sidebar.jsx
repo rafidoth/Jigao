@@ -1,18 +1,8 @@
 import { Flex, Text, Box, IconButton } from "@radix-ui/themes";
-import {
-  SunIcon,
-  MoonIcon,
-  MagicWandIcon,
-  ViewVerticalIcon,
-} from "@radix-ui/react-icons";
-import useThemeStore from "../store/themeStore";
+import { MagicWandIcon } from "@radix-ui/react-icons";
 import { NavLink, useLocation, matchPath } from "react-router";
-
+import LogoToolBar from "./logotoolbar";
 function Sidebar() {
-  const theme = useThemeStore((state) => state.theme);
-  const toggleTheme = useThemeStore((state) => state.toggleTheme);
-  const themeIcon = theme === "light" ? <MoonIcon /> : <SunIcon />;
-
   const location = useLocation();
 
   const navItems = [
@@ -20,7 +10,7 @@ function Sidebar() {
       to: "/",
       label: (
         <Flex align={"center"} gap="2">
-          <MagicWandIcon /> Jigao AI
+          <MagicWandIcon /> Create Questions
         </Flex>
       ),
     },
@@ -42,23 +32,7 @@ function Sidebar() {
         lg: "flex",
       }}
     >
-      <Flex as="span" align="center" justify="between">
-        <Box as="span">
-          <Text weight="bold" size="6" align="center" mt="4">
-            <Text color="teal">Jigao</Text>
-          </Text>
-        </Box>
-        <Flex align="center" gap="2">
-          <IconButton asChild variant="ghost" radius="full">
-            <span onClick={() => toggleTheme()}>{themeIcon}</span>
-          </IconButton>
-          <IconButton asChild variant="ghost" radius="full">
-            <span onClick={() => toggleTheme()}>
-              <ViewVerticalIcon />
-            </span>
-          </IconButton>
-        </Flex>
-      </Flex>
+      <LogoToolBar />
       <Flex as="nav" direction="column" gap="1" mt="4">
         {navItems.map((item) => {
           const active = isActive(item.to);
@@ -81,12 +55,7 @@ function Sidebar() {
                   width: "100%",
                 }}
               >
-                <Text
-                  weight={active ? "bold" : "regular"}
-                  color={active ? "teal" : undefined}
-                >
-                  {item.label}
-                </Text>
+                <Text color={active ? "teal" : undefined}>{item.label}</Text>
               </NavLink>
             </Box>
           );

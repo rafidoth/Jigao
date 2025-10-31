@@ -17,7 +17,6 @@ import {
 import { create } from "zustand";
 import { useState } from "react";
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
 import { Toast } from "radix-ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -227,11 +226,11 @@ function TrueFalseInputs() {
   const correctAnswer = useCreateNewQuestionStore(
     (state) => state.trueFalse.correctAnswer,
   );
-  const setMcqCorrectAnswer = useCreateNewQuestionStore(
+  const setTrueFalseCorrectAnswer = useCreateNewQuestionStore(
     (state) => state.setTrueFalseCorrectAnswer,
   );
 
-  const questionText = useCreateNewQuestionStore((state) => state.questionText);
+  // const questionText = useCreateNewQuestionStore((state) => state.questionText);
   const setQuestionText = useCreateNewQuestionStore(
     (state) => state.setQuestionText,
   );
@@ -250,11 +249,10 @@ function TrueFalseInputs() {
               placeholder={`Choice ${index + 1} Text`}
               radius="medium"
               value={choice}
-              onChange={(e) => setChoice(index, e.target.value)}
               variant={correctAnswer === index ? "soft" : "classic"}
             >
               <TextField.Slot
-                onClick={() => setMcqCorrectAnswer(index)}
+                onClick={() => setTrueFalseCorrectAnswer(index)}
                 px="3"
                 radius="medium"
               >
@@ -281,7 +279,7 @@ function FillInTheBlanksInputs() {
     (state) => state.setFillInTheBlanksAnswers,
   );
 
-  const questionText = useCreateNewQuestionStore((state) => state.questionText);
+  // const questionText = useCreateNewQuestionStore((state) => state.questionText);
   const setQuestionText = useCreateNewQuestionStore(
     (state) => state.setQuestionText,
   );
@@ -376,8 +374,7 @@ function ShortAnswerInputs() {
   );
 }
 
-function getChoicesBasedOnQuestionType(questionType) {
-  const state = useCreateNewQuestionStore();
+function getChoicesBasedOnQuestionType(questionType, state) {
   switch (questionType) {
     case "multiple_choice_questions":
       return state.mcq.choices;
@@ -392,8 +389,7 @@ function getChoicesBasedOnQuestionType(questionType) {
   }
 }
 
-function getCorrectAnswerBasedOnQuestionType(questionType) {
-  const state = useCreateNewQuestionStore();
+function getCorrectAnswerBasedOnQuestionType(questionType, state) {
   // console.log("state", state.mcq.correctAnswer);
   // console.log("state", state.mcq.choices);
   switch (questionType) {
@@ -416,7 +412,6 @@ function validateInputs(
   questionText,
   choices,
   correctAnswer,
-  explanation,
 ) {
   let error = "";
   if (!questionText || questionText.trim() === "") {
@@ -483,8 +478,13 @@ function CreateNewQuestionPopover({ children, set_id }) {
   const difficulty = useCreateNewQuestionStore((state) => state.difficulty);
   const questionType = useCreateNewQuestionStore((state) => state.questionType);
   const questionText = useCreateNewQuestionStore((state) => state.questionText);
-  const choices = getChoicesBasedOnQuestionType(questionType);
-  const correctAnswer = getCorrectAnswerBasedOnQuestionType(questionType);
+
+  const state = useCreateNewQuestionStore();
+  const choices = getChoicesBasedOnQuestionType(questionType, state);
+  const correctAnswer = getCorrectAnswerBasedOnQuestionType(
+    questionType,
+    state,
+  );
   const explanation = useCreateNewQuestionStore(
     (state) => state.answerExplanation,
   );
@@ -553,6 +553,7 @@ function CreateNewQuestionPopover({ children, set_id }) {
       });
     } catch (err) {
       setError("Failed to create question. Please try again.");
+      console.error(err);
     }
   };
 

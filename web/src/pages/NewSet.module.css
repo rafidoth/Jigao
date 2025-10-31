@@ -1,0 +1,17 @@
+.ChatInput {
+    width: 600px;
+    height: 100px;
+    border: none;
+    background-color: transparent;
+    outline: none;
+    font-family: "Poppins", sans-serif;
+}
+
+.ChatInput::placeholder {
+    font-style: italic;
+}
+
+.ChatInputExtended {
+    width: 600px;
+    height: 600px;
+}

@@ -13,7 +13,7 @@ function App() {
     <Theme
       appearance={theme}
       accentColor="teal"
-      radius="full"
+      radius="small"
       grayColor="sand"
       panelBackground="solid"
     >

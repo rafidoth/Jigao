@@ -20,4 +20,5 @@ main {
 
 .radix-themes {
     --default-font-family: "Poppins", sans-serif;
+    --heading-font-family: "Poppins", sans-serif;
 }
