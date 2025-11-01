@@ -1,13 +1,13 @@
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
-import { Card, Text, Flex, Grid, IconButton } from "@radix-ui/themes";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, Text, Flex, Grid, Button, IconButton } from "@radix-ui/themes";
 import {
   PlusIcon,
   GlobeIcon,
   LockClosedIcon,
   EyeOpenIcon,
 } from "@radix-ui/react-icons";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   differenceInMinutes,
   differenceInHours,
@@ -40,6 +40,11 @@ const getRecentSets = async () => {
   return res.data;
 };
 
+const createNewSetPost = async () => {
+  const res = await axios.post("http://localhost:9999/api/v1/sets");
+  return res.data;
+};
+
 const getVisibilityIcon = (visibility) => {
   switch (visibility) {
     case "public":
@@ -57,30 +62,50 @@ function SetList() {
     isLoading,
     isError,
   } = useQuery({ queryKey: ["sets"], queryFn: getRecentSets });
-  console.log(sets);
+
+  const navigate = useNavigate();
+  const { mutateAsync } = useMutation({
+    mutationFn: createNewSetPost,
+    onSuccess: (data) => {
+      console.log("Set Settings created successfully");
+      if (data.id) {
+        navigate(`/sets/${data.id}`);
+      }
+    },
+    onError: (error) => {
+      console.log("Error creating question:", error);
+    },
+  });
 
   if (isLoading) return <Text>Loading...</Text>;
   if (isError) return <Text>Error loading sets</Text>;
 
+  const handleCreateNewSet = async () => {
+    try {
+      await mutateAsync();
+    } catch (error) {
+      console.log("Error creating set:", error);
+    }
+  };
+
   return (
-    <Flex direction="column" gap="4" p="9">
-      <Text size="7" weight="bold">
-        Recent Sets
-      </Text>
-      <Flex gap="5" wrap="wrap">
-        <Card>
-          <Flex direction="column" gap="2" width="400px" p="4" height="100px">
-            <Flex direction="column">
-              <Flex direction={"column"} gap="2" style={{ color: "GrayText" }}>
-                <Flex align="center" gap="2">
-                  <PlusIcon style={{ width: "24px", height: "24px" }} />
-                  <Text size={"6"}>New</Text>
-                </Flex>
-                <Text>Create an empty new set of questions.</Text>
-              </Flex>
-            </Flex>
+    <Flex justify={"center"} direction="column" gap="4" p="9">
+      <Flex gap="2" direction="column">
+        <Text size="7" weight="bold">
+          Sets
+        </Text>
+        <Button
+          variant="soft"
+          style={{ width: "100px", cursor: "pointer" }}
+          onClick={handleCreateNewSet}
+        >
+          <Flex align="center" gap="2">
+            <PlusIcon style={{ width: "24px", height: "24px" }} />
+            <Text size={"3"}>New</Text>
           </Flex>
-        </Card>
+        </Button>
+      </Flex>
+      <Flex gap="5" wrap="wrap">
         {sets?.map((set) => (
           <Link
             key={set.id}

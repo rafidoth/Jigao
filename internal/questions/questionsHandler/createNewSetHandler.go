@@ -1,6 +1,7 @@
 package questionsHandler
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -10,13 +11,11 @@ import (
 type CreateSetReq struct {
 	Visibility string `json:"visibility"`
 	Title      string `json:"title"`
-	Context    string `json:"context"`
 }
 
 type CreateSetRes struct {
 	Visibility string `json:"visibility"`
 	Title      string `json:"title"`
-	Context    string `json:"context"`
 }
 
 func (h *Handler) CreateNewSet(w http.ResponseWriter, r *http.Request) {
@@ -26,20 +25,13 @@ func (h *Handler) CreateNewSet(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	var req CreateSetReq
-	err = h.rcvJson(r, &req)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
 	QuestionSet := &questionsModels.Set{
-		Visibility: req.Visibility,
-		Title:      req.Title,
+		Visibility: "private",
+		Title:      "untitled",
 		UserId:     uid,
 	}
 
-	err = h.store.CreateSetWithContext(QuestionSet, req.Context)
+	set, err := h.store.CreateNewSet(QuestionSet)
 	if err != nil {
 		slog.Warn("failed to create new Set DB issue", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -47,4 +39,19 @@ func (h *Handler) CreateNewSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	jsonRes, err := json.Marshal(&set)
+	if err != nil {
+		slog.Warn("failed to marshal response", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(jsonRes)
+	if err != nil {
+		slog.Warn("failed to write response", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+
 }
