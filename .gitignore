@@ -22,8 +22,10 @@ dist-ssr
 *.sln
 *.sw?
 
-#go 
+#go
 tmp/
+tmp/**/*
+tmp
 .env
 
 opencodetmp/
