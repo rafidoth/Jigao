@@ -11,15 +11,13 @@ import (
 type UpdateSetReq struct {
 	Visibility string `json:"visibility"`
 	Title      string `json:"title"`
-	Context    string `json:"context"`
 }
 
-type UpdateSetRes struct {
-	ID         string `json:"id"`
-	Visibility string `json:"visibility"`
-	Title      string `json:"title"`
-	Context    string `json:"context"`
-}
+// type UpdateSetRes struct {
+// 	ID         string `json:"id"`
+// 	Visibility string `json:"visibility"`
+// 	Title      string `json:"title"`
+// }
 
 // UpdateASet updates visibility and title for a set owned by the user.
 func (h *Handler) UpdateASet(w http.ResponseWriter, r *http.Request) {
@@ -51,24 +49,16 @@ func (h *Handler) UpdateASet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedCtx, err := h.store.UpdateSetContext(set_id, req.Context)
-	if err != nil {
-		slog.Warn("failed to update context DB issue", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	res := &UpdateSetRes{
-		ID:         qSet.ID,
-		Visibility: qSet.Visibility,
-		Title:      qSet.Title,
-		Context:    updatedCtx.Setcontext,
-	}
+	// res := &UpdateSetRes{
+	// 	ID:         qSet.ID,
+	// 	Visibility: qSet.Visibility,
+	// 	Title:      qSet.Title,
+	// }
 
 	w.WriteHeader(http.StatusOK)
-	if err := h.sendJson(w, res); err != nil {
-		slog.Warn("failed json conversion issue")
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	// if err := h.sendJson(w, res); err != nil {
+	// 	slog.Warn("failed json conversion issue")
+	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	return
+	// }
 }

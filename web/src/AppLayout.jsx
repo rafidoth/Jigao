@@ -7,18 +7,11 @@ import LogoToolBar from "./components/logotoolbar";
 function AppLayout() {
   const show = useSidebarStore((state) => state.show);
   return (
-    <Flex
-      direction={show ? "row" : "column"}
-      height="100vh"
-      width="100vw"
-      overflow="hidden"
-      position="fixed"
-      top="0"
-      right="0"
-      bottom="0"
-      left="0"
-    >
-      <div style={{ width: "300px" }}>{show && <Sidebar />}</div>
+    <Flex height="100vh" width="100vw" overflow="hidden">
+      <Box width={"15%"}>
+        {show && <Sidebar />}
+        {!show && <LogoToolBar />}
+      </Box>
       {/* <Box
         display={{
           initial: "none",
@@ -27,8 +20,7 @@ function AppLayout() {
       >
         <Separator orientation="vertical" size="4" />
         </Box>*/}
-      {!show && <LogoToolBar />}
-      <Box asChild flexGrow="1" overflow="hidden">
+      <Box width={"85%"} overflow="hidden">
         <main>
           <Outlet />
         </main>

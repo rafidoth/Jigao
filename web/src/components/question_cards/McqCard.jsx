@@ -33,7 +33,11 @@ function McqCard({
                 const isAnswer = idx === q.answerIdx;
                 const isSelected = selected === c;
                 const choiceClassName = `${styles.choice} ${
-                  isSelected ? styles.choiceSelected : ""
+                  isSelected
+                    ? isAnswer
+                      ? styles.correctChoiceSelected
+                      : styles.wrongChoiceSelected
+                    : ""
                 }`;
 
                 return (
@@ -44,18 +48,19 @@ function McqCard({
                     className={choiceClassName}
                     onClick={() => selectAnswer(q.id, c)}
                   >
+                    <Badge color="gray" variant="soft">
+                      {String.fromCharCode(65 + idx)}
+                    </Badge>
+                    <Text>{c}</Text>
                     {showAnswer && isAnswer ? (
-                      <Badge color="teal" variant="solid">
+                      <Badge color="teal" variant="solid" radius="full">
                         <Flex align="center" gap="1">
-                          <CheckCircledIcon /> Correct
+                          <CheckCircledIcon />
                         </Flex>
                       </Badge>
                     ) : (
-                      <Badge color="gray" variant="soft">
-                        {String.fromCharCode(65 + idx)}
-                      </Badge>
+                      ""
                     )}
-                    <Text>{c}</Text>
                   </Flex>
                 );
               })}

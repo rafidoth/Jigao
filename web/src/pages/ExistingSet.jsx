@@ -1,6 +1,7 @@
 import { useParams } from "react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { GearIcon } from "@radix-ui/react-icons";
 import axios from "axios";
 import {
   Badge,
@@ -36,6 +37,7 @@ import QuestionCard from "../components/question_cards/question_card.jsx";
 import CreateNewQuestionPopover from "../components/create_new_question_popover.jsx";
 import ExamsDialog from "../components/exams_dialog.jsx";
 import { useState } from "react";
+import SetSettingsUpdatePopover from "../components/set_settings_update_popover.jsx";
 
 const getVisibilityIcon = (visibility) => {
   switch (visibility) {
@@ -54,6 +56,11 @@ function ExistingSetHeader({ set, itemsLength, showAnswer, toggleShowAnswer }) {
   return (
     <Flex align="baseline" justify="between" wrap="wrap" gap="3">
       <Flex align="center" gap="2">
+        <SetSettingsUpdatePopover set={set}>
+          <IconButton variant="ghost">
+            <GearIcon style={{ height: "20px", width: "20px" }} />
+          </IconButton>
+        </SetSettingsUpdatePopover>
         <Heading size="6">{set.title}</Heading>
         <Flex align="center" justify="center">
           {getVisibilityIcon(set.visibility)}

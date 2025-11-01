@@ -14,11 +14,16 @@
     border-color: var(--gray-6);
 }
 
-.choiceSelected {
-    background: var(--accent-3);
-    border: 1px solid var(--accent-7);
+.wrongChoiceSelected {
+    background: var(--red-3);
+}
+.wrongChoiceSelected:hover {
+    background: var(--red-3);
 }
 
-.choiceSelected:hover {
-    background: var(--accent-4);
+.correctChoiceSelected {
+    background: var(--green-3);
+}
+.correctChoiceSelected:hover {
+    background: var(--green-3);
 }

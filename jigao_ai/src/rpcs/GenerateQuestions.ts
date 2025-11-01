@@ -15,7 +15,13 @@ export default async function generateQuestions(
 ) {
   const { quantity, context, instructions, question_type } = call.request;
   console.log("Request came ... questions needed : ", quantity);
-  const chain = makeChain();
+  const chain = makeChain({
+    n: quantity,
+    instructions: instructions,
+    context: context,
+    question_type: question_type,
+  });
+
   const result = await (
     await chain
   ).invoke({

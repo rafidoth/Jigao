@@ -1,16 +1,18 @@
 import { RunnableSequence } from "@langchain/core/runnables";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-
-import z from "zod";
-import {
-  AnswerSchema,
-  ChoiceSchema,
-  QuestionSchema,
-  QuestionsSchema,
-} from "../interfaces/questions";
-
-export const makeChain = async (): Promise<RunnableSequence> => {
+import { QuestionsSchema } from "../interfaces/questions";
+export const makeChain = async ({
+  n,
+  question_type,
+  instructions,
+  context,
+}: {
+  n: number;
+  question_type: string;
+  instructions: string;
+  context: string;
+}): Promise<RunnableSequence> => {
   const prompt = PromptTemplate.fromTemplate(
     `Generate {n} {question_type} questions based
         on the given context.
@@ -22,6 +24,16 @@ export const makeChain = async (): Promise<RunnableSequence> => {
         <Generate Questions on This Context>
   `,
   );
+  const finalPromptString = await prompt.format({
+    n,
+    question_type,
+    instructions,
+    context,
+  });
+
+  console.log("--- Formatted Prompt String ---");
+  console.log(finalPromptString);
+  console.log("-------------------------------");
 
   const model = new ChatGoogleGenerativeAI({
     model: "gemini-2.0-flash",
