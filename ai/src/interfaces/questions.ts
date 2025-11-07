@@ -49,3 +49,8 @@ export const QuestionsSchema = z.array(
     ),
   }),
 );
+
+export const LlmExpectedResponseSchema = z.object({
+  title: z.string().describe("Title of this set of questions"),
+  questions: QuestionsSchema,
+});

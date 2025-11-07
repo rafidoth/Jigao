@@ -15,6 +15,7 @@ message GenerateQuestionsRequest{
 
 message GenerateQuestionsResponse{
     repeated GeneratedQuestion questions = 1;
+    string title = 2;
 }
 
 message GeneratedQuestion {

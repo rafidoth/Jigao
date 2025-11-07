@@ -32,7 +32,8 @@ export default async function generateQuestions(
   });
   console.log(result);
   const response: IGenerateQuestionsResponse = {
-    questions: result,
+    questions: result.questions,
+    title: result.title,
   };
 
   callback(null, response);

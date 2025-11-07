@@ -38,15 +38,16 @@ import CreateNewQuestionPopover from "../components/create_new_question_popover.
 import ExamsDialog from "../components/exams_dialog.jsx";
 import { useState } from "react";
 import SetSettingsUpdatePopover from "../components/set_settings_update_popover.jsx";
+import { rootDomain } from "../api/api.js";
 
 const getVisibilityIcon = (visibility) => {
   switch (visibility) {
     case "public":
-      return <GlobeIcon />;
+      return <GlobeIcon style={{ height: "20px", width: "20px" }} />;
     case "private":
-      return <LockClosedIcon />;
+      return <LockClosedIcon style={{ height: "20px", width: "20px" }} />;
     case "restricted":
-      return <EyeOpenIcon />;
+      return <EyeOpenIcon style={{ height: "20px", width: "20px" }} />;
     default:
       return null;
   }
@@ -56,19 +57,20 @@ function ExistingSetHeader({ set, itemsLength, showAnswer, toggleShowAnswer }) {
   return (
     <Flex align="baseline" justify="between" wrap="wrap" gap="3">
       <Flex align="center" gap="2">
-        <SetSettingsUpdatePopover set={set}>
-          <IconButton variant="ghost">
-            <GearIcon style={{ height: "20px", width: "20px" }} />
-          </IconButton>
-        </SetSettingsUpdatePopover>
         <Heading size="6">{set.title}</Heading>
-        <Flex align="center" justify="center">
-          {getVisibilityIcon(set.visibility)}
+        <Flex align={"center"} gap={"2"}>
+          <Flex align="center" justify="center">
+            {getVisibilityIcon(set.visibility)}
+          </Flex>
+          <SetSettingsUpdatePopover set={set}>
+            <IconButton variant="ghost">
+              <GearIcon style={{ height: "20px", width: "20px" }} />
+            </IconButton>
+          </SetSettingsUpdatePopover>
+          <ExamsDialog set_id={set.id}>
+            <Button variant={"soft"}>Manage Exams</Button>
+          </ExamsDialog>
         </Flex>
-
-        <ExamsDialog set_id={set.id}>
-          <Button variant={"soft"}>Manage Exams</Button>
-        </ExamsDialog>
       </Flex>
 
       <Flex align="center" gap="2">
@@ -95,6 +97,59 @@ function ExistingSetHeader({ set, itemsLength, showAnswer, toggleShowAnswer }) {
   );
 }
 
+function ExistingSetHeaderMobile({
+  set,
+  itemsLength,
+  showAnswer,
+  toggleShowAnswer,
+}) {
+  return (
+    <Flex align="baseline" justify="center" wrap="wrap" gap="3" pt={"3"}>
+      <Flex direction="column" align="center" gap="2">
+        <Heading size="4" style={{ textAlign: "center" }}>
+          {set.title}
+        </Heading>
+      </Flex>
+      <Flex align="center" justify={"between"} gap={"4"}>
+        <Flex align={"center"} gap={"2"}>
+          <Flex align="center" justify="center">
+            {getVisibilityIcon(set.visibility)}
+          </Flex>
+          <SetSettingsUpdatePopover set={set}>
+            <IconButton variant="ghost">
+              <GearIcon style={{ height: "20px", width: "20px" }} />
+            </IconButton>
+          </SetSettingsUpdatePopover>
+          <ExamsDialog set_id={set.id}>
+            <Button variant={"soft"}>Manage Exams</Button>
+          </ExamsDialog>
+        </Flex>
+
+        <Flex align="center" gap="2">
+          <Tooltip content="Toggle Show Answer" side="top">
+            <Switch
+              size="1"
+              checked={showAnswer}
+              onCheckedChange={toggleShowAnswer}
+              variant="soft"
+              color="teal"
+            />
+          </Tooltip>
+
+          <CreateNewQuestionPopover set_id={set.id}>
+            <IconButton variant="soft" color="teal">
+              <PlusIcon />
+            </IconButton>
+          </CreateNewQuestionPopover>
+          <Badge variant="soft" color="teal">
+            {itemsLength} questions
+          </Badge>
+        </Flex>
+      </Flex>
+    </Flex>
+  );
+}
+
 function QuestionsList({ items }) {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const handleSelectingAnswer = (qId, ans) => {
@@ -103,9 +158,10 @@ function QuestionsList({ items }) {
       [qId]: ans,
     }));
   };
+
   return (
     <ScrollArea
-      type="hover"
+      type="scroll"
       style={{ height: "calc(100vh - 100px)" }}
       scrollbars="vertical"
     >
@@ -113,7 +169,7 @@ function QuestionsList({ items }) {
         gap="3"
         columns={{ initial: "1", sm: "2", md: "3", lg: "4", xl: "5" }}
         align="baseline"
-        pr="3"
+        px="3"
       >
         {items.map((q, i) => (
           <QuestionCard
@@ -137,7 +193,7 @@ function QuestionsList({ items }) {
 
 const getQuestions = async (set_id) => {
   const res = await axios.get(
-    `http://localhost:9999/api/v1/questions?set_id=${set_id}`,
+    `${rootDomain}/api/v1/questions?set_id=${set_id}`,
   );
   return res.data;
 };
@@ -187,14 +243,25 @@ function ExistingSet() {
   }
 
   return (
-    <Flex direction="row" flex="1" p="6" gap="4" justify="center">
+    <Flex direction="row" flex="1" gap="4" justify="center">
       <Flex direction="column" gap="4">
-        <ExistingSetHeader
-          set={set}
-          itemsLength={items.length}
-          showAnswer={showAnswer}
-          toggleShowAnswer={toggleShowAnswer}
-        />
+        <Box display={{ initial: "none", lg: "block" }}>
+          <ExistingSetHeader
+            set={set}
+            itemsLength={items.length}
+            showAnswer={showAnswer}
+            toggleShowAnswer={toggleShowAnswer}
+          />
+        </Box>
+        <Box display={{ initial: "block", lg: "none" }}>
+          <ExistingSetHeaderMobile
+            set={set}
+            itemsLength={items.length}
+            showAnswer={showAnswer}
+            toggleShowAnswer={toggleShowAnswer}
+          />
+        </Box>
+
         <QuestionsList items={items} />
       </Flex>
     </Flex>

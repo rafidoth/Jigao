@@ -1,7 +1,7 @@
 import { RunnableSequence } from "@langchain/core/runnables";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { QuestionsSchema } from "../interfaces/questions";
+import { LlmExpectedResponseSchema } from "../interfaces/questions";
 export const makeChain = async ({
   n,
   question_type,
@@ -40,7 +40,7 @@ export const makeChain = async ({
     temperature: 0,
   });
 
-  const structuredLlm = model.withStructuredOutput(QuestionsSchema);
+  const structuredLlm = model.withStructuredOutput(LlmExpectedResponseSchema);
   const questionGenerationChain = RunnableSequence.from([
     prompt,
     structuredLlm,

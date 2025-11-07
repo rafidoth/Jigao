@@ -65,7 +65,7 @@ func (h *Handler) GenerateNewQuestionSet(
 	var setID string
 	set := &questionsModels.Set{
 		Visibility: "public",
-		Title:      "Untitled",
+		Title:      resp.Title,
 		UserId:     uid,
 	}
 	setID, err = h.store.CreateSetWithContextRetSetId(set, gReq.Context)

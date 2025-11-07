@@ -28,11 +28,10 @@ function LogoToolBar() {
     <Box
       style={{
         width: !show ? "300px" : "100%",
-        height: !show ? "100px" : "auto",
         paddingLeft: !show ? "16px" : "",
       }}
     >
-      <Flex as="span" align="center" justify="between" gap="4" my="4">
+      <Flex as="span" align="center" gap="4">
         <Box as="span">
           <Text weight="bold" size="6" align="center" mt="4">
             <Text size={"7"}>Jigao</Text>

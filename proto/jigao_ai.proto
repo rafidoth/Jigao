@@ -2,6 +2,7 @@ syntax = "proto3";
 package jigao_ai;
 option go_package = "github.com/rafidoth/onlyexams/proto/;jigao_ai";
 
+
 service JigaoAI{
     rpc GenerateQuestions(GenerateQuestionsRequest) returns (GenerateQuestionsResponse) {}
 }
@@ -16,6 +17,7 @@ message GenerateQuestionsRequest{
 
 message GenerateQuestionsResponse{
     repeated GeneratedQuestions questions = 1;
+    string title = 2;
 }
 
 message GeneratedQuestions {

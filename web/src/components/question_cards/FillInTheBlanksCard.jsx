@@ -34,9 +34,9 @@ function FillInTheBlanksCard({
               {typeLabel(q.type)}
             </Badge>
           </Flex>
-          <Heading size="4" wrap="balance">
+          <Text weight={"medium"} size="4" wrap="balance">
             {position}. {q.text}
-          </Heading>
+          </Text>
         </Flex>
 
         <TextField.Root

@@ -12,6 +12,7 @@ import { useState } from "react";
 import { GlobeIcon, LockClosedIcon, EyeOpenIcon } from "@radix-ui/react-icons";
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { rootDomain } from "../api/api";
 
 async function updateSetSettings(variables) {
   const { set_id, title, visibility } = variables;
@@ -19,10 +20,7 @@ async function updateSetSettings(variables) {
     title: title,
     visibility: visibility,
   };
-  const res = await axios.put(
-    `http://localhost:9999/api/v1/sets/${set_id}`,
-    body,
-  );
+  const res = await axios.put(`${rootDomain}/api/v1/sets/${set_id}`, body);
   return res.data;
 }
 

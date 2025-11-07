@@ -17,6 +17,7 @@ import { create } from "zustand";
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
+import { rootDomain } from "../api/api";
 
 // Local store for create-exam dialog state
 const CreateExamStore = (set, get, store) => ({
@@ -170,7 +171,7 @@ async function createExamApiPost(variables) {
 }
 
 async function fetchExamsApi(set_id) {
-  const res = await axios.get(`http://localhost:9999/api/v1/exams`, {
+  const res = await axios.get(`${rootDomain}/api/v1/exams`, {
     params: { set_id },
   });
   return res.data;
@@ -344,7 +345,11 @@ function ExamsDialog({ children, set_id }) {
                   >
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateExam} disabled={isPending}>
+                  <Button
+                    onClick={handleCreateExam}
+                    disabled={isPending}
+                    variant="soft"
+                  >
                     {isPending ? "Creating..." : "Create"}
                   </Button>
                 </Flex>

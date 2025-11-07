@@ -2,7 +2,7 @@
 #Docker Network for communication between AI service and backend
 ############################################################
 net:
-	docker network create jigao-network 
+	docker network create jigao-network
 
 
 server :
@@ -27,10 +27,11 @@ frontend:
 	cd web && npm run dev
 
 prod_build:
-	docker build -f Dockerfile.prod -t onlyexams:prod .
+	docker build -f Dockerfile.prod -t jigao_prod .
 
 prod_run:
-	docker run -p 9999:9999 onlyexams:prod
+	docker run -p 9999:9999 jigao_prod
 
 
-
+ai_prod_buld:
+	cd jigao_ai && docker build -t aiTsNodeProd -f Dockerfile.prod .

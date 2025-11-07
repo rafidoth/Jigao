@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Flex, IconButton, Text, Select, Card } from "@radix-ui/themes";
+import { Box, Flex, IconButton, Text, Select, Card } from "@radix-ui/themes";
 import { PaperPlaneIcon } from "@radix-ui/react-icons";
 import styles from "./NewSet.module.css";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
+import { rootDomain } from "../api/api";
 
 async function generateQuestionsApiPost(variables) {
   const { numQuestions, questionType, texualContext } = variables;
@@ -13,7 +14,7 @@ async function generateQuestionsApiPost(variables) {
     type: questionType,
     context: texualContext,
   };
-  const res = await axios.post("http://localhost:9999/api/v1/sets/gen", body);
+  const res = await axios.post(`${rootDomain}/api/v1/sets/gen`, body);
 
   return res.data;
 }
@@ -65,62 +66,106 @@ function NewSet() {
       justify={"center"}
     >
       <Card style={{ position: "relative", width: "fit-content" }}>
-        <Flex gap="2" align="center">
-          <Text as="span" color="teal">
-            Generate{" "}
-          </Text>
-          <span style={{ display: "inline-flex", pointerEvents: "auto" }}>
-            <Select.Root value={selectedValue} onValueChange={setSelectedValue}>
-              <Select.Trigger variant="soft" />
-              <Select.Content>
-                <Select.Group>
-                  {Array.from({ length: 6 }, (_, i) => (i + 1) * 5).map(
-                    (value) => (
-                      <Select.Item key={value} value={value.toString()}>
+        <Flex direction={"column"} gap={"2"}>
+          <Flex gap="2" align="center" wrap={"wrap"}>
+            <Text
+              as="span"
+              color="teal"
+              size={{
+                initial: "1",
+              }}
+            >
+              Generate{" "}
+            </Text>
+            <span style={{ display: "inline-flex", pointerEvents: "auto" }}>
+              <Select.Root
+                value={selectedValue}
+                onValueChange={setSelectedValue}
+                size={{ initial: "1" }}
+              >
+                <Select.Trigger variant="soft" />
+                <Select.Content>
+                  <Select.Group>
+                    {Array.from({ length: 6 }, (_, i) => (i + 1) * 5).map(
+                      (value) => (
+                        <Select.Item key={value} value={value.toString()}>
+                          {value}
+                        </Select.Item>
+                      ),
+                    )}
+                  </Select.Group>
+                </Select.Content>
+              </Select.Root>
+            </span>
+
+            <span style={{ display: "inline-flex", pointerEvents: "auto" }}>
+              <Select.Root
+                value={selectedType}
+                onValueChange={setSelectedType}
+                size={{ initial: "1" }}
+              >
+                <Select.Trigger variant="soft" />
+                <Select.Content>
+                  <Select.Group>
+                    {[
+                      "Multiple Choice",
+                      "True/False",
+                      "Short Answer",
+                      "Fill in the Blank",
+                      "Mixed Type",
+                    ].map((value) => (
+                      <Select.Item key={value} value={value.replace(/\s/g, "")}>
                         {value}
                       </Select.Item>
-                    ),
-                  )}
-                </Select.Group>
-              </Select.Content>
-            </Select.Root>
-          </span>
+                    ))}
+                  </Select.Group>
+                </Select.Content>
+              </Select.Root>
+            </span>
 
-          <span style={{ display: "inline-flex", pointerEvents: "auto" }}>
-            <Select.Root value={selectedType} onValueChange={setSelectedType}>
-              <Select.Trigger variant="soft" />
-              <Select.Content>
-                <Select.Group>
-                  {[
-                    "Multiple Choice",
-                    "True/False",
-                    "Short Answer",
-                    "Fill in the Blank",
-                    "Mixed Type",
-                  ].map((value) => (
-                    <Select.Item key={value} value={value.replace(/\s/g, "")}>
-                      {value}
-                    </Select.Item>
-                  ))}
-                </Select.Group>
-              </Select.Content>
-            </Select.Root>
-          </span>
-          <Text as="span" color="teal">
-            {" "}
-            questions on{" "}
-          </Text>
+            <Text as="span" color="teal" size={{ initial: "1" }}>
+              {" "}
+              questions on{" "}
+            </Text>
+          </Flex>
+          <Box
+            display={{
+              initial: "none",
+              lg: "block",
+            }}
+          >
+            <textarea
+              className={
+                message.length <= 200
+                  ? styles.ChatInput
+                  : styles.ChatInputExtended
+              }
+              placeholder="Paste your Text Context here or just mention a topic name"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+          </Box>
+
+          <Box
+            display={{
+              initial: "block",
+              lg: "none",
+            }}
+          >
+            <textarea
+              className={
+                message.length <= 200
+                  ? styles.ChatInputMobile
+                  : styles.ChatInputMobileExtended
+              }
+              placeholder="Paste your Text Context here or just mention a topic name"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+          </Box>
         </Flex>
-        <textarea
-          className={
-            message.length <= 200 ? styles.ChatInput : styles.ChatInputExtended
-          }
-          size="3"
-          placeholder="Paste your Text Context here or just mention a topic name"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
 
         <IconButton
           size="3"
@@ -136,7 +181,7 @@ function NewSet() {
           <PaperPlaneIcon style={{ width: "20px", height: "20px" }} />
         </IconButton>
       </Card>
-      <Text color="gray" mt={"3"}>
+      <Text color="gray" mt={"3"} size={{ initial: "1", md: "2" }}>
         AI will generate a set of questions based on your context.
       </Text>
     </Flex>

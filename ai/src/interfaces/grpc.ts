@@ -13,6 +13,7 @@ export interface IGenerateQuestionsRequest {
 // Response Message Interface
 export interface IGenerateQuestionsResponse {
   questions: z.Infer<typeof QuestionsSchema>;
+  title: string;
 }
 
 // Handler Type Definition (Optional, but helpful for strict typing)

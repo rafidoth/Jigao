@@ -93,6 +93,7 @@ func (x *GenerateQuestionsRequest) GetQuestionType() string {
 type GenerateQuestionsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Questions     []*GeneratedQuestions  `protobuf:"bytes,1,rep,name=questions,proto3" json:"questions,omitempty"`
+	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -132,6 +133,13 @@ func (x *GenerateQuestionsResponse) GetQuestions() []*GeneratedQuestions {
 		return x.Questions
 	}
 	return nil
+}
+
+func (x *GenerateQuestionsResponse) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
 }
 
 type GeneratedQuestions struct {
@@ -359,9 +367,10 @@ const file_jigao_ai_proto_rawDesc = "" +
 	"\bquantity\x18\x01 \x01(\x05R\bquantity\x12\x18\n" +
 	"\acontext\x18\x02 \x01(\tR\acontext\x12\"\n" +
 	"\finstructions\x18\x03 \x01(\tR\finstructions\x12#\n" +
-	"\rquestion_type\x18\x04 \x01(\tR\fquestionType\"W\n" +
+	"\rquestion_type\x18\x04 \x01(\tR\fquestionType\"m\n" +
 	"\x19GenerateQuestionsResponse\x12:\n" +
-	"\tquestions\x18\x01 \x03(\v2\x1c.jigao_ai.GeneratedQuestionsR\tquestions\"\x9a\x01\n" +
+	"\tquestions\x18\x01 \x03(\v2\x1c.jigao_ai.GeneratedQuestionsR\tquestions\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\"\x9a\x01\n" +
 	"\x12GeneratedQuestions\x12.\n" +
 	"\bquestion\x18\x01 \x01(\v2\x12.jigao_ai.QuestionR\bquestion\x12*\n" +
 	"\achoices\x18\x02 \x03(\v2\x10.jigao_ai.ChoiceR\achoices\x12(\n" +

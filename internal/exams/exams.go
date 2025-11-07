@@ -103,6 +103,16 @@ func NewExamHub(st HubStorage) *ExamHub {
 }
 
 func (eh *ExamHub) RemoveRoom(roomId string) error {
+	if r, ok := eh.Rooms[roomId]; ok {
+		if r.StartSignalTimer != nil {
+			r.StartSignalTimer.Stop()
+			slog.Info("stopped start timer for room", "room", roomId)
+		}
+		if r.EndSignalTimer != nil {
+			r.EndSignalTimer.Stop()
+			slog.Info("stopped end timer for room", "room", roomId)
+		}
+	}
 	delete(eh.Rooms, roomId)
 	return nil
 }

@@ -19,6 +19,8 @@ import { useState } from "react";
 import axios from "axios";
 import { Toast } from "radix-ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Root } from "@radix-ui/themes/components/alert-dialog";
+import { rootDomain } from "../api/api";
 
 const difficultyLevels = ["easy", "medium", "hard"];
 const CreateNewQuestionStore = (set, get, store) => ({
@@ -468,7 +470,7 @@ async function createNewQuestionApiPost(variables) {
   };
   console.log("body", body);
   const res = await axios.post(
-    `http://localhost:9999/api/v1/questions?set_id=${set_id}`,
+    `${rootDomain}/api/v1/questions?set_id=${set_id}`,
     body,
   );
   return res.data;

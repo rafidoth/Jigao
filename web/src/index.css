@@ -22,3 +22,11 @@ main {
     --default-font-family: "Poppins", sans-serif;
     --heading-font-family: "Poppins", sans-serif;
 }
+
+.btn {
+    color: white;
+}
+.btn:hover {
+    color: var(--teal-8);
+    cursor: pointer;
+}

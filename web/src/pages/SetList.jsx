@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, Text, Flex, Grid, Button, IconButton } from "@radix-ui/themes";
+import { ScrollArea, Card, Text, Flex, Box, Button } from "@radix-ui/themes";
 import {
   PlusIcon,
   GlobeIcon,
@@ -16,6 +16,7 @@ import {
   differenceInMonths,
   differenceInYears,
 } from "date-fns";
+import { rootDomain } from "../api/api";
 
 const lastModified = (dateString) => {
   const date = new Date(dateString);
@@ -36,23 +37,23 @@ const lastModified = (dateString) => {
 };
 
 const getRecentSets = async () => {
-  const res = await axios.get("http://localhost:9999/api/v1/sets?recent=10");
+  const res = await axios.get(`${rootDomain}/api/v1/sets?recent=10`);
   return res.data;
 };
 
 const createNewSetPost = async () => {
-  const res = await axios.post("http://localhost:9999/api/v1/sets");
+  const res = await axios.post(`${rootDomain}/api/v1/sets`);
   return res.data;
 };
 
 const getVisibilityIcon = (visibility) => {
   switch (visibility) {
     case "public":
-      return <GlobeIcon style={{ height: "24px", width: "24px" }} />;
+      return <GlobeIcon style={{ height: "20px", width: "20px" }} />;
     case "private":
-      return <LockClosedIcon style={{ height: "24px", width: "24px" }} />;
+      return <LockClosedIcon style={{ height: "20px", width: "20px" }} />;
     case "restricted":
-      return <EyeOpenIcon style={{ height: "24px", width: "24px" }} />;
+      return <EyeOpenIcon style={{ height: "20px", width: "20px" }} />;
   }
 };
 
@@ -89,10 +90,22 @@ function SetList() {
   };
 
   return (
-    <Flex justify={"center"} direction="column" gap="4" p="9">
-      <Flex gap="2" direction="column">
+    <Flex
+      justify={"center"}
+      direction="column"
+      gap="4"
+      p={{
+        initial: "3",
+        lg: "9",
+      }}
+    >
+      <Flex
+        gap="2"
+        direction={{ initial: "row", md: "column" }}
+        justify={{ initial: "between", md: "start" }}
+      >
         <Text size="7" weight="bold">
-          Sets
+          My Sets
         </Text>
         <Button
           variant="soft"
@@ -105,39 +118,43 @@ function SetList() {
           </Flex>
         </Button>
       </Flex>
-      <Flex gap="5" wrap="wrap">
-        {sets?.map((set) => (
-          <Link
-            key={set.id}
-            to={`/sets/${set.id}`}
-            style={{ textDecoration: "none" }}
-          >
-            <Card>
-              <Flex
-                direction="column"
-                gap="2"
-                width="400px"
-                p="4"
-                height="100px"
+      <ScrollArea
+        type="scroll"
+        style={{ height: "calc(100vh - 100px)" }}
+        scrollbars="vertical"
+      >
+        <Flex direction={{ initial: "column", md: "row" }} gap="5" wrap="wrap">
+          {sets?.map((set) => (
+            <Card asChild variant="interactive">
+              <Link
+                key={set.id}
+                to={`/sets/${set.id}`}
+                style={{ textDecoration: "none" }}
               >
-                <Flex direction="column">
-                  <Flex align="center" gap="2">
-                    <Text size="6" weight="medium" color="teal">
-                      {set.title}
-                    </Text>
-                    <IconButton variant="ghost" color="gray">
-                      {getVisibilityIcon(set.visibility)}
-                    </IconButton>
-                  </Flex>
-                  <Text size="2" color="gray">
-                    Last modified {lastModified(set.updated_at)}
+                <Flex direction="column" gap="2" width={{ md: "400px" }} p="4">
+                  <Text
+                    size={{ initial: "5", md: "6" }}
+                    weight="medium"
+                    style={{ color: "white" }}
+                  >
+                    {set.title}
                   </Text>
+                  <Flex direction="column" width={"100%"}>
+                    <Flex align="center" gap="2">
+                      <Box asChild color="GrayText">
+                        {getVisibilityIcon(set.visibility)}
+                      </Box>
+                      <Text size="4" color="gray">
+                        Last modified {lastModified(set.updated_at)}
+                      </Text>
+                    </Flex>
+                  </Flex>
                 </Flex>
-              </Flex>
+              </Link>
             </Card>
-          </Link>
-        ))}
-      </Flex>
+          ))}
+        </Flex>
+      </ScrollArea>
     </Flex>
   );
 }
