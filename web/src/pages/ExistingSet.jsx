@@ -199,7 +199,7 @@ const getQuestions = async (set_id) => {
 };
 
 const getSet = async (set_id) => {
-  const res = await axios.get(`http://localhost:9999/api/v1/sets/${set_id}`);
+  const res = await axios.get(`${rootDomain}/api/v1/sets/${set_id}`);
   return res.data;
 };
 

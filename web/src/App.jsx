@@ -6,9 +6,12 @@ import ExistingSet from "./pages/ExistingSet";
 import { Theme } from "@radix-ui/themes";
 import useThemeStore from "./store/themeStore";
 import ExamPage from "./pages/ExamPage";
+import axios from "axios";
 
 function App() {
   const theme = useThemeStore((state) => state.theme);
+  axios.defaults.baseURL =
+    "http://ec2-13-234-127-119.ap-south-1.compute.amazonaws.com";
   return (
     <Theme
       appearance={theme}

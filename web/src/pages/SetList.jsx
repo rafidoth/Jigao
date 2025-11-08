@@ -37,7 +37,7 @@ const lastModified = (dateString) => {
 };
 
 const getRecentSets = async () => {
-  const res = await axios.get(`${rootDomain}/api/v1/sets?recent=10`);
+  const res = await axios.get(`/api/v1/sets?recent=10`);
   return res.data;
 };
 
