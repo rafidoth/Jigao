@@ -16,7 +16,6 @@ import {
   differenceInMonths,
   differenceInYears,
 } from "date-fns";
-import { rootDomain } from "../api/api";
 
 const lastModified = (dateString) => {
   const date = new Date(dateString);
@@ -42,7 +41,7 @@ const getRecentSets = async () => {
 };
 
 const createNewSetPost = async () => {
-  const res = await axios.post(`${rootDomain}/api/v1/sets`);
+  const res = await axios.post(`/api/v1/sets`);
   return res.data;
 };
 

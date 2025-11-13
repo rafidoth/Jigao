@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import QuestionCard from "../components/question_cards/question_card";
 import { Card, Text, ScrollArea, Grid } from "@radix-ui/themes";
-import { rootDomain } from "../api/api";
 
 function formatDuration(seconds) {
   if (seconds <= 0) return "00:00:00";
@@ -79,7 +78,7 @@ function ExamPageEndedUI({ endTime }) {
 }
 
 async function getQuestionsByExamId(exam_id) {
-  const res = await axios.get(`${rootDomain}/api/v1/exams/q/${exam_id}`);
+  const res = await axios.get(`/api/v1/exams/q/${exam_id}`);
   return res.data;
 }
 

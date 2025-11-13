@@ -38,7 +38,6 @@ import CreateNewQuestionPopover from "../components/create_new_question_popover.
 import ExamsDialog from "../components/exams_dialog.jsx";
 import { useState } from "react";
 import SetSettingsUpdatePopover from "../components/set_settings_update_popover.jsx";
-import { rootDomain } from "../api/api.js";
 
 const getVisibilityIcon = (visibility) => {
   switch (visibility) {
@@ -192,14 +191,12 @@ function QuestionsList({ items }) {
 }
 
 const getQuestions = async (set_id) => {
-  const res = await axios.get(
-    `${rootDomain}/api/v1/questions?set_id=${set_id}`,
-  );
+  const res = await axios.get(`/api/v1/questions?set_id=${set_id}`);
   return res.data;
 };
 
 const getSet = async (set_id) => {
-  const res = await axios.get(`${rootDomain}/api/v1/sets/${set_id}`);
+  const res = await axios.get(`/api/v1/sets/${set_id}`);
   return res.data;
 };
 

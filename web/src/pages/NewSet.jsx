@@ -5,7 +5,6 @@ import styles from "./NewSet.module.css";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { rootDomain } from "../api/api";
 
 async function generateQuestionsApiPost(variables) {
   const { numQuestions, questionType, texualContext } = variables;
@@ -14,7 +13,7 @@ async function generateQuestionsApiPost(variables) {
     type: questionType,
     context: texualContext,
   };
-  const res = await axios.post(`${rootDomain}/api/v1/sets/gen`, body);
+  const res = await axios.post(`/api/v1/sets/gen`, body);
 
   return res.data;
 }

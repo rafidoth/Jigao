@@ -3,11 +3,14 @@ package questionsHandler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 	"github.com/rafidoth/onlyexams/proto"
 )
@@ -46,7 +49,7 @@ func (h *Handler) GenerateNewQuestionSet(
 		return
 	}
 
-	fmt.Println("Generating Request Body : ", req)
+	slog.Info("Request of Generating Question Set on ", "user_id", uid, "request_body", req)
 	ctx := context.Background()
 
 	gReq := &proto.GenerateQuestionsRequest{
@@ -71,7 +74,21 @@ func (h *Handler) GenerateNewQuestionSet(
 	setID, err = h.store.CreateSetWithContextRetSetId(set, gReq.Context)
 	if err != nil {
 		slog.Error("failed to create set", "error", err)
-		return
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == pgerrcode.ForeignKeyViolation {
+				if pgErr.ConstraintName == "sets_user_id_fkey" {
+					slog.Error("failed to create set",
+						"error", "The User ID provided does not exist (FK Constraint)",
+						"constraint", pgErr.ConstraintName,
+					)
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write([]byte(`{"user": "not found"}`))
+					return
+				}
+			}
+
+		}
 	}
 
 	fmt.Println("grpc response :", resp)

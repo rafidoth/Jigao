@@ -20,7 +20,9 @@ CREATE TYPE question_type AS ENUM (
 
 
 CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS sets (
@@ -84,4 +86,12 @@ EXECUTE FUNCTION update_updated_at();
 
 
 
-INSERT INTO users (id) VALUES ('123');
+CREATE TABLE IF NOT EXISTS shared_set_users (
+    -- Foreign Key referencing the Sets table
+    set_id UUID NOT NULL,
+    -- Foreign Key referencing the Users table (assuming users.id is TEXT, based on your schema)
+    user_id TEXT NOT NULL,
+    PRIMARY KEY (set_id, user_id),
+    FOREIGN KEY (set_id) REFERENCES sets(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

@@ -25,6 +25,9 @@ type Storage interface {
 	CreateSetWithContext(*questionsModels.Set, string) error
 	GetAllQuestionsInASet(string) ([]questionsModels.CompleteQuestion, error)
 	CreateSetWithContextRetSetId(*questionsModels.Set, string) (string, error)
+	GetVisibility(string) (string, error)
+	GetOwnerUserId(string) (string, error)
+	CheckUserAccess(string, string) (bool, error)
 }
 
 type Handler struct {

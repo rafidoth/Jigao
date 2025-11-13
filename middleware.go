@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/clerk/clerk-sdk-go/v2"
+	"github.com/clerk/clerk-sdk-go/v2/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/rafidoth/onlyexams/config"
@@ -36,15 +38,22 @@ func LogRequestMiddleware(next http.Handler) http.Handler {
 // my middlewares
 func AuthMiddleware(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		// TODO
-		// Add Clerk verification here
-		// Add other auth logics
-		//
-		userId := "123"
-		ctx := context.WithValue(r.Context(), "user-id", userId)
+		claims, ok := clerk.SessionClaimsFromContext(r.Context())
+		// fmt.Println("claims ", claims)
+		if !ok {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"access": "unauthorized"}`))
+			return
+		}
 
+		usr, err := user.Get(r.Context(), claims.Subject)
+		if err != nil {
+			slog.Error("Authentication failed", "error", err)
+		}
+		userId := usr.ID
+		ctx := context.WithValue(r.Context(), "user-id", userId)
+		ctx = context.WithValue(ctx, "user-details", usr)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
-
 	return http.HandlerFunc(fn)
 }

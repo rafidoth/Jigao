@@ -9,6 +9,58 @@ import (
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
+func (s Store) GetOwnerUserId(id string) (string, error) {
+	var ownerUserId string
+
+	err := s.txDB(func(tx pgx.Tx) error {
+		getOwnerUserIdSql := `
+			SELECT user_id
+			FROM sets
+			WHERE id = $1`
+
+		row := tx.QueryRow(context.Background(), getOwnerUserIdSql, id)
+
+		err := row.Scan(&ownerUserId)
+		if err != nil {
+			return fmt.Errorf("query owner user id: %w", err)
+		}
+
+		slog.Info("Success: fetched owner user id", "id", id, "ownerUserId", ownerUserId)
+		return nil
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("GetOwnerUserId tx: %w", err)
+	}
+	return ownerUserId, nil
+}
+
+func (s Store) GetVisibility(id string) (string, error) {
+	var visibility string
+
+	err := s.txDB(func(tx pgx.Tx) error {
+		getVisibilitySql := `
+			SELECT visibility
+			FROM sets
+			WHERE id = $1`
+
+		row := tx.QueryRow(context.Background(), getVisibilitySql, id)
+
+		err := row.Scan(&visibility)
+		if err != nil {
+			return fmt.Errorf("query visibility: %w", err)
+		}
+
+		slog.Info("Success: fetched visibility", "id", id, "visibility", visibility)
+		return nil
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("GetVisibility tx: %w", err)
+	}
+	return visibility, nil
+}
+
 func (s Store) GetRecentSets(limit int, user_id string) ([]*questionsModels.Set, error) {
 	var recentSets []*questionsModels.Set
 

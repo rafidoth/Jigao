@@ -7,10 +7,11 @@ import (
 )
 
 type Config struct {
-	Logs        LogConfig
-	DB          PostgresConfig
-	Port        string
-	CorsAllowed string
+	Logs             LogConfig
+	DB               PostgresConfig
+	Port             string
+	CorsAllowed      string
+	CLERK_SECRET_KEY string
 }
 
 type LogConfig struct {
@@ -32,7 +33,8 @@ func LoadConfig() (*Config, error) {
 		DB: PostgresConfig{
 			DBString: os.Getenv("DBSTRING"),
 		},
-		CorsAllowed: os.Getenv("CORS_ALLOWED_ORIGIN"),
+		CorsAllowed:      os.Getenv("CORS_ALLOWED_ORIGIN"),
+		CLERK_SECRET_KEY: os.Getenv("CLERK_SECRET_KEY"),
 	}
 
 	return cfg, nil

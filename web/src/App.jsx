@@ -11,7 +11,7 @@ import axios from "axios";
 function App() {
   const theme = useThemeStore((state) => state.theme);
   axios.defaults.baseURL =
-    "http://ec2-13-234-127-119.ap-south-1.compute.amazonaws.com";
+    "https://io2s4e7tf4.execute-api.ap-south-1.amazonaws.com";
   return (
     <Theme
       appearance={theme}

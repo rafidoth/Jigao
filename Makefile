@@ -21,7 +21,7 @@ build_jigao_ai_image:
 	cd jigao_ai && docker build -t ts-node-dev -f Dockerfile.dev .
 
 jrun:
-	cd jigao_ai &&  docker run --rm --name ai-service --network jigao-network -p 50051:50051 -v "$(shell pwd)/jigao_ai":/app ts-node-dev
+	cd ai &&  docker run --rm --name ai-service --network jigao-network -p 50051:50051 -v "$(shell pwd)/ai":/app ts-node-dev
 
 frontend:
 	cd web && npm run dev

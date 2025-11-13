@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 
+	"github.com/clerk/clerk-sdk-go/v2"
+	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rafidoth/onlyexams/config"
@@ -31,24 +34,33 @@ type ExamsHandler interface {
 	GetQuestionsOfAnExam(w http.ResponseWriter, r *http.Request)
 }
 
+type UsersHandler interface {
+	LogInUser(w http.ResponseWriter, r *http.Request)
+}
+
 type Server struct {
 	router           *chi.Mux
 	questionsHandler QuestionsHandler
 	examsHandler     ExamsHandler
+	usersHandler     UsersHandler
 	cfg              *config.Config
 }
 
-func NewServer(qh QuestionsHandler, eh ExamsHandler, cfg *config.Config) *Server {
+func NewServer(qh QuestionsHandler, eh ExamsHandler, uh UsersHandler, cfg *config.Config) *Server {
 	return &Server{
 		router:           chi.NewRouter(),
 		questionsHandler: qh,
 		examsHandler:     eh,
+		usersHandler:     uh,
 		cfg:              cfg,
 	}
 }
 
 func (s *Server) registerRoutes() {
 	s.router.Route("/api/v1/", func(r chi.Router) {
+		r.Route("/users", func(r chi.Router) {
+			r.Post("/", s.usersHandler.LogInUser)
+		})
 		r.Route("/sets", func(r chi.Router) {
 			r.Get("/", s.questionsHandler.GetRecentSets)
 			r.Post("/", s.questionsHandler.CreateNewSet)
@@ -84,12 +96,17 @@ func (s *Server) useMiddlewares() {
 	)
 	s.router.Use(middleware.NoCache)
 
+	s.router.Use(clerkhttp.RequireHeaderAuthorization())
 	s.router.Use(AuthMiddleware)
 	s.router.Use(LogRequestMiddleware)
 
 }
 
 func (s *Server) Start(addr string) {
+	if s.cfg.CLERK_SECRET_KEY == "" {
+		slog.Warn("CLERK_SECRET_KEY is not set")
+	}
+	clerk.SetKey(s.cfg.CLERK_SECRET_KEY)
 	s.useMiddlewares()
 	s.registerRoutes()
 	if addr == "" {
