@@ -14,6 +14,7 @@ interface User {
   id: string;
   name: string | null;
   email: string | null;
+  image_url: string | null;
 }
 
 export const userOnLogin = async (user: User) => {

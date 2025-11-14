@@ -35,7 +35,6 @@ function App() {
       root.classList.remove("dark");
     }
   }, [theme]);
-  console.log("session id ", lastSessionIdRef.current);
 
   useEffect(() => {
     if (isLoaded && user && session) {
@@ -48,6 +47,7 @@ function App() {
             id: user.id,
             name: user.fullName,
             email: user.primaryEmailAddress?.emailAddress || null,
+            image_url: user.hasImage ? user.imageUrl : null,
           });
         }
       };

@@ -30,6 +30,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { timeAgo } from "@/lib/utils";
+import AddPeopleAccessPopover from "@/components/add_people_access_popover.tsx";
 
 function getVisibilityIcon(visibility: string) {
   switch (visibility) {
@@ -61,14 +62,30 @@ function ExistingSetHeader({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3">
             <div className="flex flex-col">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-tight break-words text-foreground">
-                {set.title}
-              </h1>
+              <div className="flex align-center">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-tight break-words text-foreground">
+                  {set.title}
+                </h1>
+
+                <SetSettingsUpdatePopover set={set}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-full transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    aria-label="Set settings"
+                  >
+                    <GearIcon className="h-5 w-5" />
+                  </Button>
+                </SetSettingsUpdatePopover>
+              </div>
               <div className="flex items-center gap-2 mt-1 text-muted-foreground text-xs sm:text-sm">
                 <span className="inline-flex items-center gap-1">
                   {getVisibilityIcon(set.visibility)}
-                  <span className="capitalize">{set.visibility}</span>
                 </span>
+                {set.visibility === "restricted" && (
+                  <AddPeopleAccessPopover set={set} />
+                )}
+
                 <Badge variant="secondary" className="hidden sm:inline-flex">
                   {itemsLength} questions
                 </Badge>
@@ -86,16 +103,6 @@ function ExistingSetHeader({
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <SetSettingsUpdatePopover set={set}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-full transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                aria-label="Set settings"
-              >
-                <GearIcon className="h-5 w-5" />
-              </Button>
-            </SetSettingsUpdatePopover>
             <ExamsDialog set_id={set.id}>
               <Button
                 variant="secondary"

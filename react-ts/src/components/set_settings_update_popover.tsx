@@ -1,10 +1,18 @@
 import { useState } from "react";
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Globe2 as GlobeIcon, Lock as LockClosedIcon, Eye as EyeOpenIcon } from "lucide-react";
+import {
+  Globe2 as GlobeIcon,
+  Lock as LockClosedIcon,
+  Eye as EyeOpenIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SetSettingsUpdatePopoverProps {
@@ -25,10 +33,15 @@ async function updateSetSettings(variables: UpdateSetSettingsVariables) {
   return res.data;
 }
 
-function SetSettingsUpdatePopover({ set, children }: SetSettingsUpdatePopoverProps) {
+function SetSettingsUpdatePopover({
+  set,
+  children,
+}: SetSettingsUpdatePopoverProps) {
   const [title, setTitle] = useState<string>(set.title);
   const visibilityList = ["public", "private", "restricted"] as const;
-  const [currentVisibility, setCurrentVisibility] = useState<string>(set.visibility);
+  const [currentVisibility, setCurrentVisibility] = useState<string>(
+    set.visibility,
+  );
   const [error, setError] = useState<string>("");
   const queryClient = useQueryClient();
   const { mutateAsync } = useMutation({
@@ -44,11 +57,7 @@ function SetSettingsUpdatePopover({ set, children }: SetSettingsUpdatePopoverPro
   });
 
   const handleApply = async () => {
-    try {
-      await mutateAsync({ set_id: set.id, title, visibility: currentVisibility });
-    } catch (_e) {
-      // error already handled in onError
-    }
+    await mutateAsync({ set_id: set.id, title, visibility: currentVisibility });
   };
 
   return (
@@ -107,7 +116,7 @@ function VisibilityList({
               "flex flex-col items-center gap-2 w-1/3 rounded-md border p-3 text-sm transition",
               currentVisibility === v
                 ? "border-primary bg-primary/10"
-                : "border-muted bg-muted/30 hover:bg-muted"
+                : "border-muted bg-muted/30 hover:bg-muted",
             )}
           >
             <span className="capitalize">{v}</span>

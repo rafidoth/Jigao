@@ -97,7 +97,7 @@ function ThinSidebar() {
               }}
             >
               <div
-                className={`flex justify-center items-center ${active ? "text-primary" : "text-muted-foreground"}`}
+                className={`flex justify-center items-center ${active ? "text-accent" : "text-muted-foreground"}`}
                 style={{
                   padding: "10px 5px",
                   width: "100%",
