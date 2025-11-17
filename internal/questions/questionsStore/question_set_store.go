@@ -66,11 +66,19 @@ func (s Store) GetRecentSets(limit int, user_id string) ([]*questionsModels.Set,
 
 	err := s.txDB(func(tx pgx.Tx) error {
 		getRecentSetsSql := `
-			SELECT *
-			FROM sets
-			WHERE user_id = $1
-			ORDER BY updated_at DESC
-			LIMIT $2`
+            SELECT *
+            FROM sets
+            WHERE user_id = $1 -- 1. Sets created by the user
+
+            UNION -- Combine the results
+
+            SELECT s.*
+            FROM sets s
+            JOIN shared_set_users ssu ON s.id = ssu.set_id
+            WHERE ssu.user_id = $1 -- 2. Sets shared with the user
+
+            ORDER BY updated_at DESC
+            LIMIT $2;`
 
 		rows, err := tx.Query(context.Background(), getRecentSetsSql, user_id, limit)
 		if err != nil {

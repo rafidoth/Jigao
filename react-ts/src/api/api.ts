@@ -22,3 +22,18 @@ export const userOnLogin = async (user: User) => {
   const res = await axios.post(`/api/v1/users`, user);
   return res.data;
 };
+
+export const getUsersWithAccess = async (setId: string | number) => {
+  const res = await axios.get(`/api/v1/sets/access_list/${setId}`);
+  return res.data;
+};
+
+export const getQuestions = async (set_id: string) => {
+  const res = await axios.get(`/api/v1/questions?set_id=${set_id}`);
+  return res.data;
+};
+
+export const getSet = async (set_id: string) => {
+  const res = await axios.get(`/api/v1/sets/${set_id}`);
+  return res.data;
+};

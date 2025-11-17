@@ -6,7 +6,7 @@ import (
 )
 
 func (s Store) CreateExamOnASet(
-	set_id, title, description string, start_time time.Time, duration_in_minutes int,
+	user_id, set_id, title, description string, start_time time.Time, duration_in_minutes int,
 ) error {
 
 	tx, err := s.db.Begin(context.Background())
@@ -18,9 +18,9 @@ func (s Store) CreateExamOnASet(
 
 	_, err = tx.Exec(
 		context.Background(),
-		`INSERT INTO exams (set_id, title, description, start_time, duration)
-	 VALUES ($1, $2, $3, $4, make_interval(mins := $5))`,
-		set_id, title, description, start_time, duration_in_minutes,
+		`INSERT INTO exams (user_id, set_id, title, description, start_time, duration)
+	 VALUES ($1, $2, $3, $4, $5, make_interval(mins := $6))`,
+		user_id, set_id, title, description, start_time, duration_in_minutes,
 	)
 	if err != nil {
 		return err

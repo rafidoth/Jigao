@@ -1,19 +1,30 @@
-import { create } from "zustand";
+import { create, type StateCreator } from "zustand";
+import type {
+  LoadedClerk,
+  SignedInSessionResource,
+  UserResource,
+} from "@clerk/types";
 
 export interface AuthState {
-  isSignedIn: boolean;
-  userId: string | null;
-  setAuth: (payload: { isSignedIn: boolean; userId: string | null }) => void;
-  clearAuth: () => void;
+  clerkFns: LoadedClerk | null;
+  setClerkFns: (fns: LoadedClerk) => void;
+  currentUserDetails: UserResource | null | undefined;
+  setCurrentUserDetails: (user: UserResource | null | undefined) => void;
+  sessionDetails: SignedInSessionResource | null | undefined;
+  setSessionDetails: (
+    session: SignedInSessionResource | null | undefined,
+  ) => void;
 }
 
-const authStore = (
-  set: (fn: (state: AuthState) => Partial<AuthState>) => void,
-): AuthState => ({
-  isSignedIn: false,
-  userId: null,
-  setAuth: (payload) => set(() => ({ ...payload })),
-  clearAuth: () => set(() => ({ isSignedIn: false, userId: null })),
+const authStore: StateCreator<AuthState> = (set) => ({
+  clerkFns: null,
+  setClerkFns: (fns: LoadedClerk) => set({ clerkFns: fns }),
+  currentUserDetails: null,
+  setCurrentUserDetails: (user: UserResource | null | undefined) =>
+    set({ currentUserDetails: user }),
+  sessionDetails: null,
+  setSessionDetails: (session: SignedInSessionResource | null | undefined) =>
+    set({ sessionDetails: session }),
 });
 
 const useAuthStore = create<AuthState>(authStore);

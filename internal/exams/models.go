@@ -5,6 +5,7 @@ import "time"
 type Exam struct {
 	Id                string    `db:"id" json:"id"`
 	SetId             string    `db:"set_id" json:"set_id"`
+	UserId            string    `db:"user_id" json:"user_id"`
 	Title             string    `db:"title" json:"title"`
 	StartTime         time.Time `db:"start_time" json:"start_time"`
 	Description       string    `db:"description" json:"description"`

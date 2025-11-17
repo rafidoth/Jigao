@@ -1,10 +1,19 @@
 package questionsHandler
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
+	"github.com/rafidoth/onlyexams/internal/users"
 )
+
+type RecentSetsResponse struct {
+	questionsModels.Set `json:"set"`
+	users.User          `json:"owner"`
+}
 
 func (h *Handler) GetRecentSets(w http.ResponseWriter, r *http.Request) {
 
@@ -31,9 +40,24 @@ func (h *Handler) GetRecentSets(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch recent sets", http.StatusInternalServerError)
 		slog.Error("Recent Set Fetching Issue", "error", err)
 	}
+	var resp []RecentSetsResponse
+
+	for _, set := range recentSets {
+		fmt.Println(*set)
+		user, err := h.usersStore.GetUserFromId(set.UserId)
+		if err != nil {
+			http.Error(w, "Internal Server Error: user not found", http.StatusInternalServerError)
+			return
+		}
+		resp = append(resp, RecentSetsResponse{
+			Set:  *set,
+			User: user,
+		})
+	}
+	fmt.Println(resp)
 
 	w.WriteHeader(http.StatusOK)
-	err = h.sendJson(w, recentSets)
+	err = h.sendJson(w, resp)
 	if err != nil {
 		slog.Warn("failed to create new set json convertion issue")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

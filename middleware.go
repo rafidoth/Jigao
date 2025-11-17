@@ -41,6 +41,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		claims, ok := clerk.SessionClaimsFromContext(r.Context())
 		// fmt.Println("claims ", claims)
 		if !ok {
+			slog.Warn("Authentication failed", "error", "Unauthorized")
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(`{"access": "unauthorized"}`))
 			return

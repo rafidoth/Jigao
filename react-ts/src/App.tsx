@@ -7,15 +7,23 @@ import useThemeStore from "./store/themeStore";
 import ExamPage from "./pages/ExamPage.tsx";
 import axios from "axios";
 import { useEffect, useRef } from "react";
-import { useSession, useUser } from "@clerk/clerk-react";
+import { useClerk, useSession, useUser } from "@clerk/clerk-react";
 import { useMutation } from "@tanstack/react-query";
 import { userOnLogin } from "./api/api.ts";
+import useAuthStore from "./store/authStore.ts";
 
 function App() {
   const theme = useThemeStore((state) => state.theme);
+  const clerkObj = useClerk();
   const { user, isLoaded } = useUser();
   const { session } = useSession();
   const lastSessionIdRef = useRef<string | null>(null);
+
+  const setClerkFns = useAuthStore((state) => state.setClerkFns);
+  const setCurrentUserDetails = useAuthStore(
+    (state) => state.setCurrentUserDetails,
+  );
+  const setSessionDetails = useAuthStore((state) => state.setSessionDetails);
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: userOnLogin,
@@ -26,6 +34,12 @@ function App() {
   // axios.defaults.baseURL =
   //   "https://io2s4e7tf4.execute-api.ap-south-1.amazonaws.com";
   axios.defaults.baseURL = "http://localhost:9999";
+
+  useEffect(() => {
+    setClerkFns(clerkObj);
+    setCurrentUserDetails(user);
+    setSessionDetails(session);
+  }, [clerkObj, user, session]);
 
   useEffect(() => {
     const root = document.documentElement;

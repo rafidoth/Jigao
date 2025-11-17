@@ -40,6 +40,8 @@ func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var QuestionSet *questionsModels.Set
+
 	if vis == "private" {
 		ownerUserId, err := h.store.GetOwnerUserId(setId)
 		if err != nil {
@@ -50,6 +52,11 @@ func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
 		if userId != ownerUserId {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
+		}
+
+		QuestionSet = &questionsModels.Set{
+			ID:     setId,
+			UserId: userId,
 		}
 	} else if vis == "restricted" {
 		ownerUserId, err := h.store.GetOwnerUserId(setId)
@@ -70,11 +77,11 @@ func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
-	}
 
-	QuestionSet := &questionsModels.Set{
-		ID:     setId,
-		UserId: userId,
+		QuestionSet = &questionsModels.Set{
+			ID:     setId,
+			UserId: ownerUserId,
+		}
 	}
 
 	QuestionSet, err = h.store.GetASet(QuestionSet)

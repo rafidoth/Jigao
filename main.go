@@ -42,14 +42,14 @@ func main() {
 	aiSvc := proto.NewAiServiceClient()
 	defer aiSvc.Close()
 
-	qStore := questionsStore.NewStore(db.GetPgxPool())
-	qH := questionsHandler.NewHandler(qStore, aiSvc.Client)
-
-	eStore := examsStore.NewStore(db.GetPgxPool())
-	eHub := exams.NewExamHub(eStore)
-	eH := examsHandler.NewHandler(eHub, eStore, qStore)
-
 	uStore := users.NewStore(db.GetPgxPool())
+	qStore := questionsStore.New(db.GetPgxPool())
+	qH := questionsHandler.New(qStore, uStore, aiSvc.Client)
+
+	eStore := examsStore.New(db.GetPgxPool())
+	eHub := exams.New(eStore)
+	eH := examsHandler.New(eHub, eStore, qStore, uStore)
+
 	uH := users.NewHandler(uStore)
 
 	go eHub.Run()

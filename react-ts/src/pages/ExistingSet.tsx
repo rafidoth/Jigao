@@ -1,7 +1,7 @@
-import { useParams } from "react-router";
-import { useQueries } from "@tanstack/react-query";
+import { useNavigate, useParams } from "react-router";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import axios from "axios";
+import { getSet, getQuestions } from "@/api/api.ts";
 import {
   Globe2 as GlobeIcon,
   Lock as LockClosedIcon,
@@ -9,6 +9,7 @@ import {
   Settings as GearIcon,
   Plus as PlusIcon,
   Info as InfoIcon,
+  ArrowLeft,
 } from "lucide-react";
 
 import useExistingSetStore from "../store/existingSetStore";
@@ -29,8 +30,15 @@ import {
 } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { timeAgo } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import AddPeopleAccessPopover from "@/components/add_people_access_popover.tsx";
+import { getUsersWithAccess } from "@/api/api.ts";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar.tsx";
 
 function getVisibilityIcon(visibility: string) {
   switch (visibility) {
@@ -45,6 +53,13 @@ function getVisibilityIcon(visibility: string) {
   }
 }
 
+interface User {
+  id: string | number;
+  name: string;
+  email: string;
+  image_url?: string | null;
+}
+
 function ExistingSetHeader({
   set,
   itemsLength,
@@ -56,17 +71,40 @@ function ExistingSetHeader({
   showAnswer: boolean;
   toggleShowAnswer: () => void;
 }) {
+  const { data: users = [], isLoading } = useQuery<User[]>({
+    queryKey: ["usersWithAccess", set.id],
+    queryFn: () => getUsersWithAccess(set.id),
+  });
+
+  const navigate = useNavigate();
+
   return (
     <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <div className="flex flex-col gap-3 px-3 md:px-6 py-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3">
             <div className="flex flex-col">
-              <div className="flex align-center">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-tight break-words text-foreground">
+              <div className="flex align-center gap-x-2">
+                <Button
+                  variant="outline"
+                  className="h-9 w-9 rounded-full transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  onClick={() => navigate(-1)}
+                >
+                  <ArrowLeft />
+                </Button>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-tight break-words text-foreground font-serif">
                   {set.title}
                 </h1>
-
+                <CreateNewQuestionPopover set_id={set.id}>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-9 w-9"
+                    aria-label="Add question"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                  </Button>
+                </CreateNewQuestionPopover>
                 <SetSettingsUpdatePopover set={set}>
                   <Button
                     variant="ghost"
@@ -83,26 +121,56 @@ function ExistingSetHeader({
                   {getVisibilityIcon(set.visibility)}
                 </span>
                 {set.visibility === "restricted" && (
-                  <AddPeopleAccessPopover set={set} />
+                  <div className="flex items-center gap-2">
+                    {users.map((user, i) => {
+                      if (i <= 3) {
+                        return (
+                          <Avatar
+                            key={user.id} // Add a key for best React practice
+                            className={`w-10 h-10 border shadow-md ${i > 0 ? "-ml-4" : ""} ${i === 0 ? "z-10" : ""}`}
+                          >
+                            <AvatarImage src={user?.image_url || undefined} />
+                            <AvatarFallback>
+                              {user?.name?.charAt(0)} {user?.name?.charAt(1)}
+                            </AvatarFallback>
+                          </Avatar>
+                        );
+                      }
+                    })}
+                    <AddPeopleAccessPopover
+                      set={set}
+                      users={users}
+                      isLoading={isLoading}
+                    />
+                  </div>
                 )}
-
-                <Badge variant="secondary" className="hidden sm:inline-flex">
-                  {itemsLength} questions
-                </Badge>
-              </div>
-              {set?.description && (
-                <p className="mt-1 text-muted-foreground text-xs sm:text-sm truncate max-w-[80vw] sm:max-w-[50vw]">
-                  {set.description}
-                </p>
-              )}
-              {set?.updated_at && (
-                <div className="mt-0.5 text-muted-foreground text-xs sm:text-sm">
-                  Updated {timeAgo(set.updated_at)}
+                <div className="flex items-center justify-between gap-4 flex-wrap pt-2 ">
+                  <div className="flex items-center gap-3">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="inline-flex items-center">
+                            <Switch
+                              checked={showAnswer}
+                              onCheckedChange={toggleShowAnswer}
+                              aria-label="Toggle show answers"
+                            />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          Toggle Show Answer
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <Badge variant="secondary" className="sm:hidden">
+                      {itemsLength} questions
+                    </Badge>
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-col items-center gap-2 flex-wrap">
             <ExamsDialog set_id={set.id}>
               <Button
                 variant="secondary"
@@ -111,41 +179,13 @@ function ExistingSetHeader({
                 Manage Exams
               </Button>
             </ExamsDialog>
-          </div>
-        </div>
-
-        {/* Action bar: switch, add question, questions badge (mobile visible) */}
-        <div className="flex items-center justify-between gap-4 flex-wrap pt-2 border-t">
-          <div className="flex items-center gap-3">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="inline-flex items-center">
-                    <Switch
-                      checked={showAnswer}
-                      onCheckedChange={toggleShowAnswer}
-                      aria-label="Toggle show answers"
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top">Toggle Show Answer</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <CreateNewQuestionPopover set_id={set.id}>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="h-9 w-9"
-                aria-label="Add question"
-              >
-                <PlusIcon className="h-5 w-5" />
-              </Button>
-            </CreateNewQuestionPopover>
-            <Badge variant="secondary" className="sm:hidden">
+            <Badge variant="outline" className="hidden sm:inline-flex">
               {itemsLength} questions
             </Badge>
           </div>
         </div>
+
+        {/* Action bar: switch, add question, questions badge (mobile visible) */}
       </div>
     </div>
   );
@@ -187,25 +227,62 @@ function QuestionsList({ items }: { items: any[] }) {
   );
 }
 
-const getQuestions = async (set_id: string) => {
-  const res = await axios.get(`/api/v1/questions?set_id=${set_id}`);
-  return res.data;
-};
-
-const getSet = async (set_id: string) => {
-  const res = await axios.get(`/api/v1/sets/${set_id}`);
-  return res.data;
-};
-
 function LoadingExistingSet() {
+  const skeletonItems = Array.from({ length: 10 });
   return (
-    <div className="max-w-5xl mx-auto p-4 md:p-6">
-      <Card className="p-4">
-        <div className="flex items-center gap-3">
-          <InfoIcon className="h-5 w-5" />
-          <p>Loading questions…</p>
+    <div className="flex flex-row flex-1 gap-4 justify-center">
+      <div className="flex flex-col gap-4 w-full">
+        {/* Header skeleton */}
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+          <div className="flex flex-col gap-3 px-3 md:px-6 py-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-3 w-full">
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-7 sm:h-8 md:h-9 w-2/3" />
+                    <Skeleton className="h-9 w-9 rounded-full" />
+                    <Skeleton className="h-9 w-9 rounded-full" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Skeleton className="h-9 w-32" />
+                <Skeleton className="h-5 w-24" />
+              </div>
+            </div>
+          </div>
         </div>
-      </Card>
+        {/* Grid skeleton */}
+        <ScrollArea className="h-[calc(100vh-100px)]">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 px-3">
+            {skeletonItems.map((_, i) => (
+              <Card key={i} className="p-4">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-16 rounded" />
+                    <Skeleton className="h-5 w-20 rounded" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-4 w-4/6" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Skeleton className="h-9 w-full rounded-md" />
+                    <Skeleton className="h-9 w-full rounded-md" />
+                    <Skeleton className="h-9 w-full rounded-md" />
+                    <Skeleton className="h-9 w-full rounded-md" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 }

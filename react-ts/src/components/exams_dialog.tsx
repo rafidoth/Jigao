@@ -25,6 +25,8 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Fallback } from "@radix-ui/react-avatar";
 
 interface CreateExamStoreState {
   reset: () => void;
@@ -300,6 +302,7 @@ function ExamsList({ set_id }: { set_id: string }) {
   if (isError)
     return <p className="text-sm text-destructive">Failed to load exams.</p>;
 
+  console.log(data);
   const exams = Array.isArray(data) ? data : [];
   if (exams.length === 0) {
     return (
@@ -321,11 +324,13 @@ function ExamsList({ set_id }: { set_id: string }) {
   return (
     <ScrollArea className="h-[400px] pr-4">
       <div className="flex flex-col gap-3">
-        {exams.map((exam: any) => {
+        {exams.map((xm: any) => {
+          const { exam, created_by } = xm;
           const startTime = exam.start_time;
           const start = startTime ? new Date(startTime) : null;
           const isPast = start ? start < new Date() : false;
-          const duration = exam.duration_in_minutes;
+          const duration = xm.duration_in_minutes;
+
           return (
             <Card
               key={exam.id ?? `${exam.set_id}-${exam.title}-${startTime}`}
@@ -338,6 +343,16 @@ function ExamsList({ set_id }: { set_id: string }) {
                     <Badge variant={isPast ? "secondary" : "default"}>
                       {isPast ? "Past" : "Upcoming"}
                     </Badge>
+                  </div>
+                  <div className="flex gap-x-2">
+                    <Avatar>
+                      <AvatarImage src={created_by.image_url} />
+                      <AvatarFallback>
+                        {created_by.name?.charAt(0)}{" "}
+                        {created_by.name?.charAt(1)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {created_by.name}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {start?.toLocaleString()}{" "}

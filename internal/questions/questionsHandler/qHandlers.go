@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
+	"github.com/rafidoth/onlyexams/internal/users"
 	"github.com/rafidoth/onlyexams/proto"
 )
 
@@ -28,18 +29,27 @@ type Storage interface {
 	GetVisibility(string) (string, error)
 	GetOwnerUserId(string) (string, error)
 	CheckUserAccess(string, string) (bool, error)
+	GetSharedAccessUsersList(string) ([]users.User, error)
+	AddSharedAccessUser(string, string) error
+}
+
+type UsersStorage interface {
+	GetUserFromId(userId string) (users.User, error)
+	GetUserFromEmail(email string) (users.User, error)
 }
 
 type Handler struct {
 	ctx             context.Context
 	store           Storage
+	usersStore      UsersStorage
 	aiServiceClient proto.JigaoAIClient
 }
 
-func NewHandler(store Storage, ai proto.JigaoAIClient) *Handler {
+func New(store Storage, usersStorage UsersStorage, ai proto.JigaoAIClient) *Handler {
 	return &Handler{
 		ctx:             context.Background(),
 		store:           store,
+		usersStore:      usersStorage,
 		aiServiceClient: ai,
 	}
 }

@@ -23,6 +23,8 @@ type QuestionsHandler interface {
 	CreateANewQuestionInASet(w http.ResponseWriter, r *http.Request)
 	GetAllQuestionsInASet(w http.ResponseWriter, r *http.Request)
 	GenerateNewQuestionSet(w http.ResponseWriter, r *http.Request)
+	GetSetAccessUsersList(w http.ResponseWriter, r *http.Request)
+	AllowSetAccess(w http.ResponseWriter, r *http.Request)
 }
 
 type ExamsHandler interface {
@@ -36,6 +38,7 @@ type ExamsHandler interface {
 
 type UsersHandler interface {
 	LogInUser(w http.ResponseWriter, r *http.Request)
+	GetUserFromEmail(w http.ResponseWriter, r *http.Request)
 }
 
 type Server struct {
@@ -60,6 +63,7 @@ func (s *Server) registerRoutes() {
 	s.router.Route("/api/v1/", func(r chi.Router) {
 		r.Route("/users", func(r chi.Router) {
 			r.Post("/", s.usersHandler.LogInUser)
+			r.Get("/user", s.usersHandler.GetUserFromEmail)
 		})
 		r.Route("/sets", func(r chi.Router) {
 			r.Get("/", s.questionsHandler.GetRecentSets)
@@ -68,6 +72,8 @@ func (s *Server) registerRoutes() {
 			r.Get("/{set_id}", s.questionsHandler.GetASet)
 			r.Put("/{set_id}", s.questionsHandler.UpdateASet)
 			r.Delete("/{set_id}", s.questionsHandler.DeleteASet)
+			r.Get("/access_list/{set_id}", s.questionsHandler.GetSetAccessUsersList)
+			r.Post("/access", s.questionsHandler.AllowSetAccess)
 		})
 		r.Route("/questions", func(r chi.Router) {
 			r.Post("/", s.questionsHandler.CreateANewQuestionInASet)

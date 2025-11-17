@@ -4,14 +4,19 @@ import {
   Archive as ArchiveIcon,
   BookOpenText as ReaderIcon,
   Backpack as BackpackIcon,
+  FileQuestionMark,
   Sun,
   Moon,
   PanelRightClose as ViewVerticalIcon,
+  LogOut,
+  ClipboardList,
 } from "lucide-react";
 import { NavLink, useLocation, matchPath } from "react-router";
 import useSidebarStore from "../store/sidebarStore";
 import useThemeStore from "../store/themeStore";
-import { SignOutButton, UserAvatar } from "@clerk/clerk-react";
+import { Button } from "./ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import useAuthStore from "@/store/authStore";
 
 interface NavItem {
   to: string;
@@ -39,7 +44,7 @@ function ThinSidebar() {
     },
     {
       to: "/sets/gamma",
-      icon: <ReaderIcon className="h-6 w-6" />,
+      icon: <ClipboardList className="h-6 w-6" />,
       label: "Exams",
     },
   ];
@@ -58,63 +63,83 @@ function ThinSidebar() {
   const isActive = (to: string) =>
     matchPath({ path: to, end: true }, location.pathname) !== null;
 
+  const currentUserDetails = useAuthStore((state) => state.currentUserDetails);
+  const clerkFns = useAuthStore((state) => state.clerkFns);
   return (
-    <div className="flex-col w-full h-full px-4 hidden lg:flex bg-sidebar text-sidebar-foreground">
-      <div className="flex flex-col items-center gap-3">
-        <span className="text-4xl font-bold">J</span>
-        <div className="flex flex-col items-center my-4 gap-3">
-          <button
-            aria-label="Toggle sidebar"
-            onClick={toggleSidebar}
-            className="rounded-full p-2 hover:bg-secondary/50"
-          >
-            <ViewVerticalIcon className="h-6 w-6 text-muted-foreground" />
-          </button>
-          <button
-            aria-label="Toggle theme"
-            onClick={toggleTheme}
-            className="rounded-full p-2 hover:bg-secondary/50"
-          >
-            {themeIcon}
-          </button>
-        </div>
-      </div>
-      <div
-        className="flex flex-col gap-3 mt-6 w-full"
-        role="navigation"
-        aria-label="Secondary"
-      >
-        {navItems.map((item) => {
-          const active = isActive(item.to);
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              style={{
-                display: "block",
-                textDecoration: "none",
-                width: "100%",
-              }}
+    <div className="flex-col w-full h-full px-4 hidden lg:flex bg-sidebar text-sidebar-foreground justify-between">
+      <div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="text-4xl font-bold">J</span>
+          <div className="flex flex-col items-center my-4 gap-3">
+            <button
+              aria-label="Toggle sidebar"
+              onClick={toggleSidebar}
+              className="rounded-full p-2 hover:bg-secondary/50"
             >
-              <div
-                className={`flex justify-center items-center ${active ? "text-accent" : "text-muted-foreground"}`}
+              <ViewVerticalIcon className="h-6 w-6 text-muted-foreground" />
+            </button>
+            <button
+              aria-label="Toggle theme"
+              onClick={toggleTheme}
+              className="rounded-full p-2 hover:bg-secondary/50"
+            >
+              {themeIcon}
+            </button>
+          </div>
+        </div>
+        <div
+          className="flex flex-col gap-3 mt-6 w-full"
+          role="navigation"
+          aria-label="Secondary"
+        >
+          {navItems.map((item) => {
+            const active = isActive(item.to);
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
                 style={{
-                  padding: "10px 5px",
+                  display: "block",
+                  textDecoration: "none",
                   width: "100%",
-                  height: "100%",
-                  borderRadius: 15,
                 }}
               >
-                <span className="sr-only">{item.label}</span>
-                {item.icon}
-              </div>
-            </NavLink>
-          );
-        })}
+                <div
+                  className={`flex justify-center items-center ${active ? "" : "text-muted-foreground opacity-50"}`}
+                  style={{
+                    padding: "10px 5px",
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: 15,
+                  }}
+                >
+                  <span className="sr-only">{item.label}</span>
+                  {item.icon}
+                </div>
+              </NavLink>
+            );
+          })}
+        </div>
       </div>
-      <div>
-        <UserAvatar />
-        <SignOutButton />
+      <div className="flex flex-col gap-y-2 items-center">
+        <Avatar className="w-10 h-10">
+          <AvatarImage src={currentUserDetails?.imageUrl} />
+          <AvatarFallback>
+            {currentUserDetails?.fullName?.substring(0, 2)}
+          </AvatarFallback>
+        </Avatar>
+        <Button
+          variant={"outline"}
+          onClick={async () => {
+            try {
+              await clerkFns?.signOut();
+            } catch (error) {
+              console.error(error);
+            }
+          }}
+        >
+          <LogOut />
+        </Button>
       </div>
     </div>
   );

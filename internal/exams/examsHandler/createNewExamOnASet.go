@@ -23,6 +23,12 @@ func (eh *ExamsHandler) CreateExamOnASet(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+	userId, err := eh.extractUserId(r)
+	if err != nil {
+		slog.Warn("failed to extract user id from request")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 
 	var req CreateExamOnASetRequest
 	body, err := io.ReadAll(r.Body)
@@ -48,6 +54,7 @@ func (eh *ExamsHandler) CreateExamOnASet(
 	}
 
 	err = eh.store.CreateExamOnASet(
+		userId,
 		req.SetId,
 		req.Title,
 		req.Description,

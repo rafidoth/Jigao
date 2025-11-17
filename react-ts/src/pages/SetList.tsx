@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Globe2 as GlobeIcon,
@@ -26,6 +27,7 @@ import {
   Eye as EyeOpenIcon,
   Plus,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const lastModified = (dateString: string) => {
   const date = new Date(dateString);
@@ -58,12 +60,87 @@ const IconForVisibility = ({ visibility }: { visibility: string }) => {
   }
 };
 
+function LoadingSetList() {
+  const rows = Array.from({ length: 6 });
+  const cards = Array.from({ length: 6 });
+  return (
+    <div className="flex flex-col gap-4 px-3 lg:px-9 py-3">
+      <div className="hidden md:flex flex-col gap-2 mb-10">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-10 w-24" />
+      </div>
+      <ScrollArea className="h-[calc(100vh-100px)] pr-2">
+        <div className="hidden md:block overflow-x-auto rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[40%] text-xs md:text-sm">
+                  <Skeleton className="h-4 w-20" />
+                </TableHead>
+                <TableHead className="w-[20%] text-xs md:text-sm">
+                  <Skeleton className="h-4 w-24" />
+                </TableHead>
+                <TableHead className="w-[20%] text-xs md:text-sm">
+                  <Skeleton className="h-4 w-20" />
+                </TableHead>
+                <TableHead className="w-[20%] text-xs md:text-sm">
+                  <Skeleton className="h-4 w-24" />
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <Skeleton className="h-5 w-4/5" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <Skeleton className="h-5 w-32" />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-5 w-5 rounded" />
+                      <Skeleton className="h-5 w-24" />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-24" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {cards.map((_, i) => (
+            <Card key={i} className="p-4">
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-5 w-3/4" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-5 w-24" />
+                  <span className="mx-1">•</span>
+                  <Skeleton className="h-5 w-32" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
 function SetList() {
   const {
     data: sets,
     isLoading,
     isError,
   } = useQuery({ queryKey: ["sets"], queryFn: getRecentSets });
+  console.log("sets", sets);
 
   const navigate = useNavigate();
   const { mutateAsync, isPending } = useMutation({
@@ -75,7 +152,7 @@ function SetList() {
     },
   });
 
-  if (isLoading) return <div className="px-4 py-6 text-sm">Loading...</div>;
+  if (isLoading) return <LoadingSetList />;
   if (isError)
     return (
       <div className="px-4 py-6 text-sm text-red-600">Error loading sets</div>
@@ -115,8 +192,12 @@ function SetList() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[60%] text-xs md:text-sm">
+                <TableHead className="w-[40%] text-xs md:text-sm">
                   Title
+                </TableHead>
+
+                <TableHead className="w-[20%] text-xs md:text-sm">
+                  Created By
                 </TableHead>
                 <TableHead className="w-[20%] text-xs md:text-sm">
                   Visibility
@@ -127,35 +208,47 @@ function SetList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sets?.map((set: any) => (
-                <TableRow
-                  key={set.id}
-                  className="cursor-pointer text-base md:text-lg lg:text-xl hover:bg-accent/60 hover:font-medium"
-                  onClick={() => navigate(`/sets/${set.id}`)}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      navigate(`/sets/${set.id}`);
-                    }
-                  }}
-                >
-                  <TableCell className="capitalize text-foreground">
-                    {set.title}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <IconForVisibility visibility={set.visibility} />
-                      <span className="capitalize text-muted-foreground">
-                        {set.visibility}
+              {sets?.map((s: any) => {
+                const set = s.set;
+                const set_owner = s.owner;
+
+                return (
+                  <TableRow
+                    key={set.id}
+                    className="cursor-pointer text-base md:text-lg hover:bg-secondary  hover:font-medium hover:text-secondary-foreground"
+                    onClick={() => navigate(`/sets/${set.id}`)}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        navigate(`/sets/${set.id}`);
+                      }
+                    }}
+                  >
+                    <TableCell className="capitalize">{set.title}</TableCell>
+                    <TableCell className="flex gap-x-2 items-center">
+                      <Avatar>
+                        <AvatarImage src={set_owner.image_url} alt={set.name} />
+                        <AvatarFallback>
+                          {set_owner.name[0]} {set_owner.name[1]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-semibold">
+                        {set_owner.name}
                       </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {lastModified(set.updated_at)}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <IconForVisibility visibility={set.visibility} />
+                        <span className="capitalize ">{set.visibility}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="">
+                      {lastModified(set.updated_at)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

@@ -106,7 +106,7 @@ main {
     --primary-foreground: #041619; /* near-black */
     --secondary: #1e40af; /* gray-900 */
     --secondary-foreground: #e5e7eb;
-    --muted: #0f172a;
+    --muted: #1c1c1c;
     --muted-foreground: #94a3b8; /* slate-400 */
     --accent: #1e40af;
     --accent-foreground: #e5e7eb;

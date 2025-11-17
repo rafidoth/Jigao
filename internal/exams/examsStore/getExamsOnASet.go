@@ -7,7 +7,7 @@ import (
 	"github.com/rafidoth/onlyexams/internal/exams"
 )
 
-func (s Store) GetExamsBySetId(set_id string) ([]exams.Exam, error) {
+func (s Store) GetExamsBySetId(user_id, set_id string) ([]exams.Exam, error) {
 	var results []exams.Exam
 
 	tx, err := s.db.Begin(context.Background())
@@ -21,6 +21,7 @@ func (s Store) GetExamsBySetId(set_id string) ([]exams.Exam, error) {
 		context.Background(),
 		`SELECT
 			id,
+			user_id,
 			set_id,
 			title,
 			COALESCE(description, '') AS description,
@@ -30,8 +31,8 @@ func (s Store) GetExamsBySetId(set_id string) ([]exams.Exam, error) {
 			created_at,
 			updated_at
 		 FROM exams
-		 WHERE set_id = $1`,
-		set_id,
+		 WHERE set_id = $1 AND user_id = $2`,
+		set_id, user_id,
 	)
 	if err != nil {
 		return nil, err

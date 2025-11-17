@@ -12,7 +12,6 @@ import { Input } from "./ui/input";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 
-// Types
 interface User {
   id: string | number;
   name: string;
@@ -24,16 +23,10 @@ interface SetLike {
   id: string | number;
 }
 
-// API helpers
 const getUserFromEmail = async (email: string): Promise<User> => {
   const res = await axios.get(
     `/api/v1/users/user?email=${encodeURIComponent(email)}`,
   );
-  return res.data;
-};
-
-const getUsersWithAccess = async (setId: string | number): Promise<User[]> => {
-  const res = await axios.get(`/api/v1/sets/access_list/${setId}`);
   return res.data;
 };
 
@@ -50,7 +43,6 @@ const addUserToAccessList = async ({
   });
 };
 
-// Utils
 const getInitials = (name?: string | null) => {
   if (!name) return "";
   const parts = name.trim().split(/\s+/);
@@ -61,15 +53,16 @@ const getInitials = (name?: string | null) => {
     .toUpperCase();
 };
 
-function AddPeopleAccessPopover({ set }: { set: SetLike }) {
+function AddPeopleAccessPopover({
+  set,
+  users,
+  isLoading,
+}: {
+  set: SetLike;
+  users: User[];
+  isLoading: boolean;
+}) {
   const queryClient = useQueryClient();
-
-  // Keep loading behavior unchanged; only add set.id to key for correctness
-  const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ["usersWithAccess", set.id],
-    queryFn: () => getUsersWithAccess(set.id),
-  });
-
   const { mutateAsync, isPending } = useMutation({
     mutationFn: addUserToAccessList,
     onSuccess: () => {
@@ -128,7 +121,7 @@ function AddPeopleAccessPopover({ set }: { set: SetLike }) {
   return (
     <Popover>
       <PopoverTrigger
-        className="rounded-full hover:bg-accent hover:text-white p-2 border"
+        className="rounded-full hover:bg-accent hover:text-white p-2 border border-dashed -ml-4"
         aria-label="Add people"
       >
         <Plus />

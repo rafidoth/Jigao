@@ -92,7 +92,7 @@ type ExamHub struct {
 	Storage    HubStorage
 }
 
-func NewExamHub(st HubStorage) *ExamHub {
+func New(st HubStorage) *ExamHub {
 	return &ExamHub{
 		Rooms:      make(map[string]*Room),
 		Register:   make(chan *Client, 10),
