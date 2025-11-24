@@ -126,7 +126,7 @@ function AddPeopleAccessPopover({
       >
         <Plus />
       </PopoverTrigger>
-      <PopoverContent className="font-display font-medium w-[400px] p-4 space-y-4">
+      <PopoverContent className="font-sans font-medium w-[400px] p-4 space-y-4">
         <div className="flex flex-col gap-y-3">
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
             Allow access to this set

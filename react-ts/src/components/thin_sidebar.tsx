@@ -2,9 +2,7 @@ import React from "react";
 import {
   Wand2 as MagicWandIcon,
   Archive as ArchiveIcon,
-  BookOpenText as ReaderIcon,
   Backpack as BackpackIcon,
-  FileQuestionMark,
   Sun,
   Moon,
   PanelRightClose as ViewVerticalIcon,
@@ -69,7 +67,13 @@ function ThinSidebar() {
     <div className="flex-col w-full h-full px-4 hidden lg:flex bg-sidebar text-sidebar-foreground justify-between">
       <div>
         <div className="flex flex-col items-center gap-3">
-          <span className="text-4xl font-bold">J</span>
+          <span className="text-4xl font-bold">
+            <img
+              src={"/logo.png"}
+              alt="Jigao"
+              className="rounded-lg scale-80  mt-2"
+            />
+          </span>
           <div className="flex flex-col items-center my-4 gap-3">
             <button
               aria-label="Toggle sidebar"

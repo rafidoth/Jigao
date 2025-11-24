@@ -18,7 +18,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowUpRight as ArrowTopRightIcon, RotateCcw } from "lucide-react";
+import {
+  ArrowUpRight as ArrowTopRightIcon,
+  RotateCcw,
+  Trash,
+} from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -26,7 +30,8 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Fallback } from "@radix-ui/react-avatar";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { AreYouSure } from "@/components/AreYouSure";
 
 interface CreateExamStoreState {
   reset: () => void;
@@ -292,17 +297,35 @@ async function fetchExamsApi(set_id: string) {
   return res.data;
 }
 
+async function deleteExamApi(exam_id: string) {
+  await axios.delete(`/api/v1/exams/${exam_id}`);
+  return { exam_id };
+}
+
+function determineExamType(visibility: string) {
+  if (visibility === "public") return "Public Test";
+  else if (visibility === "private") return "Self Test";
+  else return "Group Test";
+}
+
 function ExamsList({ set_id }: { set_id: string }) {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["exams", set_id],
     queryFn: () => fetchExamsApi(set_id),
+  });
+
+  const { mutateAsync: deleteExam, isPending: deleting } = useMutation({
+    mutationFn: (exam_id: string) => deleteExamApi(exam_id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exams", set_id] });
+    },
   });
 
   if (isLoading) return <p className="text-sm">Loading exams…</p>;
   if (isError)
     return <p className="text-sm text-destructive">Failed to load exams.</p>;
 
-  console.log(data);
   const exams = Array.isArray(data) ? data : [];
   if (exams.length === 0) {
     return (
@@ -330,6 +353,7 @@ function ExamsList({ set_id }: { set_id: string }) {
           const start = startTime ? new Date(startTime) : null;
           const isPast = start ? start < new Date() : false;
           const duration = xm.duration_in_minutes;
+          const xmType = determineExamType(exam.visibility);
 
           return (
             <Card
@@ -344,6 +368,7 @@ function ExamsList({ set_id }: { set_id: string }) {
                       {isPast ? "Past" : "Upcoming"}
                     </Badge>
                   </div>
+                  <div>{xmType}</div>
                   <div className="flex gap-x-2">
                     <Avatar>
                       <AvatarImage src={created_by.image_url} />
@@ -364,7 +389,7 @@ function ExamsList({ set_id }: { set_id: string }) {
                     </p>
                   )}
                 </div>
-                <div>
+                <div className="flex items-center gap-2">
                   <a href={`/exam/${exam.id}`} target="_blank" rel="noreferrer">
                     <Button
                       variant="secondary"
@@ -374,6 +399,22 @@ function ExamsList({ set_id }: { set_id: string }) {
                       Open <ArrowTopRightIcon className="h-4 w-4" />
                     </Button>
                   </a>
+                  <AreYouSure
+                    mutateAsync={() => deleteExam(exam.id)}
+                    title="Delete Exam"
+                    description="This action cannot be undone."
+                    confirmLabel={deleting ? "Deleting..." : "Delete"}
+                    cancelLabel="Cancel"
+                  >
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={deleting}
+                      className="flex items-center gap-1"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </AreYouSure>
                 </div>
               </div>
             </Card>
@@ -458,41 +499,44 @@ export default function ExamsDialog({
           </SheetDescription>
         </SheetHeader>
         <div className="flex flex-col gap-6">
-          <Card className="p-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-base font-semibold">Create Exam</h3>
-                <p className="text-sm text-muted-foreground">
-                  Configure details and schedule a start time.
-                </p>
+          <Dialog>
+            <DialogTrigger>Create New Exam</DialogTrigger>
+            <DialogContent className="w-[800px]">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-base font-semibold">Create Exam</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Configure details and schedule a start time.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <TitleField />
+              <div className="mt-4 flex flex-col gap-4">
+                <div className="sm:col-span-2">
+                  <TitleField />
+                </div>
+                <div className="sm:col-span-2">
+                  <DescriptionField />
+                </div>
+                <StartTimeField />
+                <DurationField />
               </div>
-              <div className="sm:col-span-2">
-                <DescriptionField />
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {error && (
+                  <Alert variant="destructive" className="sm:max-w-xs">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                <div className="ml-auto flex gap-3">
+                  <Button variant="outline" onClick={() => setOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateExam} disabled={isPending}>
+                    {isPending ? "Creating..." : "Create"}
+                  </Button>
+                </div>
               </div>
-              <StartTimeField />
-              <DurationField />
-            </div>
-            <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              {error && (
-                <Alert variant="destructive" className="sm:max-w-xs">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              <div className="ml-auto flex gap-3">
-                <Button variant="outline" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreateExam} disabled={isPending}>
-                  {isPending ? "Creating..." : "Create"}
-                </Button>
-              </div>
-            </div>
-          </Card>
+            </DialogContent>
+          </Dialog>
 
           <div>
             <h3 className="text-base font-semibold mb-1">Scheduled Exams</h3>

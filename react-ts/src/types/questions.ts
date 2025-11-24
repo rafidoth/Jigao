@@ -11,29 +11,24 @@ export interface BaseQuestion {
   type: QuestionKind;
   difficulty: Difficulty;
   text: string;
-  explanation?: string;
 }
 
 export interface MultipleChoiceQuestion extends BaseQuestion {
   type: "multiple_choice_questions";
   choices: string[]; // exactly 4 in current UI
-  answerIdx: number; // index into choices
 }
 
 export interface TrueFalseQuestion extends BaseQuestion {
   type: "true_false";
-  choices: [string, string]; // ["True", "False"] typically
-  answerIdx: number; // 0 or 1
+  choices: [string, string];
 }
 
 export interface ShortQuestion extends BaseQuestion {
   type: "short_question";
-  answerText?: string; // estimated answer shown when reveal is on
 }
 
 export interface FillInTheBlanksQuestion extends BaseQuestion {
   type: "fill_in_the_blanks";
-  choices: string[]; // list of acceptable answers
 }
 
 export type Question =

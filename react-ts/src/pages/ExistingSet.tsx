@@ -84,7 +84,7 @@ function ExistingSetHeader({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3">
             <div className="flex flex-col">
-              <div className="flex align-center gap-x-2">
+              <div className="flex items-center gap-x-4">
                 <Button
                   variant="outline"
                   className="h-9 w-9 rounded-full transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
@@ -92,7 +92,7 @@ function ExistingSetHeader({
                 >
                   <ArrowLeft />
                 </Button>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-tight break-words text-foreground font-serif">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-tight break-words text-foreground ">
                   {set.title}
                 </h1>
                 <CreateNewQuestionPopover set_id={set.id}>
@@ -204,7 +204,7 @@ function QuestionsList({ items }: { items: any[] }) {
 
   return (
     <ScrollArea className="h-[calc(100vh-100px)]">
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 px-3">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  px-3">
         {items.map((q: any, i: number) => (
           <QuestionCard
             key={q.id}

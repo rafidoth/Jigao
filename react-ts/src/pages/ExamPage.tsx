@@ -4,6 +4,7 @@ import useWebSocket from "react-use-websocket";
 import { differenceInSeconds } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import RunningExam from "./RunningExamPage";
 import QuestionCard from "../components/question_cards/question_card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -14,8 +15,9 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@clerk/clerk-react";
 
-function formatDuration(seconds: number) {
+export function formatDuration(seconds: number) {
   if (seconds <= 0) return "00:00:00";
   const days = Math.floor(seconds / (24 * 3600));
   seconds %= 24 * 3600;
@@ -30,7 +32,7 @@ function formatDuration(seconds: number) {
     .padStart(2, "0")}`;
 }
 
-function useRemainingSeconds(untilThisTime: Date) {
+export function useRemainingSeconds(untilThisTime: Date) {
   const [remainingSeconds, setRemainingSeconds] = useState(
     differenceInSeconds(untilThisTime, new Date()),
   );
@@ -47,9 +49,13 @@ function useRemainingSeconds(untilThisTime: Date) {
   return remainingSeconds;
 }
 
-function CountdownText({ until }: { until: Date }) {
+export function CountdownText({ until }: { until: Date }) {
   const remainingSeconds = useRemainingSeconds(until);
-  return <span className="font-mono">{formatDuration(remainingSeconds)}</span>;
+  return (
+    <span className="font-display font-semibold">
+      {formatDuration(remainingSeconds)}
+    </span>
+  );
 }
 
 // function StatusBadge({ status }: { status: string }) {
@@ -172,23 +178,7 @@ function ExamPageQuestionsUI({ items }: { items: any[] }) {
     <div className="relative">
       <ScrollArea className="h-[calc(100vh-220px)]">
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 pr-3">
-          {items.map((q: any, i: number) => (
-            <QuestionCard
-              key={q.id}
-              question={q}
-              position={i + 1}
-              selected={selectedAnswers[q.id] || ""}
-              selectAnswer={handleSelectingAnswer}
-            />
-          ))}
-
-          {items.length === 0 && (
-            <Card className="p-4">
-              <p className="text-muted-foreground">
-                No questions in this set yet.
-              </p>
-            </Card>
-          )}
+          Questions list
         </div>
       </ScrollArea>
 
@@ -203,14 +193,19 @@ function ExamPageQuestionsUI({ items }: { items: any[] }) {
 
 function ExamPage() {
   const { exam_id } = useParams();
-
-  const socketUrl = `ws://localhost:9999/api/v1/exams/join/${exam_id}?role=p`;
-  const { lastJsonMessage, readyState } = useWebSocket(socketUrl, {
-    onMessage: (event) => {
-      const data = JSON.parse(event.data);
-      console.log("Received:", data);
+  const { session } = useSession();
+  const [token, setToken] = useState<string | null>(null);
+  const socketUrl = `ws://localhost:9999/api/v1/exams/join/${exam_id}`;
+  const { lastJsonMessage, readyState } = useWebSocket(
+    token ? socketUrl : null,
+    {
+      queryParams: token ? { token: token } : {},
+      onMessage: (event) => {
+        const data = JSON.parse(event.data);
+        console.log("Received:", data);
+      },
     },
-  });
+  );
 
   const [title, setTitle] = useState("");
   const [examStatus, setExamStatus] = useState("");
@@ -225,19 +220,33 @@ function ExamPage() {
 
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [endTime, setEndTime] = useState<Date>(new Date());
-
-  let statusPanel: React.ReactNode = null;
+  console.log(items);
+  let examComponent: React.ReactNode = null;
   switch (examStatus) {
     case "waiting":
-      if (startTime) statusPanel = <ExamPageWaitingUI startTime={startTime} />;
+      if (startTime)
+        examComponent = <ExamPageWaitingUI startTime={startTime} />;
       break;
     case "running":
-      if (endTime) statusPanel = <ExamPageRunningUI endTime={endTime} />;
+      if (endTime)
+        examComponent = (
+          <RunningExam endTime={endTime} title={title} questions={items} />
+        );
       break;
     case "ended":
-      if (endTime) statusPanel = <ExamPageEndedUI endTime={endTime} />;
+      if (endTime) examComponent = <ExamPageEndedUI endTime={endTime} />;
       break;
   }
+
+  useEffect(() => {
+    if (session) {
+      const fn = async () => {
+        const tkn = await session?.getToken();
+        setToken(tkn);
+      };
+      fn();
+    }
+  }, [session]);
 
   useEffect(() => {
     if (lastJsonMessage !== null) {
@@ -267,29 +276,7 @@ function ExamPage() {
     }
   }, [lastJsonMessage]);
 
-  return (
-    <div className="space-y-4 flex flex-col justify-center align-center">
-      <div className="flex justify-center text-3xl font-bold mt-5">
-        {title || "Exam"}
-      </div>
-      <div className="w-full flex justify-center">{statusPanel}</div>
-
-      {examStatus === "running" && (
-        <>
-          {isLoading && (
-            <Card className="p-4">
-              <p className="text-sm text-muted-foreground">
-                Loading questions…
-              </p>
-            </Card>
-          )}
-          {items.length > 0 && !isLoading && (
-            <ExamPageQuestionsUI items={items} />
-          )}
-        </>
-      )}
-    </div>
-  );
+  return <div className="w-full flex justify-center">{examComponent}</div>;
 }
 
 export default ExamPage;
