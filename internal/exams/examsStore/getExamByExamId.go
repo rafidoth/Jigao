@@ -20,9 +20,12 @@ func (s Store) GetExamByExamId(exam_id string) (models.Exam, error) {
 
 	rows, err := tx.Query(
 		context.Background(),
-		`SELECT 
+		`SELECT
 			id,
 			set_id,
+			user_id,
+			visibility,
+			description,
 			title,
 			start_time,
 			(EXTRACT(EPOCH FROM duration)/60)::int AS duration,

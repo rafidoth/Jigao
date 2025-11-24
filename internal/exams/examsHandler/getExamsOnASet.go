@@ -1,28 +1,29 @@
 package examsHandler
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 
-	"github.com/rafidoth/onlyexams/internal/exams"
+	"github.com/rafidoth/onlyexams/internal/exams/models"
 	"github.com/rafidoth/onlyexams/internal/users"
 )
 
 type ExamWithCreatedBy struct {
-	Exam      exams.Exam `json:"exam"`
-	CreatedBy users.User `json:"created_by"`
+	Exam      models.Exam `json:"exam"`
+	CreatedBy users.User  `json:"created_by"`
 }
 
 func (eh *ExamsHandler) GetExamsOnASet(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	userId, err := eh.extractUserId(r)
-	if err != nil {
-		slog.Warn("user_id is required")
-		http.Error(w, "user_id is required", http.StatusBadRequest)
-		return
-	}
+	// userId, err := eh.extractUserId(r)
+	// if err != nil {
+	// 	slog.Warn("user_id is required")
+	// 	http.Error(w, "user_id is required", http.StatusBadRequest)
+	// 	return
+	// }
 
 	setId := r.URL.Query().Get("set_id")
 	if setId == "" {
@@ -31,7 +32,8 @@ func (eh *ExamsHandler) GetExamsOnASet(
 		return
 	}
 
-	exams, err := eh.store.GetExamsBySetId(userId, setId)
+	exams, err := eh.store.GetExamsBySetId(setId)
+	fmt.Println("exams fetched with userId ", exams)
 	if err != nil {
 		slog.Error("failed to get exams on a set DB issue", "error", err)
 		w.WriteHeader(http.StatusOK)

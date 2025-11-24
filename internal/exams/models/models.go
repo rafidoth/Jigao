@@ -3,14 +3,17 @@ package models
 import "time"
 
 type Exam struct {
-	Id                string    `db:"id"`
-	SetId             string    `db:"set_id"`
-	Title             string    `db:"title"`
-	StartTime         time.Time `db:"start_time"`
-	DurationInMinutes int       `db:"duration"`
-	EndTime           time.Time `db:"end_time"`
-	CreatedAt         time.Time `db:"created_at"`
-	UpdatedAt         time.Time `db:"updated_at"`
+	Id                string    `db:"id" json:"id"`
+	SetId             string    `db:"set_id" json:"set_id"`
+	UserId            string    `db:"user_id" json:"user_id"`
+	Visibility        string    `db:"visibility" json:"visibility"`
+	Title             string    `db:"title" json:"title"`
+	StartTime         time.Time `db:"start_time" json:"start_time"`
+	Description       string    `db:"description" json:"description"`
+	DurationInMinutes int       `db:"duration" json:"duration"`
+	EndTime           time.Time `db:"end_time" json:"end_time"`
+	CreatedAt         time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt         time.Time `db:"updated_at" json:"updated_at"`
 }
 
 // type ExamParticipant struct {

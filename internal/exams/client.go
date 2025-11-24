@@ -17,7 +17,7 @@ type Client struct {
 }
 
 func NewClient(conn *websocket.Conn, clientType, id, roomId string) *Client {
-	if clientType != "c" && clientType != "p" {
+	if clientType != "monitor" && clientType != "participant" {
 		log.Println("invalid client type:", clientType)
 		return nil
 	}

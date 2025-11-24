@@ -88,9 +88,7 @@ EXECUTE FUNCTION update_updated_at();
 
 
 CREATE TABLE IF NOT EXISTS shared_set_users (
-    -- Foreign Key referencing the Sets table
     set_id UUID NOT NULL,
-    -- Foreign Key referencing the Users table (assuming users.id is TEXT, based on your schema)
     user_id TEXT NOT NULL,
     PRIMARY KEY (set_id, user_id),
     FOREIGN KEY (set_id) REFERENCES sets(id) ON DELETE CASCADE,
@@ -98,10 +96,10 @@ CREATE TABLE IF NOT EXISTS shared_set_users (
 );
 
 -- exams sqls
-
 CREATE TABLE IF NOT EXISTS exams (
     id UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL DEFAULT 'untitled',
+    title TEXT NOT NULL DEFAULT 'untitled exam',
+    visibility visibility NOT NULL DEFAULT 'private',
     description TEXT,
     start_time TIMESTAMPTZ NOT NULL,
     duration INTERVAL NOT NULL,
@@ -111,7 +109,6 @@ CREATE TABLE IF NOT EXISTS exams (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-
 );
 
 

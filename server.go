@@ -28,12 +28,13 @@ type QuestionsHandler interface {
 }
 
 type ExamsHandler interface {
-	CreateRoom(w http.ResponseWriter, r *http.Request)
+	// CreateRoom(w http.ResponseWriter, r *http.Request)
 	JoinRoom(w http.ResponseWriter, r *http.Request)
 	CreateExamOnASet(w http.ResponseWriter, r *http.Request)
 	GetExamsOnASet(w http.ResponseWriter, r *http.Request)
 	GetExamById(w http.ResponseWriter, r *http.Request)
 	GetQuestionsOfAnExam(w http.ResponseWriter, r *http.Request)
+	RemoveExam(w http.ResponseWriter, r *http.Request)
 }
 
 type UsersHandler interface {
@@ -83,9 +84,10 @@ func (s *Server) registerRoutes() {
 		r.Route("/exams", func(r chi.Router) {
 			r.Get("/q/{exam_id}", s.examsHandler.GetQuestionsOfAnExam)
 			r.Get("/{exam_id}", s.examsHandler.GetExamById)
+			r.Delete("/{exam_id}", s.examsHandler.RemoveExam)
 			r.Post("/", s.examsHandler.CreateExamOnASet)
 			r.Get("/", s.examsHandler.GetExamsOnASet)
-			r.Post("/rooms/{exam_id}", s.examsHandler.CreateRoom)
+			// r.Post("/rooms/{exam_id}", s.examsHandler.CreateRoom)
 			r.Get("/join/{room_id}", s.examsHandler.JoinRoom)
 		})
 	})
@@ -102,9 +104,10 @@ func (s *Server) useMiddlewares() {
 	)
 	s.router.Use(middleware.NoCache)
 
+	s.router.Use(LogRequestMiddleware)
+
 	s.router.Use(clerkhttp.RequireHeaderAuthorization())
 	s.router.Use(AuthMiddleware)
-	s.router.Use(LogRequestMiddleware)
 
 }
 

@@ -11,10 +11,9 @@ import (
 )
 
 type CreateExamOnASetRequest struct {
-	SetId       string `json:"set_id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	// ISO 8601 format: "2023-10-05T14:48:00Z"
+	SetId             string    `json:"set_id"`
+	Title             string    `json:"title"`
+	Description       string    `json:"description"`
 	StartTime         time.Time `json:"start_time"`
 	DurationInMinutes int       `json:"duration_in_minutes"`
 }

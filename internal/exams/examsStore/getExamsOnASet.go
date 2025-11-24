@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/rafidoth/onlyexams/internal/exams"
+	"github.com/rafidoth/onlyexams/internal/exams/models"
 )
 
-func (s Store) GetExamsBySetId(user_id, set_id string) ([]exams.Exam, error) {
-	var results []exams.Exam
+func (s Store) GetExamsBySetId(set_id string) ([]models.Exam, error) {
+	var results []models.Exam
 
 	tx, err := s.db.Begin(context.Background())
 	if err != nil {
@@ -24,6 +24,7 @@ func (s Store) GetExamsBySetId(user_id, set_id string) ([]exams.Exam, error) {
 			user_id,
 			set_id,
 			title,
+			visibility,
 			COALESCE(description, '') AS description,
 			start_time,
 			(EXTRACT(EPOCH FROM duration)/60)::int AS duration,
@@ -31,14 +32,14 @@ func (s Store) GetExamsBySetId(user_id, set_id string) ([]exams.Exam, error) {
 			created_at,
 			updated_at
 		 FROM exams
-		 WHERE set_id = $1 AND user_id = $2`,
-		set_id, user_id,
+		 WHERE set_id = $1`,
+		set_id,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[exams.Exam])
+	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Exam])
 	if err != nil {
 		return nil, err
 	}

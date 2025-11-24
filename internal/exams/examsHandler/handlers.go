@@ -19,14 +19,17 @@ type Storage interface {
 		duration_in_minutes int,
 	) error
 
-	GetExamsBySetId(user_id, set_id string) ([]exams.Exam, error)
+	GetExamsBySetId(set_id string) ([]models.Exam, error)
 	IsExamExists(exam_id string) error
 	GetExamSetId(exam_id string) (string, error)
 	GetExamByExamId(examId string) (models.Exam, error)
+	RemoveExam(examId string) error
 }
 
 type QuestionsStore interface {
 	GetAllQuestionsInASet(setID string) ([]questionsModels.CompleteQuestion, error)
+	GetOwnerUserId(id string) (string, error)
+	CheckUserAccess(userId, setId string) (bool, error)
 }
 
 type UsersStore interface {
