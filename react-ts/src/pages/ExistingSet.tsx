@@ -1,197 +1,28 @@
-import { useNavigate, useParams } from "react-router";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import ExistingSetHeader from "@/components/existing_set/ExistingSetHeader.tsx";
+import { useParams } from "react-router";
+import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { getSet, getQuestions } from "@/api/api.ts";
-import {
-  Globe2 as GlobeIcon,
-  Lock as LockClosedIcon,
-  Eye as EyeOpenIcon,
-  Settings as GearIcon,
-  Plus as PlusIcon,
-  Info as InfoIcon,
-  ArrowLeft,
-} from "lucide-react";
+import { CommandIcon, Ghost, Info as InfoIcon } from "lucide-react";
 
-import useExistingSetStore from "../store/existingSetStore";
+import useExistingSetStore from "../store/existingSetStore.ts";
 import QuestionCard from "../components/question_cards/question_card.tsx";
-import CreateNewQuestionPopover from "../components/create_new_question_popover";
-import ExamsDialog from "../components/exams_dialog.tsx";
-import SetSettingsUpdatePopover from "../components/set_settings_update_popover.tsx";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import ExistingSetAiChat from "@/components/existing_set/ExistingSetAiChat.tsx";
+import useAuthStore from "@/store/authStore.ts";
 
-import AddPeopleAccessPopover from "@/components/add_people_access_popover.tsx";
-import { getUsersWithAccess } from "@/api/api.ts";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar.tsx";
-
-function getVisibilityIcon(visibility: string) {
-  switch (visibility) {
-    case "public":
-      return <GlobeIcon className="h-5 w-5" />;
-    case "private":
-      return <LockClosedIcon className="h-5 w-5" />;
-    case "restricted":
-      return <EyeOpenIcon className="h-5 w-5" />;
-    default:
-      return null;
-  }
-}
-
-interface User {
-  id: string | number;
-  name: string;
-  email: string;
-  image_url?: string | null;
-}
-
-function ExistingSetHeader({
-  set,
-  itemsLength,
-  showAnswer,
-  toggleShowAnswer,
+function QuestionsList({
+  items,
+  gridLayout,
 }: {
-  set: any;
-  itemsLength: number;
-  showAnswer: boolean;
-  toggleShowAnswer: () => void;
+  items: any[];
+  gridLayout: boolean;
 }) {
-  const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ["usersWithAccess", set.id],
-    queryFn: () => getUsersWithAccess(set.id),
-  });
-
-  const navigate = useNavigate();
-
-  return (
-    <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-      <div className="flex flex-col gap-3 px-3 md:px-6 py-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-x-4">
-                <Button
-                  variant="outline"
-                  className="h-9 w-9 rounded-full transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                  onClick={() => navigate(-1)}
-                >
-                  <ArrowLeft />
-                </Button>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-tight break-words text-foreground ">
-                  {set.title}
-                </h1>
-                <CreateNewQuestionPopover set_id={set.id}>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="h-9 w-9"
-                    aria-label="Add question"
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                  </Button>
-                </CreateNewQuestionPopover>
-                <SetSettingsUpdatePopover set={set}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 rounded-full transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                    aria-label="Set settings"
-                  >
-                    <GearIcon className="h-5 w-5" />
-                  </Button>
-                </SetSettingsUpdatePopover>
-              </div>
-              <div className="flex items-center gap-2 mt-1 text-muted-foreground text-xs sm:text-sm">
-                <span className="inline-flex items-center gap-1">
-                  {getVisibilityIcon(set.visibility)}
-                </span>
-                {set.visibility === "restricted" && (
-                  <div className="flex items-center gap-2">
-                    {users.map((user, i) => {
-                      if (i <= 3) {
-                        return (
-                          <Avatar
-                            key={user.id} // Add a key for best React practice
-                            className={`w-10 h-10 border shadow-md ${i > 0 ? "-ml-4" : ""} ${i === 0 ? "z-10" : ""}`}
-                          >
-                            <AvatarImage src={user?.image_url || undefined} />
-                            <AvatarFallback>
-                              {user?.name?.charAt(0)} {user?.name?.charAt(1)}
-                            </AvatarFallback>
-                          </Avatar>
-                        );
-                      }
-                    })}
-                    <AddPeopleAccessPopover
-                      set={set}
-                      users={users}
-                      isLoading={isLoading}
-                    />
-                  </div>
-                )}
-                <div className="flex items-center justify-between gap-4 flex-wrap pt-2 ">
-                  <div className="flex items-center gap-3">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="inline-flex items-center">
-                            <Switch
-                              checked={showAnswer}
-                              onCheckedChange={toggleShowAnswer}
-                              aria-label="Toggle show answers"
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          Toggle Show Answer
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <Badge variant="secondary" className="sm:hidden">
-                      {itemsLength} questions
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-2 flex-wrap">
-            <ExamsDialog set_id={set.id}>
-              <Button
-                variant="secondary"
-                className="h-9 px-3 transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-              >
-                Manage Exams
-              </Button>
-            </ExamsDialog>
-            <Badge variant="outline" className="hidden sm:inline-flex">
-              {itemsLength} questions
-            </Badge>
-          </div>
-        </div>
-
-        {/* Action bar: switch, add question, questions badge (mobile visible) */}
-      </div>
-    </div>
-  );
-}
-
-function QuestionsList({ items }: { items: any[] }) {
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<string, string>
   >({});
@@ -203,16 +34,20 @@ function QuestionsList({ items }: { items: any[] }) {
   };
 
   return (
-    <ScrollArea className="h-[calc(100vh-100px)]">
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  px-3">
+    <ScrollArea className="h-[calc(100vh-100px)] w-full flex justify-center">
+      <div
+        className={`${gridLayout ? "grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3  px-3" : "flex flex-col items-center gap-3"}`}
+      >
         {items.map((q: any, i: number) => (
-          <QuestionCard
-            key={q.id}
-            question={q}
-            position={i + 1}
-            selected={selectedAnswers[q.id] || ""}
-            selectAnswer={handleSelectingAnswer}
-          />
+          <span className={`${gridLayout ? "" : "w-[600px]"}`}>
+            <QuestionCard
+              key={q.id}
+              question={q}
+              position={i + 1}
+              selected={selectedAnswers[q.id] || ""}
+              selectAnswer={handleSelectingAnswer}
+            />
+          </span>
         ))}
 
         {items.length === 0 && (
@@ -222,6 +57,11 @@ function QuestionsList({ items }: { items: any[] }) {
             </p>
           </Card>
         )}
+      </div>
+      <div className="flex justify-center my-7">
+        <Badge className="bg-blue-800/20 text-blue-500 my-6">
+          End of Questions
+        </Badge>
       </div>
     </ScrollArea>
   );
@@ -332,6 +172,11 @@ function ExistingSet() {
   const toggleShowAnswer = useExistingSetStore(
     (state) => state.toggleShowAnswer,
   );
+  const gridLayout = useExistingSetStore((state) => state.gridLayout);
+  const toggleGridLayout = useExistingSetStore(
+    (state) => state.toggleGridLayout,
+  );
+  const currentUserDetails = useAuthStore((state) => state.currentUserDetails);
 
   if (isSetLoading || isQuestionsLoading) {
     return <LoadingExistingSet />;
@@ -345,15 +190,20 @@ function ExistingSet() {
 
   return (
     <div className="flex flex-row flex-1 gap-4 justify-center">
-      <div className="flex flex-col gap-4 w-full">
+      <div className="flex flex-col gap-4 w-full items-center">
         <ExistingSetHeader
           set={set}
           itemsLength={items.length}
           showAnswer={showAnswer}
           toggleShowAnswer={toggleShowAnswer}
+          gridLayout={gridLayout}
+          toggleGridLayout={toggleGridLayout}
         />
-        <QuestionsList items={items} />
+        <div className="w-3/4">
+          <QuestionsList items={items} gridLayout={gridLayout} />
+        </div>
       </div>
+      <ExistingSetAiChat />
     </div>
   );
 }

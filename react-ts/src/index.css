@@ -137,3 +137,28 @@ main {
         @apply bg-background text-foreground;
     }
 }
+
+@layer utilities {
+    /* Thin scrollbar */
+    .scrollbar-thin {
+        scrollbar-width: thin;
+    }
+
+    /* Customize scrollbar for WebKit browsers */
+    .scrollbar-custom::-webkit-scrollbar {
+        width: 6px; /* scrollbar width */
+    }
+
+    .scrollbar-custom::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollbar-custom::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2); /* thumb color */
+        border-radius: 9999px; /* fully rounded */
+    }
+
+    .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.35);
+    }
+}

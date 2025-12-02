@@ -1,6 +1,7 @@
 package questionsHandler
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -42,7 +43,8 @@ func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
 
 	var QuestionSet *questionsModels.Set
 
-	if vis == "private" {
+	switch vis {
+	case "private":
 		ownerUserId, err := h.store.GetOwnerUserId(setId)
 		if err != nil {
 			slog.Warn("failed to get owner user id", "error", err)
@@ -58,7 +60,7 @@ func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
 			ID:     setId,
 			UserId: userId,
 		}
-	} else if vis == "restricted" {
+	case "restricted":
 		ownerUserId, err := h.store.GetOwnerUserId(setId)
 		if err != nil {
 			slog.Warn("failed to get owner user id", "error", err)
@@ -82,7 +84,21 @@ func (h *Handler) GetASet(w http.ResponseWriter, r *http.Request) {
 			ID:     setId,
 			UserId: ownerUserId,
 		}
+	case "public":
+		ownerUserId, err := h.store.GetOwnerUserId(setId)
+		if err != nil {
+			slog.Warn("failed to get owner user id", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		QuestionSet = &questionsModels.Set{
+			ID:     setId,
+			UserId: ownerUserId,
+		}
+
 	}
+
+	fmt.Println("Getaset debug ", QuestionSet)
 
 	QuestionSet, err = h.store.GetASet(QuestionSet)
 	if err != nil {

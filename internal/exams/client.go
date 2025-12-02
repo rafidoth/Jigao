@@ -1,6 +1,7 @@
 package exams
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"log/slog"
@@ -11,8 +12,8 @@ import (
 type Client struct {
 	Conn       *websocket.Conn
 	Evt        chan *Event
-	ClientType string // controller, participant
-	Id         string `json:"id"`
+	ClientType string // monitor, participant
+	UserId     string `json:"id"`
 	RoomId     string `json:"roomId"`
 }
 
@@ -25,7 +26,7 @@ func NewClient(conn *websocket.Conn, clientType, id, roomId string) *Client {
 		Conn:       conn,
 		Evt:        make(chan *Event, 10),
 		ClientType: clientType,
-		Id:         id,
+		UserId:     id,
 		RoomId:     roomId,
 	}
 }
@@ -39,7 +40,7 @@ func (c *Client) Write() {
 		c.Conn.Close()
 	}()
 
-	fmt.Println("Starting write goroutine for client id:", c.Id, "in room:", c.RoomId)
+	fmt.Println("Starting write goroutine for client id:", c.UserId, "in room:", c.RoomId)
 	for {
 		m, ok := <-c.Evt
 		if !ok {
@@ -51,6 +52,16 @@ func (c *Client) Write() {
 	}
 }
 
+type ReceiveEvent struct {
+	Type    string          `json:"type"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+type AnswerSelectPayload struct {
+	QuestionID string `json:"question_id"`
+	Answer     string `json:"answer"`
+}
+
 func (c *Client) Read(eh *ExamHub) {
 	defer func() {
 		eh.Unregister <- c
@@ -60,20 +71,37 @@ func (c *Client) Read(eh *ExamHub) {
 	for {
 		_, m, err := c.Conn.ReadMessage()
 		if err != nil {
-			cga := websocket.CloseGoingAway
-			cac := websocket.CloseAbnormalClosure
-			if websocket.IsUnexpectedCloseError(err, cga, cac) {
-				log.Printf("error: %v", err)
-			}
+			slog.Error("error reading message", "error", err)
 			break
 		}
-		fmt.Println(
-			"Received message from client id:",
-			c.Id, "in room:",
-			c.RoomId, "message:",
-			string(m),
-		)
-		// evt := newEvent(c.RoomId, c.Id, "message", string(m))
-		// eh.Broadcast <- evt
+
+		var re ReceiveEvent
+		if err := json.Unmarshal(m, &re); err != nil {
+			slog.Error("invalid event format", "error", err)
+			continue
+		}
+
+		switch re.Type {
+		case "answer_selected":
+			var payload AnswerSelectPayload
+			if err := json.Unmarshal(re.Payload, &payload); err != nil {
+				slog.Error("invalid payload for answer_selected", "error", err)
+				continue
+			}
+
+			fmt.Printf("User %s answered Question %s with %s\n", c.UserId, payload.QuestionID, payload.Answer)
+
+			ase := &AnswerSelectEvent{
+				ExamId:     c.RoomId,
+				UserId:     c.UserId,
+				QuestionId: payload.QuestionID,
+				Answer:     payload.Answer,
+			}
+			fmt.Println("before sending in channel ", ase)
+			eh.AnswerSelect <- ase
+
+		case "submit_exam":
+			// Handle other types
+		}
 	}
 }

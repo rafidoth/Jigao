@@ -59,7 +59,6 @@ func (eh *ExamsHandler) JoinRoom(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-
 	userId, ok := r.Context().Value("user-id").(string)
 	if !ok || userId == "" {
 		slog.Error("user id not found in context")
@@ -78,7 +77,6 @@ func (eh *ExamsHandler) JoinRoom(
 		)
 		return
 	}
-
 	// /exams/join-room/{room_id}
 	roomId := chi.URLParam(r, "room_id")
 	room := eh.hub.GetRoom(roomId)
@@ -92,7 +90,6 @@ func (eh *ExamsHandler) JoinRoom(
 			http.Error(w, "No room or exam found with given id", http.StatusNotFound)
 			return
 		}
-
 		// if yes, create a room
 		slog.Info("exam found, creating room:", "exam_id:", roomId)
 		if err := eh.hub.CreateNewRoom(roomId); err != nil {
@@ -103,7 +100,6 @@ func (eh *ExamsHandler) JoinRoom(
 	}
 
 	clientType := eh.determineClientType(userId, roomId)
-
 	client := exams.NewClient(conn, clientType, userId, roomId)
 	if client == nil {
 		http.Error(w, "Invalid client type", http.StatusBadRequest)

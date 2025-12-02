@@ -42,7 +42,7 @@ export default function McqCard({
               {typeLabel(q.type)}
             </Badge>
           </div>
-          <p className="font-medium">
+          <p>
             {position}. {q.text}
           </p>
         </div>

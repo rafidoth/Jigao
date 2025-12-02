@@ -85,20 +85,22 @@ func NewRoom(xm models.Exam, eH *ExamHub) *Room {
 }
 
 type ExamHub struct {
-	Rooms      map[string]*Room
-	Register   chan *Client
-	Unregister chan *Client
-	Broadcast  chan *Event
-	Storage    HubStorage
+	Rooms        map[string]*Room
+	Register     chan *Client
+	Unregister   chan *Client
+	Broadcast    chan *Event
+	AnswerSelect chan *AnswerSelectEvent
+	Storage      HubStorage
 }
 
 func New(st HubStorage) *ExamHub {
 	return &ExamHub{
-		Rooms:      make(map[string]*Room),
-		Register:   make(chan *Client, 10),
-		Unregister: make(chan *Client, 10),
-		Broadcast:  make(chan *Event, 10),
-		Storage:    st,
+		Rooms:        make(map[string]*Room),
+		Register:     make(chan *Client, 10),
+		Unregister:   make(chan *Client, 10),
+		Broadcast:    make(chan *Event, 10),
+		AnswerSelect: make(chan *AnswerSelectEvent, 10),
+		Storage:      st,
 	}
 }
 
@@ -148,9 +150,18 @@ func (eh *ExamHub) Run() {
 		//client to be unregistered
 		case cl := <-eh.Unregister:
 			handleUnregisterClient(eh, cl)
-		//broadcast to all clients in a room
+		case ase := <-eh.AnswerSelect:
+			handleAnswerSelectEvent(eh, ase)
 		case event := <-eh.Broadcast:
 			handleBroadcastEvent(eh, event)
+		}
+	}
+}
+
+func handleAnswerSelectEvent(eh *ExamHub, ase *AnswerSelectEvent) {
+	if _, exists := eh.Rooms[ase.ExamId]; exists {
+		if _, ok := eh.Rooms[ase.ExamId].Clients[ase.UserId]; ok {
+			slog.Info("Answer selected by user", "user_id", ase.UserId, "question_id", ase.QuestionId, "answer", ase.Answer)
 		}
 	}
 }
@@ -163,7 +174,7 @@ func handleBroadcastEvent(eh *ExamHub, event *Event) {
 			case client.Evt <- event:
 			default:
 				close(client.Evt)
-				delete(r.Clients, client.Id)
+				delete(r.Clients, client.UserId)
 			}
 		}
 	}
@@ -171,13 +182,13 @@ func handleBroadcastEvent(eh *ExamHub, event *Event) {
 
 func handleUnregisterClient(eh *ExamHub, cl *Client) {
 	if _, exists := eh.Rooms[cl.RoomId]; exists {
-		if _, ok := eh.Rooms[cl.RoomId].Clients[cl.Id]; ok {
-			delete(eh.Rooms[cl.RoomId].Clients, cl.Id)
+		if _, ok := eh.Rooms[cl.RoomId].Clients[cl.UserId]; ok {
+			delete(eh.Rooms[cl.RoomId].Clients, cl.UserId)
 			close(cl.Evt)
 			log.Println("client unregistered from room:",
 				cl.RoomId,
 				"client id:",
-				cl.Id,
+				cl.UserId,
 			)
 			if len(eh.Rooms[cl.RoomId].Clients) == 0 {
 				eh.RemoveRoom(cl.RoomId)
@@ -193,18 +204,18 @@ func handleRegisterClient(eh *ExamHub, cl *Client) {
 		"Registering client to room:",
 		cl.RoomId,
 		"client id:",
-		cl.Id,
+		cl.UserId,
 	)
 	if _, exists := eh.Rooms[cl.RoomId]; exists {
 		r := eh.Rooms[cl.RoomId]
-		if _, exists := r.Clients[cl.Id]; !exists {
+		if _, exists := r.Clients[cl.UserId]; !exists {
 			c := eh.Rooms[cl.RoomId].Clients
-			c[cl.Id] = cl
+			c[cl.UserId] = cl
 
 			log.Println("client registered to room:",
 				cl.RoomId,
 				"client id:",
-				cl.Id)
+				cl.UserId)
 
 			writeOnJoinEvent(cl, r)
 

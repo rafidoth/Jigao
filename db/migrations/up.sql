@@ -132,3 +132,16 @@ CREATE TRIGGER exam_participants_updated_at_trigger
 BEFORE UPDATE ON exam_participants
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
+
+
+
+CREATE TABLE IF NOT EXISTS exam_answers (
+    exam_id UUID NOT NULL,
+    FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    question_id UUID NOT NULL,
+    FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
+    answer TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+);

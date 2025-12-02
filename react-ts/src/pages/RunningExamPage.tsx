@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { CountdownText } from "./ExamPage";
 import { format } from "date-fns";
 import { typeLabel } from "@/components/question_cards/CardUtils";
-import { Link } from "react-router";
 import type {
   Question,
   MultipleChoiceQuestion,
@@ -15,6 +14,7 @@ import type {
   FillInTheBlanksQuestion,
 } from "@/types/questions";
 import { cn } from "@/lib/utils";
+import { useResolvedPath } from "react-router";
 
 interface BaseExamCardProps {
   position: number;
@@ -255,17 +255,46 @@ function RunningExam({
   endTime,
   title,
   questions,
+  sendEvent,
+  isConnected,
 }: {
   endTime: Date;
   title: string;
   questions: Question[];
+  sendEvent: (type: string, payload: any) => void;
+  isConnected: boolean;
 }) {
+  const messageQueue = useRef<{ type: string; payload: any }[]>([]);
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<string, string>
   >({});
   const selectAnswer = (id: string, ans: string) => {
+    // 4. Logic: Send if ready, Queue if not
+    if (isConnected) {
+      sendEvent("answer_selected", { question_id: id, answer: ans });
+    } else {
+      console.warn("Socket connecting... buffering answer.");
+      messageQueue.current.push({
+        type: "answer_selected",
+        payload: { id, answer: ans },
+      });
+    }
+
     setSelectedAnswers((prev) => ({ ...prev, [id]: ans }));
   };
+
+  useEffect(() => {
+    if (isConnected && messageQueue.current.length > 0) {
+      console.log(
+        `Flushing ${messageQueue.current.length} buffered answers...`,
+      );
+      messageQueue.current.forEach((msg) => {
+        sendEvent(msg.type, msg.payload);
+      });
+      // Clear queue
+      messageQueue.current = [];
+    }
+  }, [isConnected, sendEvent]);
 
   return (
     <div className="h-screen w-[800px] flex flex-col gap-4 py-4">
@@ -290,7 +319,7 @@ function RunningExam({
               <CountdownText until={endTime} />
             </div>
           </div>
-          <div className="border flex gap-x-2 px-2 rounded-md bg-red-800/80 text-red-50 font-semibold">
+          <div className="border flex gap-x-2 px-2 rounded-md bg-red-800/20 text-red-500 font-semibold">
             <span>{format(endTime, "d MMMM,yyyy")}</span>
             <span>{format(endTime, "p")}</span>
           </div>
@@ -313,12 +342,6 @@ function RunningExam({
             </Badge>
           </div>
         </div>
-      </div>
-      <div className="absolute bottom-5 right-5 flex  gap-x-2 justify-center items-center z-10">
-        <img src="/logo.png" className="w-8 h-8 rounded-md" />
-        <Link to="/" className="text-3xl">
-          Jigao
-        </Link>
       </div>
     </div>
   );

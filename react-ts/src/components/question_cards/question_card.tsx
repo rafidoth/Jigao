@@ -1,4 +1,4 @@
-import useExistingSetStore from "@/store/existingSetStore";
+import useExistingSetStore from "@/store/existingSetStore.ts";
 import McqCard from "./McqCard";
 import TrueFalseCard from "./TrueFalseCard";
 import ShortAnswerCard from "./ShortAnswerCard";
@@ -12,7 +12,12 @@ interface Props {
   selectAnswer: (id: string, ans: string) => void;
 }
 
-export default function QuestionCard({ question: q, position, selected, selectAnswer }: Props) {
+export default function QuestionCard({
+  question: q,
+  position,
+  selected,
+  selectAnswer,
+}: Props) {
   const showAnswer = useExistingSetStore((state) => state.showAnswer);
   switch (q.type) {
     case "multiple_choice_questions":

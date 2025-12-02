@@ -11,6 +11,7 @@ import { useClerk, useSession, useUser } from "@clerk/clerk-react";
 import { useMutation } from "@tanstack/react-query";
 import { userOnLogin } from "./api/api.ts";
 import useAuthStore from "./store/authStore.ts";
+import LoadingScreen from "./components/LoadingScreen.tsx";
 
 function App() {
   const theme = useThemeStore((state) => state.theme);
@@ -53,7 +54,8 @@ function App() {
   useEffect(() => {
     if (isLoaded && user && session) {
       const fn = async () => {
-        const token = await session?.getToken();
+        const template = "jigao-jwt-1";
+        const token = await session?.getToken({ template });
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         if (session.id !== lastSessionIdRef.current) {
           lastSessionIdRef.current = session.id;
@@ -70,7 +72,7 @@ function App() {
   }, [session, isLoaded, user, mutateAsync]);
 
   if (isPending) {
-    return <div>Signing In...</div>;
+    return <LoadingScreen />;
   }
 
   return (

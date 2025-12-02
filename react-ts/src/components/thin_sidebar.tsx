@@ -19,6 +19,7 @@ import useAuthStore from "@/store/authStore";
 interface NavItem {
   to: string;
   icon: React.ReactNode;
+  activeIcon: React.ReactNode;
   label: string;
 }
 
@@ -28,21 +29,25 @@ function ThinSidebar() {
     {
       to: "/",
       icon: <MagicWandIcon className="h-6 w-6" />,
+      activeIcon: <MagicWandIcon fill="white" className="h-6 w-6" />,
       label: "Create Questions",
     },
     {
       to: "/sets/",
-      icon: <ArchiveIcon className="h-6 w-6" />,
+      icon: <ArchiveIcon className="h-6 w-6 " />,
+      activeIcon: <ArchiveIcon fill="white" className="h-6 w-6 text-white" />,
       label: "My Sets",
     },
     {
       to: "/sets/beta",
       icon: <BackpackIcon className="h-6 w-6" />,
+      activeIcon: <BackpackIcon fill="white" className="h-6 w-6 text-white" />,
       label: "Question Bank",
     },
     {
       to: "/sets/gamma",
       icon: <ClipboardList className="h-6 w-6" />,
+      activeIcon: <ClipboardList fill="white" className="h-6 w-6 text-white" />,
       label: "Exams",
     },
   ];
@@ -68,11 +73,7 @@ function ThinSidebar() {
       <div>
         <div className="flex flex-col items-center gap-3">
           <span className="text-4xl font-bold">
-            <img
-              src={"/logo.png"}
-              alt="Jigao"
-              className="rounded-lg scale-80  mt-2"
-            />
+            <img src={"/logo.png"} alt="Jigao" className="scale-60  mt-2" />
           </span>
           <div className="flex flex-col items-center my-4 gap-3">
             <button
@@ -109,7 +110,7 @@ function ThinSidebar() {
                 }}
               >
                 <div
-                  className={`flex justify-center items-center ${active ? "" : "text-muted-foreground opacity-50"}`}
+                  className={`flex justify-center items-center}`}
                   style={{
                     padding: "10px 5px",
                     width: "100%",
@@ -118,7 +119,7 @@ function ThinSidebar() {
                   }}
                 >
                   <span className="sr-only">{item.label}</span>
-                  {item.icon}
+                  {active ? item.activeIcon : item.icon}
                 </div>
               </NavLink>
             );

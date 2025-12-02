@@ -23,3 +23,10 @@ type OnJoinEvent struct {
 	Time       time.Time `json:"time"`
 	Title      string    `json:"title"`
 }
+
+type AnswerSelectEvent struct {
+	ExamId     string `json:"exam_id"`
+	UserId     string `json:"user_id"`
+	QuestionId string `json:"question_id"`
+	Answer     string `json:"answer"`
+}

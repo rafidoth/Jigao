@@ -32,6 +32,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { AreYouSure } from "@/components/AreYouSure";
+import { Scrollbar } from "@radix-ui/react-scroll-area";
 
 interface CreateExamStoreState {
   reset: () => void;
@@ -345,7 +346,8 @@ function ExamsList({ set_id }: { set_id: string }) {
   }
 
   return (
-    <ScrollArea className="h-[400px] pr-4">
+    <ScrollArea className="h-[calc(100vh-200px)]">
+      <Scrollbar orientation="vertical" />
       <div className="flex flex-col gap-3">
         {exams.map((xm: any) => {
           const { exam, created_by } = xm;
@@ -500,7 +502,11 @@ export default function ExamsDialog({
         </SheetHeader>
         <div className="flex flex-col gap-6">
           <Dialog>
-            <DialogTrigger>Create New Exam</DialogTrigger>
+            <DialogTrigger>
+              <Button className="font-display" variant={"outline"}>
+                Create New Exam
+              </Button>
+            </DialogTrigger>
             <DialogContent className="w-[800px]">
               <div className="flex items-start justify-between">
                 <div>

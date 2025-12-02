@@ -28,6 +28,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect } from "react";
 
 const lastModified = (dateString: string) => {
   const date = new Date(dateString);
@@ -139,8 +140,20 @@ function SetList() {
     data: sets,
     isLoading,
     isError,
-  } = useQuery({ queryKey: ["sets"], queryFn: getRecentSets });
-  console.log("sets", sets);
+  } = useQuery({
+    queryKey: ["sets"],
+    queryFn: getRecentSets,
+    initialData: () => {
+      const stored = localStorage.getItem("sets-cache");
+      return stored ? JSON.parse(stored) : [];
+    },
+    staleTime: 0,
+  });
+  useEffect(() => {
+    if (sets) {
+      localStorage.setItem("sets-cache", JSON.stringify(sets));
+    }
+  }, [sets]);
 
   const navigate = useNavigate();
   const { mutateAsync, isPending } = useMutation({
@@ -153,10 +166,10 @@ function SetList() {
   });
 
   if (isLoading) return <LoadingSetList />;
-  if (isError)
-    return (
-      <div className="px-4 py-6 text-sm text-red-600">Error loading sets</div>
-    );
+  // if (isError)
+  //   return (
+  //     <div className="px-4 py-6 text-sm text-red-600">Error loading sets</div>
+  //   );
 
   const handleCreateNewSet = async () => {
     await mutateAsync();
@@ -165,7 +178,7 @@ function SetList() {
   return (
     <div className="flex flex-col gap-4 px-3 lg:px-9 py-3">
       <div className="hidden md:flex flex-col gap-2 mb-10 align">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold font-serif ">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold  my-2">
           My Sets
         </h2>
         <Button

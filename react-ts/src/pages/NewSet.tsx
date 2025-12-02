@@ -3,6 +3,7 @@ import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { Send, Paperclip } from "lucide-react";
+import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,24 @@ async function generateQuestionsApiPost(
   const res = await axios.post(`/api/v1/sets/gen`, body);
   return res.data as GenerateQuestionsResponse;
 }
+
+const loadingStates = [
+  {
+    text: "Understanding your context",
+  },
+  {
+    text: "Finding the right questions",
+  },
+  {
+    text: "Curating your questions",
+  },
+  {
+    text: "Generating your questions",
+  },
+  {
+    text: "Reviewing your questions",
+  },
+];
 
 function NewSet() {
   const [selectedValue, setSelectedValue] = useState<string>("5");
@@ -91,6 +110,12 @@ function NewSet() {
     { label: "Fill in the Blank", value: "FillintheBlank" },
     { label: "Mixed Type", value: "MixedType" },
   ];
+
+  if (isPending) {
+    return (
+      <MultiStepLoader loadingStates={loadingStates} loading={isPending} loop />
+    );
+  }
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center px-4">

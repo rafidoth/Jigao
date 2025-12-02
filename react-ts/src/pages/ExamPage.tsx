@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { useParams } from "react-router";
 import { useEffect, useMemo, useState } from "react";
 import useWebSocket from "react-use-websocket";
@@ -5,7 +6,6 @@ import { differenceInSeconds } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import RunningExam from "./RunningExamPage";
-import QuestionCard from "../components/question_cards/question_card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Card,
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@clerk/clerk-react";
+import ExamPageWaitingUI from "./WaitingExamPage";
 
 export function formatDuration(seconds: number) {
   if (seconds <= 0) return "00:00:00";
@@ -95,48 +96,6 @@ export function CountdownText({ until }: { until: Date }) {
 //   );
 // }
 
-function ExamPageWaitingUI({ startTime }: { startTime: Date }) {
-  return (
-    <Card className="w-3/4">
-      <CardContent>
-        <div className="flex justify-between">
-          <div>
-            <p className="font-semibold">Waiting for exam to start</p>
-            <div className="text-gray-400">
-              Start time: {startTime.toLocaleString()}
-            </div>
-          </div>
-          <div className="flex flex-col items-center justify-center gap-1 py-2">
-            <div className="text-xs text-muted-foreground">Starts in</div>
-            <div className="font-mono text-2xl">
-              <CountdownText until={startTime} />
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ExamPageRunningUI({ endTime }: { endTime: Date }) {
-  return (
-    <Card className="w-3/4">
-      <CardHeader className="border-b">
-        <CardTitle>Exam in progress</CardTitle>
-        <CardDescription>End time: {endTime.toLocaleString()}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col items-center justify-center gap-1 py-2">
-          <div className="text-xs text-muted-foreground">Ends in</div>
-          <div className="font-mono text-2xl">
-            <CountdownText until={endTime} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 function ExamPageEndedUI({ endTime }: { endTime: Date }) {
   return (
     <Card className="w-3/4">
@@ -196,7 +155,7 @@ function ExamPage() {
   const { session } = useSession();
   const [token, setToken] = useState<string | null>(null);
   const socketUrl = `ws://localhost:9999/api/v1/exams/join/${exam_id}`;
-  const { lastJsonMessage, readyState } = useWebSocket(
+  const { lastJsonMessage, sendJsonMessage, readyState } = useWebSocket(
     token ? socketUrl : null,
     {
       queryParams: token ? { token: token } : {},
@@ -206,6 +165,13 @@ function ExamPage() {
       },
     },
   );
+  const sendEvent = (type: string, payload: any) => {
+    if (readyState === 1) {
+      sendJsonMessage({ type, payload });
+    } else {
+      console.error("Connection not open");
+    }
+  };
 
   const [title, setTitle] = useState("");
   const [examStatus, setExamStatus] = useState("");
@@ -220,17 +186,24 @@ function ExamPage() {
 
   const [startTime, setStartTime] = useState<Date>(new Date());
   const [endTime, setEndTime] = useState<Date>(new Date());
-  console.log(items);
   let examComponent: React.ReactNode = null;
   switch (examStatus) {
     case "waiting":
       if (startTime)
-        examComponent = <ExamPageWaitingUI startTime={startTime} />;
+        examComponent = (
+          <ExamPageWaitingUI startTime={startTime} title={title} />
+        );
       break;
     case "running":
       if (endTime)
         examComponent = (
-          <RunningExam endTime={endTime} title={title} questions={items} />
+          <RunningExam
+            endTime={endTime}
+            title={title}
+            questions={items}
+            sendEvent={sendEvent}
+            isConnected={readyState === 1}
+          />
         );
       break;
     case "ended":
@@ -276,7 +249,18 @@ function ExamPage() {
     }
   }, [lastJsonMessage]);
 
-  return <div className="w-full flex justify-center">{examComponent}</div>;
+  return (
+    <div className="w-full flex justify-center">
+      {examComponent}
+
+      <div className="absolute bottom-5 right-5 flex  gap-x-2 justify-center items-center z-10">
+        <img src="/logo.png" className="w-8 h-8 rounded-md" />
+        <Link to="/" className="text-3xl font-bold">
+          Jigao
+        </Link>
+      </div>
+    </div>
+  );
 }
 
 export default ExamPage;
