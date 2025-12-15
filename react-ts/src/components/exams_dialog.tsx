@@ -10,7 +10,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-
+import { isToday, isTomorrow, isYesterday, isThisWeek, format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -278,6 +278,37 @@ function validateExamInputs(
     error = "Duration must be greater than 0";
   return { error, isError: error !== "" };
 }
+const formatDateFriendly = (date: Date, duration?: number) => {
+  let dateString = "";
+
+  if (isToday(date)) {
+    dateString = `Today at ${format(date, "h:mm a")}`;
+  } else if (isTomorrow(date)) {
+    dateString = `Tomorrow at ${format(date, "h:mm a")}`;
+  } else if (isYesterday(date)) {
+    dateString = `Yesterday at ${format(date, "h:mm a")}`;
+  } else if (isThisWeek(date, { weekStartsOn: 1 })) {
+    dateString = `${format(date, "EEEE")} at ${format(date, "h:mm a")}`;
+  } else {
+    dateString = format(date, "MMM d, yyyy • h:mm a");
+  }
+
+  if (duration) {
+    const hours = Math.floor(duration / 60);
+    const minutes = duration % 60;
+
+    let durationString = "• ";
+    if (hours > 0) {
+      durationString += `${hours}h `;
+    }
+    if (minutes > 0 || hours === 0) {
+      durationString += `${minutes}m`;
+    }
+    return `${dateString} ${durationString.trim()}`;
+  }
+
+  return dateString;
+};
 
 async function createExamApiPost(variables: any) {
   const { set_id, title, description, start_time_iso, duration_in_minutes } =
@@ -309,6 +340,12 @@ function determineExamType(visibility: string) {
   else return "Group Test";
 }
 
+function getExamTypeBadgeColor(visibility: string) {
+  if (visibility === "public") return "bg-green-600 text-white";
+  else if (visibility === "private") return "bg-yellow-500 text-black";
+  else return "bg-rose-600 text-white";
+}
+
 function ExamsList({ set_id }: { set_id: string }) {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useQuery({
@@ -330,17 +367,13 @@ function ExamsList({ set_id }: { set_id: string }) {
   const exams = Array.isArray(data) ? data : [];
   if (exams.length === 0) {
     return (
-      <div className="flex flex-col gap-3">
-        <p className="text-sm text-muted-foreground">
-          No exams yet for this set.
-        </p>
-        <Button
-          className="w-[100px]"
-          variant="outline"
-          onClick={() => refetch()}
-        >
+      <div className="flex flex-col gap-3 items-center py-10">
+        <Button className="w-[100px]" variant="ghost" onClick={() => refetch()}>
           <RotateCcw />
         </Button>
+        <p className="text-3xl text-muted-foreground">
+          No exams found for this set.
+        </p>
       </div>
     );
   }
@@ -356,35 +389,59 @@ function ExamsList({ set_id }: { set_id: string }) {
           const isPast = start ? start < new Date() : false;
           const duration = xm.duration_in_minutes;
           const xmType = determineExamType(exam.visibility);
+          const isOngoing =
+            start &&
+            !isPast &&
+            start <= new Date() &&
+            duration &&
+            new Date(start.getTime() + duration * 60000) > new Date();
 
           return (
             <Card
               key={exam.id ?? `${exam.set_id}-${exam.title}-${startTime}`}
-              className={`transition-colors ${isPast ? "opacity-65" : ""}`}
+              className={`transition-all hover:shadow-md ${
+                isPast ? "bg-gray-500" : isOngoing ? "bg-blue-500/10" : ""
+              }`}
             >
-              <div className="flex items-center justify-between p-4">
+              <div className="flex items-center justify-between px-4">
                 <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`text-sm font-bold ${getExamTypeBadgeColor(exam.visibility)} w-fit px-2 rounded-md mb-1`}
+                    >
+                      {formatDateFriendly(start!, duration)}
+                    </div>
+
+                    <div
+                      className={`text-sm font-semibold ${getExamTypeBadgeColor(exam.visibility)} w-fit px-2 rounded-md mb-1`}
+                    >
+                      {xmType}
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">{exam.title}</span>
-                    <Badge variant={isPast ? "secondary" : "default"}>
-                      {isPast ? "Past" : "Upcoming"}
+                    <span className="font-semibold text-2xl font-bold">
+                      {exam.title}
+                    </span>
+                    <Badge
+                      variant={isPast ? "secondary" : "default"}
+                      className="text-sm"
+                    >
+                      {isPast ? (isOngoing ? "On Going" : "Past") : "Upcoming"}
                     </Badge>
                   </div>
-                  <div>{xmType}</div>
-                  <div className="flex gap-x-2">
-                    <Avatar>
+                  <div className="flex items-center gap-x-2 my-2">
+                    <Avatar className="w-12 h-12">
                       <AvatarImage src={created_by.image_url} />
                       <AvatarFallback>
                         {created_by.name?.charAt(0)}{" "}
                         {created_by.name?.charAt(1)}
                       </AvatarFallback>
                     </Avatar>
-                    {created_by.name}
+                    <div className="flex flex-col">
+                      <span className="text-muted-foreground">created by</span>
+                      <span className="text-lg">{created_by.name}</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {start?.toLocaleString()}{" "}
-                    {duration ? `• ${duration} min` : ""}
-                  </p>
                   {exam.description && (
                     <p className="text-xs text-muted-foreground line-clamp-3">
                       {exam.description}
@@ -495,55 +552,59 @@ export default function ExamsDialog({
         className="w-[92vw] sm:max-w-xl md:max-w-2xl p-3"
       >
         <SheetHeader className="pb-2">
-          <SheetTitle className="text-xl">Exams</SheetTitle>
-          <SheetDescription>
-            Create a new exam and review scheduled exams for this set.
+          <SheetTitle className="text-3xl">Exams</SheetTitle>
+          <SheetDescription className="text-lg">
+            Create new exam and review scheduled exams for this set.
           </SheetDescription>
         </SheetHeader>
         <div className="flex flex-col gap-6">
-          <Dialog>
-            <DialogTrigger>
-              <Button className="font-display" variant={"outline"}>
-                Create New Exam
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="w-[800px]">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-base font-semibold">Create Exam</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Configure details and schedule a start time.
-                  </p>
+          <div>
+            <Dialog>
+              <DialogTrigger>
+                <Button
+                  className="font-display cursor-pointer font-bold"
+                  variant="secondary"
+                >
+                  Create New Exam
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-[800px]">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold">Create Exam</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Configure details and schedule a start time.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 flex flex-col gap-4">
-                <div className="sm:col-span-2">
-                  <TitleField />
+                <div className="mt-4 flex flex-col gap-4">
+                  <div className="sm:col-span-2">
+                    <TitleField />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <DescriptionField />
+                  </div>
+                  <StartTimeField />
+                  <DurationField />
                 </div>
-                <div className="sm:col-span-2">
-                  <DescriptionField />
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  {error && (
+                    <Alert variant="destructive" className="sm:max-w-xs">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <div className="ml-auto flex gap-3">
+                    <Button variant="outline" onClick={() => setOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateExam} disabled={isPending}>
+                      {isPending ? "Creating..." : "Create"}
+                    </Button>
+                  </div>
                 </div>
-                <StartTimeField />
-                <DurationField />
-              </div>
-              <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                {error && (
-                  <Alert variant="destructive" className="sm:max-w-xs">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                <div className="ml-auto flex gap-3">
-                  <Button variant="outline" onClick={() => setOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreateExam} disabled={isPending}>
-                    {isPending ? "Creating..." : "Create"}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
+              </DialogContent>
+            </Dialog>
+          </div>
           <div>
             <h3 className="text-base font-semibold mb-1">Scheduled Exams</h3>
             <p className="text-sm text-muted-foreground mb-3">

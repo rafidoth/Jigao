@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import useAuthStore from "@/store/authStore";
-import { GhostIcon, Send, SendHorizonal, X } from "lucide-react";
-import { ScrollArea } from "../ui/scroll-area";
+import { GhostIcon, SendHorizonal, X } from "lucide-react";
 import { Input } from "../ui/input";
 
-// Adds simple open/close animations using CSS transitions without altering existing Tailwind style blocks.
 const ExistingSetAiChat = () => {
   const [closed, setClosed] = useState(true);
   const [showPanel, setShowPanel] = useState(false); // stays mounted during close animation
@@ -14,7 +12,6 @@ const ExistingSetAiChat = () => {
   const currentUserDetails = useAuthStore((state) => state.currentUserDetails);
   const chatScreenRef = useRef(null);
 
-  // Bubble initial fade-in
   useEffect(() => {
     if (closed) {
       const t = requestAnimationFrame(() => setBubbleReady(true));

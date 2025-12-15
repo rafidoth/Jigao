@@ -75,7 +75,7 @@ function ExistingSetHeader({
               <div className="flex items-center gap-x-4">
                 <Button
                   variant="outline"
-                  className="h-9 w-9 rounded-full transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  className="cursor-pointer h-9 w-9 rounded-full transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                   onClick={() => navigate(-1)}
                 >
                   <ArrowLeft />

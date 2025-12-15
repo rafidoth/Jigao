@@ -12,6 +12,8 @@ import { useMutation } from "@tanstack/react-query";
 import { userOnLogin } from "./api/api.ts";
 import useAuthStore from "./store/authStore.ts";
 import LoadingScreen from "./components/LoadingScreen.tsx";
+import Exams from "./pages/Exams.tsx";
+import QuestionBank from "./pages/Exams.tsx";
 
 function App() {
   const theme = useThemeStore((state) => state.theme);
@@ -82,6 +84,8 @@ function App() {
           <Route index element={<NewSet />} />
           <Route path="sets/" element={<SetList />} />
           <Route path="sets/:set_id" element={<ExistingSet />} />
+          <Route path="exams/" element={<Exams />} />
+          <Route path="question-bank/" element={<QuestionBank />} />
         </Route>
         <Route path="exam/:exam_id" element={<ExamPage />} />
       </Routes>

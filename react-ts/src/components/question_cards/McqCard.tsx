@@ -31,7 +31,7 @@ export default function McqCard({
   selectAnswer,
 }: Props) {
   return (
-    <Card className="p-4">
+    <Card className="p-4 min-h-[400px]">
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export default function McqCard({
         {showAnswer && q.explanation ? (
           <div className="space-y-2">
             <p className="font-semibold text-sm">Explanation</p>
-            <Card className="p-3 text-sm text-muted-foreground">
+            <Card className="p-3 bg-blue-500/10 text-white">
               {q.explanation}
             </Card>
           </div>

@@ -65,6 +65,7 @@ func (h *Handler) GenerateNewQuestionSet(
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+	fmt.Println("grpc response :", resp)
 	var setID string
 	set := &questionsModels.Set{
 		Visibility: "public",
@@ -91,7 +92,6 @@ func (h *Handler) GenerateNewQuestionSet(
 		}
 	}
 
-	fmt.Println("grpc response :", resp)
 	for _, que := range resp.Questions {
 		q := questionsModels.Question{
 			Question:     que.Question.Question,

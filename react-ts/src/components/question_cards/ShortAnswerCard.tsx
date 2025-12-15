@@ -23,7 +23,7 @@ function difficultyClass(d: string) {
 
 export default function ShortAnswerCard({ question: q, showAnswer, position, selected, selectAnswer }: Props) {
   return (
-    <Card className="p-4">
+    <Card className="p-4 min-h-[400px]">
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">

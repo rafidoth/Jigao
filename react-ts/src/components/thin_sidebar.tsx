@@ -39,16 +39,16 @@ function ThinSidebar() {
       label: "My Sets",
     },
     {
-      to: "/sets/beta",
+      to: "/exams",
       icon: <BackpackIcon className="h-6 w-6" />,
       activeIcon: <BackpackIcon fill="white" className="h-6 w-6 text-white" />,
-      label: "Question Bank",
+      label: "Exams",
     },
     {
-      to: "/sets/gamma",
+      to: "/question-bank",
       icon: <ClipboardList className="h-6 w-6" />,
       activeIcon: <ClipboardList fill="white" className="h-6 w-6 text-white" />,
-      label: "Exams",
+      label: "Question Bank",
     },
   ];
 

@@ -27,7 +27,7 @@ func init() {
 }
 
 func main() {
-	slog.Info("OnlyExam is starting .....")
+	slog.Info("jigao is starting .....")
 
 	cfg, err := config.LoadConfig()
 	if err != nil {

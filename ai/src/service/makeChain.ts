@@ -1,7 +1,9 @@
 import { RunnableSequence } from "@langchain/core/runnables";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatGroq } from "@langchain/groq";
 import { LlmExpectedResponseSchema } from "../interfaces/questions";
+
 export const makeChain = async ({
   n,
   question_type,
@@ -35,11 +37,15 @@ export const makeChain = async ({
   console.log(finalPromptString);
   console.log("-------------------------------");
 
-  const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
+  // const model = new ChatGoogleGenerativeAI({
+  //   model: "gemini-2.0-flash",
+  //   temperature: 0,
+  // });
+
+  const model = new ChatGroq({
+    model: "openai/gpt-oss-120b",
     temperature: 0,
   });
-
   const structuredLlm = model.withStructuredOutput(LlmExpectedResponseSchema);
   const questionGenerationChain = RunnableSequence.from([
     prompt,
