@@ -56,7 +56,7 @@ export default function McqCard({
                 type="button"
                 onClick={() => selectAnswer(q.id, c)}
                 className={cn(
-                  "w-full flex items-center gap-2 rounded-md border p-2 text-left transition",
+                  "w-full flex items-center gap-2 rounded-md border p-2 text-left transition cursor-pointer",
                   isSelected
                     ? isAnswer
                       ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-500/10"

@@ -1,13 +1,12 @@
 package questionsHandler
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
+	"github.com/rafidoth/onlyexams/internal/utils"
 )
 
 type requestCreateNewQuestion struct {
@@ -31,16 +30,8 @@ func (h *Handler) CreateANewQuestionInASet(w http.ResponseWriter, r *http.Reques
 	}
 
 	var req requestCreateNewQuestion
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		slog.Warn("failed to read request body", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	err = json.Unmarshal(body, &req)
-	if err != nil {
-		slog.Warn("failed to marshal request body", "error", err)
+	ok := utils.ExtractRequestBody(r, &req)
+	if !ok {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}

@@ -31,6 +31,9 @@ type Storage interface {
 	CheckUserAccess(string, string) (bool, error)
 	GetSharedAccessUsersList(string) ([]users.User, error)
 	AddSharedAccessUser(string, string) error
+	CreateQuestionsInBatchReturnIds(questions []questionsModels.Question) ([]string, error)
+	SaveChoicesInBatch(choicesWithQuestionType []questionsModels.ChoicesWithQuestionType) (map[string][]questionsModels.Choice, error)
+	SaveAnswersInBatch(answersWithQuestionInfo []questionsModels.AnswerWithQuestionInfo, choicesMap map[string][]questionsModels.Choice) error
 }
 
 type UsersStorage interface {
