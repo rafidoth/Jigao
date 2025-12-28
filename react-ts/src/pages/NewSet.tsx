@@ -2,7 +2,7 @@ import { useState, type KeyboardEvent } from "react";
 import axios from "axios";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { Send, Paperclip } from "lucide-react";
+import { Send, Paperclip, LoaderPinwheel, Plus } from "lucide-react";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 
 import { Card } from "@/components/ui/card";
@@ -15,17 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-type QuestionType =
-  | "MultipleChoice"
-  | "True/False"
-  | "ShortAnswer"
-  | "FillintheBlank"
-  | "MixedType";
+import { ComboBox, type ComboBoxItem } from "@/components/ui/combobox";
+import useAuthStore from "@/store/authStore";
 
 interface GenerateQuestionsVars {
-  numQuestions: number;
-  questionType: QuestionType;
   texualContext: string;
 }
 
@@ -37,10 +30,8 @@ interface GenerateQuestionsResponse {
 async function generateQuestionsApiPost(
   variables: GenerateQuestionsVars,
 ): Promise<GenerateQuestionsResponse> {
-  const { numQuestions, questionType, texualContext } = variables;
+  const { texualContext } = variables;
   const body = {
-    n: numQuestions,
-    type: questionType,
     context: texualContext,
   };
   const res = await axios.post(`/api/v1/sets/gen`, body);
@@ -65,11 +56,21 @@ const loadingStates = [
   },
 ];
 
+const dummy_styles: ComboBoxItem[] = [
+  {
+    label: "Generic",
+    value: "generic",
+    disabled: false,
+  },
+  { label: "UIU SPL", value: "uiu_spl", disabled: false },
+];
+
 function NewSet() {
-  const [selectedValue, setSelectedValue] = useState<string>("5");
-  const [selectedType, setSelectedType] =
-    useState<QuestionType>("MultipleChoice");
   const [message, setMessage] = useState<string>("");
+  const [file, setFile] = useState<File | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<ComboBoxItem>(
+    dummy_styles[0],
+  );
   const navigate = useNavigate();
 
   const { mutateAsync, isPending, isError, error } = useMutation({
@@ -86,8 +87,6 @@ function NewSet() {
     if (!message.trim()) return; // avoid empty context
     try {
       await mutateAsync({
-        numQuestions: parseInt(selectedValue, 10),
-        questionType: selectedType,
         texualContext: message.trim(),
       });
     } catch (_) {
@@ -102,89 +101,71 @@ function NewSet() {
     }
   };
 
-  const numbers = Array.from({ length: 6 }, (_, i) => (i + 1) * 5);
-  const typeOptions: { label: string; value: QuestionType }[] = [
-    { label: "Multiple Choice", value: "MultipleChoice" },
-    { label: "True/False", value: "True/False" },
-    { label: "Short Answer", value: "ShortAnswer" },
-    { label: "Fill in the Blank", value: "FillintheBlank" },
-    { label: "Mixed Type", value: "MixedType" },
-  ];
-
   if (isPending) {
     return (
       <MultiStepLoader loadingStates={loadingStates} loading={isPending} loop />
     );
   }
 
+  const currentUserDetails = useAuthStore((state) => state.currentUserDetails);
   return (
     <div className="flex h-full w-full flex-col items-center justify-center px-4">
-      <Card className="relative w-full max-w-[680px] p-6 border-none">
+      <div className="flex items-center gap-2 mb-6 absolute bottom-10  ">
+        <img
+          src={"/logo2.png"}
+          alt="Jigao"
+          className=" w-10 h-10 rounded  mt-2"
+        />
+        <span className="text-4xl font-black font-display">jigao</span>
+      </div>
+      <div className="flex items-center gap-3 mb-6 ">
+        <div className="flex gap-x-2 items-center font-handwriting">
+          <span className=" text-4xl">Welcome Back,</span>
+          <span className="text-primary text-4xl">
+            {currentUserDetails?.firstName}
+          </span>
+        </div>
+      </div>
+      <Card className="relative w-full max-w-[800px] p-6 border-none bg-primary/0">
         <div className="flex flex-col gap-4">
-          <fieldset
-            className="flex flex-wrap items-center gap-2"
-            aria-label="Generation parameters"
-          >
-            <label htmlFor="numQuestions" className="text-primary text-sm">
-              Generate
-            </label>
-            <Select value={selectedValue} onValueChange={setSelectedValue}>
-              <SelectTrigger
-                size="sm"
-                id="numQuestions"
-                aria-label="Number of questions"
-              >
-                <SelectValue placeholder={selectedValue} />
-              </SelectTrigger>
-              <SelectContent>
-                {numbers.map((value) => (
-                  <SelectItem key={value} value={value.toString()}>
-                    {value}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-2 ">
+            <ComboBox
+              items={dummy_styles}
+              className="w-[200px] rounded-full border-none"
+              onChange={setSelectedStyle}
+              selected={selectedStyle}
+            />
+            <Button variant="default" className="rounded-full p-2">
+              <Plus className="h-5 w-5" />
+            </Button>
+          </div>
 
-            <Select
-              value={selectedType}
-              onValueChange={(v) => setSelectedType(v as QuestionType)}
-            >
-              <SelectTrigger size="sm" aria-label="Question type">
-                <SelectValue placeholder={selectedType} />
-              </SelectTrigger>
-              <SelectContent>
-                {typeOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <span className="text-primary text-sm">questions on</span>
-          </fieldset>
-
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="context"
-              className="text-xs font-medium text-muted-foreground"
-            >
-              Text Context / Topic
-            </label>
+          <div className="relative flex flex-col gap-2 text-2xl">
             <Textarea
               id="context"
-              className={`placeholder:italic font-mono w-full ${
-                message.length <= 200 ? "h-24" : "h-[600px]"
+              className={`border-none rounded-2xl py-6 placeholder:italic w-full ${
+                message.length <= 200 ? "h-[200px]" : "h-[600px]"
               }`}
-              placeholder="Paste your text context here or just mention a topic name"
+              placeholder="Describe the topic to generate questions"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isPending}
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{message.length} chars</span>
-              <span>Press Enter to send</span>
-            </div>
+
+            <Button
+              onClick={handleSend}
+              type="button"
+              disabled={isPending || !message.trim()}
+              aria-disabled={isPending}
+              className="absolute bottom-5 right-5 rounded-full flex justify-center items-center p-2"
+            >
+              {isPending ? (
+                <LoaderPinwheel className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
           </div>
 
           {isError && (
@@ -192,30 +173,8 @@ function NewSet() {
               {(error as any)?.message || "Failed to generate questions"}
             </p>
           )}
-          <div className="flex justify-between align-center">
-            <Button variant="outline" disabled>
-              {" "}
-              <Paperclip /> Upload PDF/DocX/PPTX
-            </Button>
-            <div className="flex justify-end">
-              <Button
-                onClick={handleSend}
-                type="button"
-                disabled={isPending || !message.trim()}
-                aria-disabled={isPending}
-                className="gap-2"
-              >
-                <Send className="h-4 w-4" />
-                {isPending ? "Generating..." : "Generate Set"}
-              </Button>
-            </div>
-          </div>
         </div>
       </Card>
-
-      <p className="text-muted-foreground mt-4 text-sm md:text-base max-w-[680px] text-center px-2">
-        AI will generate a set of questions based on your context.
-      </p>
     </div>
   );
 }

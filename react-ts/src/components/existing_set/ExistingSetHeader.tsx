@@ -156,12 +156,7 @@ function ExistingSetHeader({
           </div>
           <div className="flex flex-col items-center gap-2 flex-wrap">
             <ExamsDialog set_id={set.id}>
-              <Button
-                variant="secondary"
-                className="h-9 px-3 transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-              >
-                Manage Exams
-              </Button>
+              <Button variant="default">Manage Exams</Button>
             </ExamsDialog>
             <Badge variant="outline" className="hidden sm:inline-flex">
               {itemsLength} questions

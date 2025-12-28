@@ -136,11 +136,7 @@ function LoadingSetList() {
 }
 
 function SetList() {
-  const {
-    data: sets,
-    isLoading,
-    isError,
-  } = useQuery({
+  const { data: sets, isLoading } = useQuery({
     queryKey: ["sets"],
     queryFn: getRecentSets,
     initialData: () => {
@@ -228,7 +224,7 @@ function SetList() {
                 return (
                   <TableRow
                     key={set.id}
-                    className="cursor-pointer text-base md:text-lg hover:bg-secondary  hover:font-medium hover:text-secondary-foreground"
+                    className="cursor-pointer text-base md:text-lg hover:bg-primary hover:font-medium hover:text-primary-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                     onClick={() => navigate(`/sets/${set.id}`)}
                     tabIndex={0}
                     onKeyDown={(e) => {
