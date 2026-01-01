@@ -14,6 +14,7 @@ import (
 )
 
 func main() {
+	// loading configs
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		os.Exit(1)
