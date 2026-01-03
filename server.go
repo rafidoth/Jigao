@@ -25,6 +25,7 @@ type QuestionsHandler interface {
 	GenerateNewQuestionSet(w http.ResponseWriter, r *http.Request)
 	GetSetAccessUsersList(w http.ResponseWriter, r *http.Request)
 	AllowSetAccess(w http.ResponseWriter, r *http.Request)
+	SaveGeneratedQuestionsHandler(w http.ResponseWriter, r *http.Request)
 }
 
 type ExamsHandler interface {
@@ -35,6 +36,7 @@ type ExamsHandler interface {
 	GetExamById(w http.ResponseWriter, r *http.Request)
 	GetQuestionsOfAnExam(w http.ResponseWriter, r *http.Request)
 	RemoveExam(w http.ResponseWriter, r *http.Request)
+	GetSubmissionResult(w http.ResponseWriter, r *http.Request)
 }
 
 type UsersHandler interface {
@@ -70,6 +72,7 @@ func (s *Server) registerRoutes() {
 			r.Get("/", s.questionsHandler.GetRecentSets)
 			r.Post("/", s.questionsHandler.CreateNewSet)
 			r.Post("/gen", s.questionsHandler.GenerateNewQuestionSet)
+			r.Post("/save_generated", s.questionsHandler.SaveGeneratedQuestionsHandler)
 			r.Get("/{set_id}", s.questionsHandler.GetASet)
 			r.Put("/{set_id}", s.questionsHandler.UpdateASet)
 			r.Delete("/{set_id}", s.questionsHandler.DeleteASet)
@@ -89,6 +92,10 @@ func (s *Server) registerRoutes() {
 			r.Get("/", s.examsHandler.GetExamsOnASet)
 			// r.Post("/rooms/{exam_id}", s.examsHandler.CreateRoom)
 			r.Get("/join/{room_id}", s.examsHandler.JoinRoom)
+		})
+
+		r.Route("/submissions", func(r chi.Router) {
+			r.Get("/{exam_id}", s.examsHandler.GetSubmissionResult)
 		})
 	})
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -34,7 +33,6 @@ func LogRequestMiddleware(next http.Handler) http.Handler {
 		slog.Info("Incoming Request Logger", "URL", r.URL, "Method", r.Method, "Connection", r.Header.Get("Connection"))
 
 		connectionString := r.Header.Get("Connection")
-		fmt.Println("hello world", connectionString)
 		if strings.Contains(strings.ToLower(connectionString), "upgrade") {
 
 			queryParam := r.URL.Query()
@@ -49,7 +47,6 @@ func LogRequestMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// my middlewares
 func AuthMiddleware(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		claims, ok := clerk.SessionClaimsFromContext(r.Context())
@@ -67,6 +64,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		userId := usr.ID
 		ctx := context.WithValue(r.Context(), "user-id", userId)
 		ctx = context.WithValue(ctx, "user-details", usr)
+		slog.Info("Authenticated user", "user-id", userId, "route", r.URL.Path)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)

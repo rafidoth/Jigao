@@ -30,3 +30,14 @@ type AnswerSelectEvent struct {
 	QuestionId string `json:"question_id"`
 	Answer     string `json:"answer"`
 }
+type SubmitExamEvent struct {
+	ExamId  string            `json:"exam_id"`
+	UserId  string            `json:"user_id"`
+	Answers map[string]string `json:"answers"`
+	Time    time.Time         `json:"time"`
+}
+
+type EvaluationEvent struct {
+	SubmitExamEvent
+	SubmissionID string
+}

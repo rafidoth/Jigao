@@ -37,3 +37,8 @@ export const getSet = async (set_id: string) => {
   const res = await axios.get(`/api/v1/sets/${set_id}`);
   return res.data;
 };
+
+export const getQuestionsByExamId = async (exam_id: string | undefined) => {
+  const res = await axios.get(`/api/v1/exams/q/${exam_id}`);
+  return res.data;
+};

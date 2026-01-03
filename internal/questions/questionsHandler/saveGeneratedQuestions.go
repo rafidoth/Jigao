@@ -1,7 +1,6 @@
 package questionsHandler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -11,20 +10,21 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 	"github.com/rafidoth/onlyexams/internal/utils"
-	"github.com/rafidoth/onlyexams/proto"
 )
 
-type GenerateNewSetReq struct {
-	NumQuestions int    `json:"n"`
-	SetContext   string `json:"context"`
-	QuestionType string `json:"type"`
+type GeneratedQuestion struct {
+	Question questionsModels.Question `json:"question"`
+	Answer   questionsModels.Answer   `json:"answer"`
+	Choices  []questionsModels.Choice `json:"choices"`
 }
 
-type GenerateNewSetRes struct {
-	SetId string `json:"set_id"`
+type SaveGeneratedQuestionsReq struct {
+	Title     string              `json:"title"`
+	Questions []GeneratedQuestion `json:"questions"`
+	Context   string              `json:"context"`
 }
 
-func (h *Handler) GenerateNewQuestionSet(
+func (h *Handler) SaveGeneratedQuestionsHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
@@ -33,33 +33,16 @@ func (h *Handler) GenerateNewQuestionSet(
 		http.Error(w, "Failed to extract user ID", http.StatusBadRequest)
 		return
 	}
-
-	var req GenerateNewSetReq
+	var req SaveGeneratedQuestionsReq
 	utils.ExtractRequestBody(r, &req)
-
-	slog.Info("Request of Generating Question Set on ", "user_id", uid, "request_body", req)
-	ctx := context.Background()
-
-	gReq := &proto.GenerateQuestionsRequest{
-		Quantity:     int32(req.NumQuestions),
-		Context:      req.SetContext,
-		QuestionType: req.QuestionType,
-		Instructions: "",
-	}
-	resp, err := h.aiServiceClient.GenerateQuestions(ctx, gReq)
-	if err != nil {
-		slog.Error("failed to generate questions", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
 
 	var setID string
 	set := &questionsModels.Set{
 		Visibility: "public",
-		Title:      resp.Title,
+		Title:      req.Title,
 		UserId:     uid,
 	}
-	setID, err = h.store.CreateSetWithContextRetSetId(set, gReq.Context)
+	setID, err = h.store.CreateSetWithContextRetSetId(set, req.Context)
 	if err != nil {
 		slog.Error("failed to create set", "error", err)
 		var pgErr *pgconn.PgError
@@ -81,7 +64,7 @@ func (h *Handler) GenerateNewQuestionSet(
 	var questions []questionsModels.Question
 	var choicesWithQuestionType []questionsModels.ChoicesWithQuestionType
 	var answersWithQuestionInfo []questionsModels.AnswerWithQuestionInfo
-	for _, que := range resp.Questions {
+	for _, que := range req.Questions {
 		q := questionsModels.Question{
 			Question:     que.Question.Question,
 			Difficulty:   que.Question.Difficulty,
@@ -103,10 +86,11 @@ func (h *Handler) GenerateNewQuestionSet(
 
 		answersWithQuestionInfo = append(answersWithQuestionInfo, questionsModels.AnswerWithQuestionInfo{
 			QuestionType: que.Question.QuestionType,
-			AnswerText:   que.Answer.Answer,
+			AnswerText:   que.Answer.AnswerText,
 			Explanation:  que.Answer.Explanation,
 		})
 	}
+
 	if len(questions) != len(choicesWithQuestionType) {
 		slog.Error("mismatched questions and choices length",
 			"questions_length", len(questions),

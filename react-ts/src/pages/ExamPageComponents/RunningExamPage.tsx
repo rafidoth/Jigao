@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CountdownText } from "./ExamPage";
+import { CountdownText } from "../ExamPage";
 import { format } from "date-fns";
 import { typeLabel } from "@/components/question_cards/CardUtils";
+import { Button } from "@/components/ui/button";
 import type {
   Question,
   MultipleChoiceQuestion,
@@ -14,7 +15,7 @@ import type {
   FillInTheBlanksQuestion,
 } from "@/types/questions";
 import { cn } from "@/lib/utils";
-import { useResolvedPath } from "react-router";
+import { useNavigate } from "react-router";
 
 interface BaseExamCardProps {
   position: number;
@@ -56,8 +57,10 @@ function McqExamCard({
                 type="button"
                 onClick={() => selectAnswer(q.id, c)}
                 className={cn(
-                  "w-full flex items-center gap-2 rounded-md border p-2 text-left transition",
-                  isSelected ? "border-accent bg-accent/30" : "hover:bg-muted",
+                  "w-full flex items-center gap-2 rounded-md border p-2 text-left transition cursor-pointer",
+                  isSelected
+                    ? "border-primary bg-primary/30"
+                    : "hover:bg-muted",
                 )}
               >
                 <Badge variant="outline" className="w-7 justify-center">
@@ -101,7 +104,7 @@ function TrueFalseExamCard({
                 type="button"
                 onClick={() => selectAnswer(q.id, c)}
                 className={cn(
-                  "w-full flex items-center gap-2 rounded-md border p-2 text-left transition",
+                  "w-full flex items-center gap-2 rounded-md border p-2 text-left transition cursor-pointer",
                   isSelected
                     ? "border-primary bg-primary/10"
                     : "hover:bg-muted",
@@ -190,6 +193,51 @@ function FillInTheBlanksExamCard({
   );
 }
 
+interface RunningExamHeaderProps {
+  endTime: Date;
+  title: string;
+  submitExam?: () => void;
+}
+
+function RunningExamHeader({
+  endTime,
+  title,
+  submitExam,
+}: RunningExamHeaderProps) {
+  return (
+    <div
+      className={cn(
+        "flex justify-between items-center shrink-0 sticky top-0 z-10   border rounded-md p-4",
+      )}
+    >
+      <div className="flex flex-col">
+        <div className="text-3xl">{title || "Exam"} </div>
+        <Badge
+          variant={"outline"}
+          className="font-semibold select-none bg-blue-500/20 text-blue-500"
+        >
+          Exam in progress
+        </Badge>
+      </div>
+      <Button variant={"destructive"} onClick={submitExam}>
+        Submit Exam
+      </Button>
+      <div className="flex flex-col items-center justify-center gap-1 py-2">
+        <div className="flex gap-x-2 items-center justify-center">
+          <div className="text-muted-foreground">Ends in</div>
+          <div className="font-mono text-2xl">
+            <CountdownText until={endTime} />
+          </div>
+        </div>
+        <div className="border flex gap-x-2 px-2 rounded-md bg-red-800/20 text-red-500 font-semibold">
+          <span>{format(endTime, "d MMMM,yyyy")}</span>
+          <span>{format(endTime, "p")}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface ExamQuestionCardProps {
   question: Question;
   position: number;
@@ -257,74 +305,69 @@ function RunningExam({
   questions,
   sendEvent,
   isConnected,
+  exam_id,
 }: {
   endTime: Date;
   title: string;
+  exam_id?: string;
   questions: Question[];
   sendEvent: (type: string, payload: any) => void;
   isConnected: boolean;
 }) {
-  const messageQueue = useRef<{ type: string; payload: any }[]>([]);
+  const localStorageKey = `exam-answers-${exam_id}`;
   const [selectedAnswers, setSelectedAnswers] = useState<
-    Record<string, string>
+    Record<string, string | null>
   >({});
-  const selectAnswer = (id: string, ans: string) => {
-    // 4. Logic: Send if ready, Queue if not
-    if (isConnected) {
-      sendEvent("answer_selected", { question_id: id, answer: ans });
-    } else {
-      console.warn("Socket connecting... buffering answer.");
-      messageQueue.current.push({
-        type: "answer_selected",
-        payload: { id, answer: ans },
-      });
-    }
 
+  const selectAnswer = (id: string, ans: string) => {
+    localStorage.setItem(
+      localStorageKey,
+      JSON.stringify({ ...selectedAnswers, [id]: ans }),
+    );
     setSelectedAnswers((prev) => ({ ...prev, [id]: ans }));
   };
 
-  useEffect(() => {
-    if (isConnected && messageQueue.current.length > 0) {
-      console.log(
-        `Flushing ${messageQueue.current.length} buffered answers...`,
-      );
-      messageQueue.current.forEach((msg) => {
-        sendEvent(msg.type, msg.payload);
-      });
-      // Clear queue
-      messageQueue.current = [];
+  const navigate = useNavigate();
+
+  const submitExam = () => {
+    if (!isConnected) {
+      alert("Cannot submit exam: not connected to server.");
+      return;
     }
-  }, [isConnected, sendEvent]);
+    sendEvent("submit_exam", {
+      exam_id,
+      answers: selectedAnswers,
+      time: new Date(),
+    });
+    localStorage.removeItem(localStorageKey);
+    navigate(`/submissions/${exam_id}`);
+  };
+  useEffect(() => {
+    const savedAnswers = localStorage.getItem(localStorageKey);
+
+    if (savedAnswers) {
+      setSelectedAnswers(JSON.parse(savedAnswers));
+      return;
+    }
+
+    const initial = questions.reduce<Record<string, string | null>>(
+      (acc, q) => {
+        acc[q.id] = null;
+        return acc;
+      },
+      {},
+    );
+
+    setSelectedAnswers(initial);
+  }, [questions, localStorageKey]);
 
   return (
     <div className="h-screen w-[800px] flex flex-col gap-4 py-4">
-      <div
-        className={cn(
-          "flex justify-between items-center shrink-0 sticky top-0 z-10   border rounded-md p-4",
-        )}
-      >
-        <div className="flex flex-col">
-          <div className="text-3xl">{title || "Exam"} </div>
-          <Badge
-            variant={"outline"}
-            className="font-semibold select-none bg-blue-500/20 text-blue-500"
-          >
-            Exam in progress
-          </Badge>
-        </div>
-        <div className="flex flex-col items-center justify-center gap-1 py-2">
-          <div className="flex gap-x-2 items-center justify-center">
-            <div className="text-muted-foreground">Ends in</div>
-            <div className="font-mono text-2xl">
-              <CountdownText until={endTime} />
-            </div>
-          </div>
-          <div className="border flex gap-x-2 px-2 rounded-md bg-red-800/20 text-red-500 font-semibold">
-            <span>{format(endTime, "d MMMM,yyyy")}</span>
-            <span>{format(endTime, "p")}</span>
-          </div>
-        </div>
-      </div>
+      <RunningExamHeader
+        submitExam={submitExam}
+        endTime={endTime}
+        title={title}
+      />
       <div className="flex-1 overflow-y-auto pr-2">
         <div className="flex flex-col gap-3 pb-6">
           {questions?.map((q, idx) => (

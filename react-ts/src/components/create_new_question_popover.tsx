@@ -3,7 +3,11 @@ import { create } from "zustand";
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +20,11 @@ import type { Difficulty, QuestionKind } from "@/types/questions";
 const difficultyLevels: Difficulty[] = ["easy", "medium", "hard"];
 
 // Question type metadata used for selection UI
-const questionTypes: { value: QuestionKind; label: string; description: string }[] = [
+const questionTypes: {
+  value: QuestionKind;
+  label: string;
+  description: string;
+}[] = [
   {
     value: "multiple_choice_questions",
     label: "Multiple Choice",
@@ -35,7 +43,8 @@ const questionTypes: { value: QuestionKind; label: string; description: string }
   {
     value: "fill_in_the_blanks",
     label: "Fill in the Blank",
-    description: "There should be a ___ in the question and one correct answer for that.",
+    description:
+      "There should be a ___ in the question and one correct answer for that.",
   },
 ];
 
@@ -82,7 +91,10 @@ const CreateNewQuestionStore = (
   questionType: "multiple_choice_questions",
   setQuestionType: (t) => set({ questionType: t }),
 
-  mcq: { choices: ["", "", "", ""], correctAnswer: Math.floor(Math.random() * 4) },
+  mcq: {
+    choices: ["", "", "", ""],
+    correctAnswer: Math.floor(Math.random() * 4),
+  },
   setChoice: (index, value) =>
     set((state: CreateNewQuestionStoreState) => {
       const newChoices = [...state.mcq.choices];
@@ -90,9 +102,14 @@ const CreateNewQuestionStore = (
       return { mcq: { ...state.mcq, choices: newChoices } };
     }),
   setMcqCorrectAnswer: (index) =>
-    set((state: CreateNewQuestionStoreState) => ({ mcq: { ...state.mcq, correctAnswer: index } })),
+    set((state: CreateNewQuestionStoreState) => ({
+      mcq: { ...state.mcq, correctAnswer: index },
+    })),
 
-  trueFalse: { choices: ["True", "False"], correctAnswer: Math.floor(Math.random() * 2) },
+  trueFalse: {
+    choices: ["True", "False"],
+    correctAnswer: Math.floor(Math.random() * 2),
+  },
   setTrueFalseCorrectAnswer: (index) =>
     set((state: CreateNewQuestionStoreState) => ({
       trueFalse: { ...state.trueFalse, correctAnswer: index },
@@ -116,7 +133,9 @@ const CreateNewQuestionStore = (
   setAnswerExplanation: (t) => set({ answerExplanation: t }),
 });
 
-const useCreateNewQuestionStore = create<CreateNewQuestionStoreState>(CreateNewQuestionStore);
+const useCreateNewQuestionStore = create<CreateNewQuestionStoreState>(
+  CreateNewQuestionStore,
+);
 
 function DifficultySelector() {
   const difficulty = useCreateNewQuestionStore((s) => s.difficulty);
@@ -166,13 +185,13 @@ function QuestionTypeSelector() {
         return (
           <Card
             key={qt.value}
-            className={
-              `p-3 border cursor-pointer transition ${active ? "border-primary bg-primary/10" : "hover:bg-muted"}`
-            }
+            className={` flex flex-col p-3 border cursor-pointer transition ${active ? "border-primary bg-primary/10" : "hover:bg-muted"}`}
             onClick={() => setQuestionType(qt.value)}
           >
-            <p className="font-medium text-sm">{qt.label}</p>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{qt.description}</p>
+            <p className="font-medium text-xl">{qt.label}</p>
+            <p className=" text-muted-foreground mt-1 leading-relaxed">
+              {qt.description}
+            </p>
           </Card>
         );
       })}
@@ -225,12 +244,19 @@ function MCQInputs() {
 
 function TrueFalseInputs() {
   const choices = useCreateNewQuestionStore((s) => s.trueFalse.choices);
-  const correctAnswer = useCreateNewQuestionStore((s) => s.trueFalse.correctAnswer);
-  const setTrueFalseCorrectAnswer = useCreateNewQuestionStore((s) => s.setTrueFalseCorrectAnswer);
+  const correctAnswer = useCreateNewQuestionStore(
+    (s) => s.trueFalse.correctAnswer,
+  );
+  const setTrueFalseCorrectAnswer = useCreateNewQuestionStore(
+    (s) => s.setTrueFalseCorrectAnswer,
+  );
   const setQuestionText = useCreateNewQuestionStore((s) => s.setQuestionText);
   return (
     <div className="flex flex-col gap-3">
-      <Textarea placeholder="Enter the statement" onChange={(e) => setQuestionText(e.target.value)} />
+      <Textarea
+        placeholder="Enter the statement"
+        onChange={(e) => setQuestionText(e.target.value)}
+      />
       <div className="grid gap-3 md:grid-cols-2">
         {choices.map((choice, index) => {
           const active = correctAnswer === index;
@@ -254,8 +280,12 @@ function TrueFalseInputs() {
 }
 
 function FillInTheBlanksInputs() {
-  const correctAnswers = useCreateNewQuestionStore((s) => s.fillInTheBlanks.correctAnswers);
-  const addAnswer = useCreateNewQuestionStore((s) => s.addFillInTheBlanksAnswer);
+  const correctAnswers = useCreateNewQuestionStore(
+    (s) => s.fillInTheBlanks.correctAnswers,
+  );
+  const addAnswer = useCreateNewQuestionStore(
+    (s) => s.addFillInTheBlanksAnswer,
+  );
   const setQuestionText = useCreateNewQuestionStore((s) => s.setQuestionText);
   const [current, setCurrent] = useState("");
   const [error, setError] = useState("");
@@ -287,7 +317,10 @@ function FillInTheBlanksInputs() {
 
   return (
     <div className="flex flex-col gap-3">
-      <Textarea placeholder="Enter the statement" onChange={(e) => setQuestionText(e.target.value)} />
+      <Textarea
+        placeholder="Enter the statement"
+        onChange={(e) => setQuestionText(e.target.value)}
+      />
       {correctAnswers.length > 0 && (
         <div className="flex gap-2 flex-wrap">
           {correctAnswers.map((ans, i) => (
@@ -314,7 +347,9 @@ function FillInTheBlanksInputs() {
 }
 
 function ShortAnswerInputs() {
-  const estimatedCorrectAnswer = useCreateNewQuestionStore((s) => s.shortAnswer.estimatedCorrectAnswer);
+  const estimatedCorrectAnswer = useCreateNewQuestionStore(
+    (s) => s.shortAnswer.estimatedCorrectAnswer,
+  );
   const questionText = useCreateNewQuestionStore((s) => s.questionText);
   const setQuestionText = useCreateNewQuestionStore((s) => s.setQuestionText);
   const setShortAnswerEstimatedCorrectAnswer = useCreateNewQuestionStore(
@@ -336,7 +371,10 @@ function ShortAnswerInputs() {
   );
 }
 
-function getChoicesBasedOnQuestionType(questionType: QuestionKind, state: CreateNewQuestionStoreState) {
+function getChoicesBasedOnQuestionType(
+  questionType: QuestionKind,
+  state: CreateNewQuestionStoreState,
+) {
   switch (questionType) {
     case "multiple_choice_questions":
       return state.mcq.choices;
@@ -351,7 +389,10 @@ function getChoicesBasedOnQuestionType(questionType: QuestionKind, state: Create
   }
 }
 
-function getCorrectAnswerBasedOnQuestionType(questionType: QuestionKind, state: CreateNewQuestionStoreState) {
+function getCorrectAnswerBasedOnQuestionType(
+  questionType: QuestionKind,
+  state: CreateNewQuestionStoreState,
+) {
   switch (questionType) {
     case "multiple_choice_questions":
       return state.mcq.choices[state.mcq.correctAnswer];
@@ -409,7 +450,15 @@ interface CreateQuestionVariables {
 }
 
 async function createNewQuestionApiPost(variables: CreateQuestionVariables) {
-  const { set_id, difficulty, questionType, questionText, choices, correctAnswer, explanation } = variables;
+  const {
+    set_id,
+    difficulty,
+    questionType,
+    questionText,
+    choices,
+    correctAnswer,
+    explanation,
+  } = variables;
   const body = {
     question: {
       difficulty: difficulty,
@@ -426,15 +475,26 @@ async function createNewQuestionApiPost(variables: CreateQuestionVariables) {
   return res.data;
 }
 
-export default function CreateNewQuestionPopover({ children, set_id }: { children: React.ReactNode; set_id: string }) {
+export default function CreateNewQuestionPopover({
+  children,
+  set_id,
+}: {
+  children: React.ReactNode;
+  set_id: string;
+}) {
   const difficulty = useCreateNewQuestionStore((s) => s.difficulty);
   const questionType = useCreateNewQuestionStore((s) => s.questionType);
   const questionText = useCreateNewQuestionStore((s) => s.questionText);
   const state = useCreateNewQuestionStore();
   const choices = getChoicesBasedOnQuestionType(questionType, state);
-  const correctAnswer = getCorrectAnswerBasedOnQuestionType(questionType, state);
+  const correctAnswer = getCorrectAnswerBasedOnQuestionType(
+    questionType,
+    state,
+  );
   const explanation = useCreateNewQuestionStore((s) => s.answerExplanation);
-  const setExplanation = useCreateNewQuestionStore((s) => s.setAnswerExplanation);
+  const setExplanation = useCreateNewQuestionStore(
+    (s) => s.setAnswerExplanation,
+  );
   const [error, setError] = useState("");
 
   let inputs: React.ReactNode = null;
@@ -505,7 +565,9 @@ export default function CreateNewQuestionPopover({ children, set_id }: { childre
             <DifficultySelector />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Answer Explanation (optional)</label>
+            <label className="text-sm font-medium">
+              Answer Explanation (optional)
+            </label>
             <Textarea
               placeholder="Explain the correct answer for participants"
               value={explanation}

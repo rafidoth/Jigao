@@ -48,12 +48,7 @@ func (s Store) GetAllQuestionsInASet(
 			return nil, err
 		}
 
-		aRows, err := tx.Query(context.Background(), `
-			SELECT *
-			FROM answers
-			WHERE question_id = $1
-			LIMIT 1
-		`, q.Id)
+		aRows, err := tx.Query(context.Background(), `SELECT id, created_at, answer, COALESCE(choice_id::text, '') AS choice_id, explanation, question_id FROM answers WHERE question_id = $1 LIMIT 1`, q.Id)
 		if err != nil {
 			return nil, err
 		}

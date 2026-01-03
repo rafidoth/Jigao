@@ -24,6 +24,7 @@ type Storage interface {
 	GetExamSetId(exam_id string) (string, error)
 	GetExamByExamId(examId string) (models.Exam, error)
 	RemoveExam(examId string) error
+	GetEvaluationResult(examID, userID string) (int, map[string]models.EvaluatedAnswerType, error)
 }
 
 type QuestionsStore interface {

@@ -83,6 +83,7 @@ func (c *Client) Read(eh *ExamHub) {
 
 		switch re.Type {
 		case "answer_selected":
+			// not using this event type for now
 			var payload AnswerSelectPayload
 			if err := json.Unmarshal(re.Payload, &payload); err != nil {
 				slog.Error("invalid payload for answer_selected", "error", err)
@@ -101,7 +102,19 @@ func (c *Client) Read(eh *ExamHub) {
 			eh.AnswerSelect <- ase
 
 		case "submit_exam":
-			// Handle other types
+			var payload SubmitExamEvent
+			if err := json.Unmarshal(re.Payload, &payload); err != nil {
+				slog.Error("invalid payload for submit_exam", "error", err)
+				continue
+			}
+
+			fmt.Printf("User %s submitted exam %s with answers %v\n", c.UserId, payload.ExamId, payload.Answers)
+			see := &SubmitExamEvent{
+				ExamId:  payload.ExamId,
+				UserId:  c.UserId,
+				Answers: payload.Answers,
+			}
+			eh.SubmitExam <- see
 		}
 	}
 }

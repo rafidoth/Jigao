@@ -1,4 +1,4 @@
-import { CountdownText } from "./ExamPage";
+import { CountdownText } from "../ExamPage";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 

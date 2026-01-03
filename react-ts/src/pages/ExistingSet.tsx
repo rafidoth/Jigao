@@ -3,17 +3,14 @@ import { useParams } from "react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { getSet, getQuestions } from "@/api/api.ts";
-import { CommandIcon, Ghost, Info as InfoIcon } from "lucide-react";
-
+import { Info as InfoIcon } from "lucide-react";
 import useExistingSetStore from "../store/existingSetStore.ts";
 import QuestionCard from "../components/question_cards/question_card.tsx";
-
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import ExistingSetAiChat from "@/components/existing_set/ExistingSetAiChat.tsx";
 import useAuthStore from "@/store/authStore.ts";
 
 function QuestionsList({
@@ -99,7 +96,7 @@ function LoadingExistingSet() {
         </div>
         {/* Grid skeleton */}
         <ScrollArea className="h-[calc(100vh-100px)]">
-          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 px-3">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 px-3">
             {skeletonItems.map((_, i) => (
               <Card key={i} className="p-4">
                 <div className="flex flex-col gap-3">
@@ -203,7 +200,6 @@ function ExistingSet() {
           <QuestionsList items={items} gridLayout={gridLayout} />
         </div>
       </div>
-      <ExistingSetAiChat />
     </div>
   );
 }

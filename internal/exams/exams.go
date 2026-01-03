@@ -12,6 +12,8 @@ import (
 
 type HubStorage interface {
 	GetExamByExamId(examId string) (models.Exam, error)
+	SaveSubmittedExamAnswers(examId, userId string, answers map[string]string) error
+	EvaluateSubmission(examId, userId string) error
 }
 
 type Room struct {
@@ -90,6 +92,8 @@ type ExamHub struct {
 	Unregister   chan *Client
 	Broadcast    chan *Event
 	AnswerSelect chan *AnswerSelectEvent
+	SubmitExam   chan *SubmitExamEvent
+	Evaluation   chan *SubmitExamEvent
 	Storage      HubStorage
 }
 
@@ -100,6 +104,8 @@ func New(st HubStorage) *ExamHub {
 		Unregister:   make(chan *Client, 10),
 		Broadcast:    make(chan *Event, 10),
 		AnswerSelect: make(chan *AnswerSelectEvent, 10),
+		SubmitExam:   make(chan *SubmitExamEvent, 10),
+		Evaluation:   make(chan *SubmitExamEvent, 10),
 		Storage:      st,
 	}
 }
@@ -117,6 +123,24 @@ func (eh *ExamHub) RemoveRoom(roomId string) error {
 	}
 	delete(eh.Rooms, roomId)
 	return nil
+}
+
+func (eh *ExamHub) EndExamNow(roomId string) error {
+	if r, ok := eh.Rooms[roomId]; ok {
+		if r.EndSignalTimer != nil {
+			r.EndSignalTimer.Stop()
+			slog.Info("stopped end timer for room", "room", roomId)
+		}
+		payload := struct {
+			EndTime time.Time `json:"end_time"`
+		}{
+			EndTime: time.Now(),
+		}
+		evt := makeEvent("exam-ends-now", roomId, payload)
+		eh.Broadcast <- evt
+		return nil
+	}
+	return errors.New("room does not exist")
 }
 
 func (eh *ExamHub) CreateNewRoom(roomId string) error {
@@ -154,7 +178,35 @@ func (eh *ExamHub) Run() {
 			handleAnswerSelectEvent(eh, ase)
 		case event := <-eh.Broadcast:
 			handleBroadcastEvent(eh, event)
+		case see := <-eh.SubmitExam:
+			handleSubmitExamEvent(eh, see)
+		case eve := <-eh.Evaluation:
+			handleEvaluationEvent(eh, eve)
 		}
+
+	}
+}
+
+func handleSubmitExamEvent(eh *ExamHub, see *SubmitExamEvent) {
+	if _, exists := eh.Rooms[see.ExamId]; exists {
+		if _, ok := eh.Rooms[see.ExamId].Clients[see.UserId]; ok {
+			slog.Info("Exam submitted by user", "user_id", see.UserId, "exam_id", see.ExamId, "answers", see.Answers)
+			err := eh.Storage.SaveSubmittedExamAnswers(see.ExamId, see.UserId, see.Answers)
+			if err != nil {
+				slog.Error("Failed to save submitted exam answers", "error", err)
+				//TODO: send error event back to client
+				return
+			}
+			eh.Evaluation <- see
+			eh.EndExamNow(see.ExamId)
+		}
+	}
+}
+
+func handleEvaluationEvent(eh *ExamHub, see *SubmitExamEvent) {
+	if err := eh.Storage.EvaluateSubmission(see.ExamId, see.UserId); err != nil {
+		slog.Error("Failed to evaluate submission", "error", err)
+		return
 	}
 }
 
