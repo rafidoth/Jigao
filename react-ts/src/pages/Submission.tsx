@@ -93,6 +93,7 @@ function CorrectedQuestionsList({
           choices,
           difficulty,
           answer: correctAnswer,
+          explanation,
         } = q;
 
         return (
@@ -148,6 +149,12 @@ function CorrectedQuestionsList({
                 );
               })}
             </div>
+            {explanation && (
+              <div className="mt-4 p-3 bg-secondary/10 rounded-md">
+                <span className="font-semibold">Explanation:</span>
+                <p className="text-sm mt-1">{explanation}</p>
+              </div>
+            )}
           </div>
         );
       })}
