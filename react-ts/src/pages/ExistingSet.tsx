@@ -36,7 +36,7 @@ function QuestionsList({
         className={`${gridLayout ? "grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3  px-3" : "flex flex-col items-center gap-3"}`}
       >
         {items.map((q: any, i: number) => (
-          <span className={`${gridLayout ? "" : "w-[600px]"}`}>
+          <span className={`${gridLayout ? "" : "w-[700px]"}`}>
             <QuestionCard
               key={q.id}
               question={q}

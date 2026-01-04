@@ -34,7 +34,7 @@ export default function FillInTheBlanksCard({
   const isCorrect = q.choices.some((choice) => choice === selected);
   const isEmpty = selected === "";
   return (
-    <Card className="p-4 min-h-[400px]">
+    <Card className="p-4 min-h-[400px] border-none">
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
