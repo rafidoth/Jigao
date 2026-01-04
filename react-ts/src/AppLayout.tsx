@@ -15,18 +15,16 @@ function AppLayout() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      {/* Desktop sidebar */}
       {show ? (
         <div className="hidden md:block w-[15%] h-full border-r">
           <Sidebar />
         </div>
       ) : (
-        <div className="hidden md:block w-[5%] h-full border-r">
+        <div className="hidden md:block w-[3%] h-full border-none">
           <ThinSidebar />
         </div>
       )}
 
-      {/* Fullscreen mobile sidebar */}
       {hamburgerMenu && (
         <div className="fixed inset-0 z-50 bg-background">
           <FullScreenSidebar />

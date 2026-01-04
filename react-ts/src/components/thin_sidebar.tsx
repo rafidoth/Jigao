@@ -69,28 +69,16 @@ function ThinSidebar() {
   const currentUserDetails = useAuthStore((state) => state.currentUserDetails);
   const clerkFns = useAuthStore((state) => state.clerkFns);
   return (
-    <div className="flex-col w-full h-full px-4 hidden lg:flex bg-sidebar text-sidebar-foreground justify-between">
+    <div className="flex-col w-full h-full  hidden lg:flex bg-sidebar text-sidebar-foreground justify-between">
       <div>
         <div className="flex flex-col items-center gap-3">
           <span className="text-4xl font-bold">
-            <img src={"/logo.png"} alt="Jigao" className="scale-60  mt-2" />
+            <img
+              src={"/logo2.png"}
+              alt="Jigao"
+              className="scale-60  mt-2 rounded-xl"
+            />
           </span>
-          <div className="flex flex-col items-center my-4 gap-3">
-            <button
-              aria-label="Toggle sidebar"
-              onClick={toggleSidebar}
-              className="rounded-full p-2 hover:bg-secondary/50"
-            >
-              <ViewVerticalIcon className="h-6 w-6 text-muted-foreground" />
-            </button>
-            <button
-              aria-label="Toggle theme"
-              onClick={toggleTheme}
-              className="rounded-full p-2 hover:bg-secondary/50"
-            >
-              {themeIcon}
-            </button>
-          </div>
         </div>
         <div
           className="flex flex-col gap-3 mt-6 w-full"
