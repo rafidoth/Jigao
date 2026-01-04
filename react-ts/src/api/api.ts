@@ -42,3 +42,8 @@ export const getQuestionsByExamId = async (exam_id: string | undefined) => {
   const res = await axios.get(`/api/v1/exams/q/${exam_id}`);
   return res.data;
 };
+
+export const getExamById = async (exam_id: string | undefined) => {
+  const res = await axios.get(`/api/v1/exams/${exam_id}`);
+  return res.data;
+};

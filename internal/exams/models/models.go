@@ -32,3 +32,9 @@ type EvaluatedAnswerType struct {
 	IsCorrect     bool   `json:"is_correct"`
 	CorrectAnswer string `json:"correct_answer"`
 }
+
+type EvaluationResult struct {
+	Score       int                            `json:"score"`
+	AnswerSheet map[string]EvaluatedAnswerType `json:"answer_sheet"`
+	CreatedAt   time.Time                      `json:"created_at"`
+}

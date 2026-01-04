@@ -7,27 +7,25 @@ import (
 	"github.com/rafidoth/onlyexams/internal/exams/models"
 )
 
-func (s Store) GetEvaluationResult(examID, userID string) (int, map[string]models.EvaluatedAnswerType, error) {
+func (s Store) GetEvaluationResult(examID, userID string) (*models.EvaluationResult, error) {
 	ctx := context.Background()
-	var scoreInt int
-	var answersJSON []byte
+	var evaluatedResult models.EvaluationResult
+	var answerJson []byte
 
 	if err := s.db.QueryRow(ctx, `
-		SELECT score, answers
+		SELECT score, answers, created_at
 		FROM exam_submissions
 		WHERE exam_id = $1 AND user_id = $2
 		ORDER BY created_at DESC
 		LIMIT 1
-	`, examID, userID).Scan(&scoreInt, &answersJSON); err != nil {
-		return 0, nil, err
+	`, examID, userID).Scan(&evaluatedResult.Score, &answerJson, &evaluatedResult.CreatedAt); err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(answerJson, &evaluatedResult.AnswerSheet); err != nil {
+		return nil, err
 	}
 
-	var evaluated map[string]models.EvaluatedAnswerType
-	if err := json.Unmarshal(answersJSON, &evaluated); err != nil {
-		return 0, nil, err
-	}
-
-	return scoreInt, evaluated, nil
+	return &evaluatedResult, nil
 }
 
 type UserSubmissionAnswer struct {

@@ -2,67 +2,12 @@ import { useParams } from "react-router";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { getQuestionsByExamId } from "@/api/api";
+import { getExamById, getQuestionsByExamId } from "@/api/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
-const dummy = [
-  {
-    id: "2d3bfc69-f13f-4e28-8796-d64a6d3184e2",
-    text: "What is the primary purpose of an Environmental Impact Assessment (EIA)?",
-    type: "multiple_choice_questions",
-    difficulty: "easy",
-    choices: [
-      "To assess economic feasibility",
-      "To evaluate potential environmental effects of a proposed project",
-      "To design marketing strategies",
-      "To calculate project profit",
-    ],
-    answer: "To evaluate potential environmental effects of a proposed project",
-    answerIdx: 1,
-    explanation:
-      "The main goal of an EIA is to identify, predict, and evaluate the environmental consequences of a proposed action before decisions are made.",
-  },
-  {
-    id: "daadbf28-2645-476e-9b2e-799769d676f8",
-    text: "The ___ method involves comparing the environmental conditions before and after a project implementation.",
-    type: "fill_in_the_blanks",
-    difficulty: "medium",
-    choices: ["Before-After", "Control-Impact", "Difference-in-Differences"],
-    answer: "",
-    answerIdx: 0,
-    explanation: "",
-  },
-  {
-    id: "2867df10-40a9-4fb9-967b-d4b14abb1869",
-    text: "An EIA is only required for large-scale industrial projects.",
-    type: "true_false",
-    difficulty: "easy",
-    choices: ["true", "false"],
-    answer: "false",
-    answerIdx: 1,
-    explanation:
-      "EIAs can be required for a wide range of projects, not just large industrial ones, depending on potential environmental impacts.",
-  },
-  {
-    id: "68bdab5f-52af-4eb4-817d-62fc23de9b7e",
-    text: "Name one key component that must be included in an EIA report.",
-    type: "short_question",
-    difficulty: "medium",
-    choices: [],
-    answer: "Mitigation measures",
-    answerIdx: 0,
-    explanation:
-      "An EIA report must outline mitigation measures to reduce or offset identified adverse impacts.",
-  },
-];
+import { LoaderIcon } from "lucide-react";
+import { format } from "date-fns";
 
 type AnswerEntry = {
   answer: string | number | boolean | null;
@@ -76,6 +21,7 @@ type SubmissionResponse = {
   data?: {
     score: number;
     answer_sheet: Record<string | number, AnswerEntry>;
+    created_at: Date;
   };
 };
 
@@ -106,6 +52,7 @@ function useSubmission(examId: string | undefined) {
     retry: 1,
   });
 }
+
 function useQuestions(examId: string | undefined) {
   return useQuery({
     queryKey: ["questions", examId],
@@ -116,18 +63,15 @@ function useQuestions(examId: string | undefined) {
   });
 }
 
-// function useExams(examId: string | undefined) {
-//   return useQuery({
-//     queryKey: ["exams", examId],
-//     enabled: !!examId,
-//     queryFn:
-//       const res = await axios.get(`/api/v1/exams/${examId}`);
-//       return res.data;
-//     },
-//     staleTime: 5 * 60_000,
-//     retry: 1,
-//   });
-// }
+function useExams(examId: string | undefined) {
+  return useQuery({
+    queryKey: ["exams", examId],
+    enabled: !!examId,
+    queryFn: () => getExamById(examId!),
+    staleTime: 5 * 60_000,
+    retry: 1,
+  });
+}
 
 function CorrectedQuestionsList({
   questions,
@@ -141,13 +85,12 @@ function CorrectedQuestionsList({
       {questions.map((q) => {
         const entry = user_submission[q.id];
         const isCorrect = entry?.is_correct === true;
+        // const unanswered = entry?.answer === null || entry?.answer === "";
         const userAns = entry?.answer;
-        console.log("question", q.text, entry?.is_correct);
         const {
           id: questionId,
           text: questionText,
           choices,
-          type,
           difficulty,
           answer: correctAnswer,
         } = q;
@@ -155,14 +98,12 @@ function CorrectedQuestionsList({
         return (
           <div
             key={questionId}
-            className={`rounded-xl border p-4 transition-colors ${
-              isCorrect
-                ? "border-green-600/60 bg-green-950/20"
-                : "border-red-600/60 bg-red-950/20"
+            className={`rounded-xl border-none p-4 transition-colors ${
+              isCorrect ? "bg-green-950/30" : " bg-red-950/30"
             }`}
           >
             <div className="flex items-start justify-between mb-3">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">
+              <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                 {difficulty}
               </span>
               <span
@@ -170,7 +111,7 @@ function CorrectedQuestionsList({
                   isCorrect ? "text-green-400" : "text-red-400"
                 }`}
               >
-                {isCorrect ? "✓ Correct" : "✗ Incorrect"}
+                {isCorrect ? "Correct" : "Incorrect"}
               </span>
             </div>
 
@@ -216,19 +157,35 @@ function CorrectedQuestionsList({
 
 function Submission() {
   const { exam_id } = useParams();
-  const { data: submissionData, isError, error } = useSubmission(exam_id);
-  const { data: questionsData } = useQuestions(exam_id);
-  console.log("questions data fetched", questionsData);
-  console.log("submission data fetched", submissionData);
-  console.log("answer sheet", submissionData?.data?.answer_sheet);
+  const {
+    data: submissionData,
+    isLoading: submissionDataLoading,
+    isError,
+    error,
+  } = useSubmission(exam_id);
+  const { data: questionsData, isLoading: questionsDataLoading } =
+    useQuestions(exam_id);
+
+  const { data: examData, isLoading: examDataLoading } = useExams(exam_id);
   const entries = useMemo(() => {
     if (!submissionData?.data?.answer_sheet) return [];
     return Object.entries(submissionData.data.answer_sheet);
   }, [submissionData]);
+
   console.log("entries", entries);
 
   if (isError) {
     console.error("Error fetching submission data:", error);
+  }
+  if (submissionDataLoading || questionsDataLoading || examDataLoading) {
+    return (
+      <div className="flex justify-center items-center h-[100vh] gap-x-2">
+        <span className="text-lg font-medium animate-spin flex items-center gap-2">
+          <LoaderIcon />
+        </span>
+        Loading
+      </div>
+    );
   }
   if (submissionData && submissionData.success === false) {
     return (
@@ -242,13 +199,43 @@ function Submission() {
   }
 
   return (
-    <ScrollArea className="h-[100vh] w-full px-6">
-      <div className="flex justify-center justify-center py-4">
-        <Badge className="bg-primary font-bold">
-          <span>{submissionData?.data?.score}</span>
-          <span> / {questionsData?.length}</span>
-        </Badge>
-        <span></span>
+    <ScrollArea className="h-[100vh] w-full px-6 select-none">
+      <div className="flex flex-col font-bold justify-center items-center py-4 gap-2">
+        <div className="text-2xl">{examData?.title}</div>
+        <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center gap-2 bg-primary/10 rounded-xl px-4 py-2">
+            <span>Score</span>
+            <Badge className="bg-accent font-bold">
+              <span>{submissionData?.data?.score}</span>
+              <span> / {questionsData?.length}</span>
+            </Badge>
+          </div>
+          <div className="flex flex-col items-center gap-2 bg-primary/10 rounded-xl px-4 py-2">
+            <span>Duration</span>
+            <Badge className="bg-accent font-bold">
+              <span> {examData.duration}</span>
+            </Badge>
+          </div>
+          {submissionData?.data?.created_at && (
+            <div className="flex flex-col items-center gap-2 bg-primary/10 rounded-xl px-4 py-2">
+              <span>Subimission Time</span>
+              <div className="flex gap-2">
+                <Badge className="bg-accent font-bold">
+                  <span>
+                    {" "}
+                    {format(submissionData.data.created_at, "dd MMMM, yyyy")}
+                  </span>
+                </Badge>
+                <Badge className="bg-accent font-bold">
+                  <span>
+                    {" "}
+                    {format(submissionData.data.created_at, "hh:mm a")}
+                  </span>
+                </Badge>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <div className="lg:w-3/4 w-full mx-auto">
         {questionsData && submissionData?.data?.answer_sheet && (
