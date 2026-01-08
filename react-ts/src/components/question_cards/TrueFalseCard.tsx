@@ -42,7 +42,7 @@ export default function TrueFalseCard({
               {typeLabel(q.type)}
             </Badge>
           </div>
-          <p className="font-medium">
+          <p className="font-medium text-xl">
             {position}. {q.text}
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function TrueFalseCard({
                     {String.fromCharCode(65 + idx)}
                   </Badge>
                 )}
-                <span className="flex-1">{c}</span>
+                <span className="flex-1 text-xl">{c}</span>
               </button>
             );
           })}

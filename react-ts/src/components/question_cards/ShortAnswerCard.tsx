@@ -43,11 +43,12 @@ export default function ShortAnswerCard({
               {typeLabel(q.type)}
             </Badge>
           </div>
-          <p className="font-medium">
+          <p className="font-medium text-xl">
             {position}. {q.text}
           </p>
         </div>
         <Textarea
+          className="text-xl"
           placeholder="Write your answer…"
           value={selected}
           onChange={(e) => selectAnswer(q.id, e.target.value)}

@@ -1,20 +1,19 @@
 import { Clock } from "lucide-react";
 import Image from "next/image";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Bevan } from "next/font/google";
+import HoverButtonUI from "./HoverButtonUI";
+const bevan = Bevan({ subsets: ["latin"], weight: "400" });
 
 function HeroSection() {
   return (
     <section className="w-full p-4 flex justify-center items-center ">
       <div className="w-full h-full flex flex-col items-center rounded-[48px] bg-gradient-to-b from-slate-950  to-white">
         <Navbar />
-        <div className="flex justify-center mt-10">
-          <span className="text-white rounded-full border px-4 py-1 opacity-60">
-            AI Powered
-          </span>
+        <div className="flex justify-center my-10">
+          <span className=" rounded-full px-4 py-1 bg-white ">AI Powered</span>
         </div>
         <h1
-          className={`text-white flex flex-wrap justify-center items-center text-5xl md:text-7xl text-center  px-4  font-bold `}
+          className={`text-white flex flex-wrap justify-center items-center text-5xl md:text-8xl text-center  px-4  font-bold ${bevan.className}`}
         >
           <span className="relative">
             Turn Notes into <br></br>
@@ -26,20 +25,13 @@ function HeroSection() {
           </span>
         </h1>
         <p
-          className={` w-[600px] text-center text-white mt-6 text-lg md:text-2xl`}
+          className={` w-[600px] text-center text-white mt-6 text-lg md:text-xl my-15`}
         >
           Upload your <strong>notes (text or PDF)</strong> to instantly generate{" "}
           <strong>practice exams</strong>, attempt them, and receive{" "}
           <strong>immediate feedback</strong> to accelerate learning.
         </p>
-        <div className="flex mt-8">
-          <Input
-            className="border-none bg-slate-900 text-white font-semibold placeholder:text-white/40 focus:ring-0 focus:border-none"
-            placeholder="Enter your email"
-            type="email"
-          />
-          <Button className="ml-4 cursor-pointer">Notify Me</Button>
-        </div>
+        <HoverButtonUI />
 
         <Image
           className="object-cover my-20"
@@ -55,13 +47,16 @@ function HeroSection() {
 
 function Navbar() {
   return (
-    <nav className="w-full p-4 h-[60px] flex justify-center items-center ">
-      <ul className="flex space-x-4 ">
-        <li className="hover:underline cursor-pointer">Home</li>
-        <li className="hover:underline cursor-pointer">About</li>
-        <li className="hover:underline cursor-pointer">Services</li>
-        <li className="hover:underline cursor-pointer">Contact</li>
-      </ul>
+    <nav className="text-white md:w-[1200px] p-4 h-[60px] flex justify-center items-center md:mb-10 md:mt-10 ">
+      <div className="flex gap-x-2">
+        <Image
+          src="/logo.png"
+          alt="Jigao Logo"
+          width={32}
+          height={32}
+          className="mr-auto"
+        />
+      </div>
     </nav>
   );
 }

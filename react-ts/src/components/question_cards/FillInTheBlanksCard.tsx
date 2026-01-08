@@ -45,7 +45,7 @@ export default function FillInTheBlanksCard({
               {typeLabel(q.type)}
             </Badge>
           </div>
-          <p className="font-medium">
+          <p className="font-medium text-xl">
             {position}. {q.text}
           </p>
         </div>
@@ -54,6 +54,7 @@ export default function FillInTheBlanksCard({
           value={selected}
           onChange={(e) => selectAnswer(q.id, e.target.value)}
           className={cn(
+            "text-xl",
             isCorrect
               ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-500/10"
               : isEmpty
