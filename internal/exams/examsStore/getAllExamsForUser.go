@@ -2,13 +2,14 @@ package examsStore
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/rafidoth/onlyexams/internal/exams/models"
+	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 )
 
 func (s Store) GetExamsListByUserId(user_id string) ([]models.Exam, error) {
-	var results []models.Exam
 
 	tx, err := s.db.Begin(context.Background())
 	if err != nil {
@@ -41,11 +42,52 @@ func (s Store) GetExamsListByUserId(user_id string) ([]models.Exam, error) {
 	if err != nil {
 		return nil, err
 	}
-	results = examsSlice
+	set_ids := make([]string, 0, len(examsSlice))
+	for _, exam := range examsSlice {
+		set_ids = append(set_ids, exam.SetId)
+	}
+
+	rows, err = tx.Query(
+		context.Background(),
+		`  SELECT
+			id,
+			user_id,
+			title,
+			created_at,
+			updated_at
+		  FROM sets
+		  WHERE id = ANY($1)`,
+		set_ids,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	setsMap := make(map[string]questionsModels.Set)
+	for rows.Next() {
+		var set questionsModels.Set
+		if err := rows.Scan(
+			&set.ID,
+			&set.UserId,
+			&set.Title,
+			&set.CreatedAt,
+			&set.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		setsMap[set.ID] = set
+	}
+	fmt.Println("setsMap:", setsMap)
+
+	for i := range examsSlice {
+		if set, ok := setsMap[examsSlice[i].SetId]; ok {
+			examsSlice[i].Set = &set
+		}
+	}
 
 	if err := tx.Commit(context.Background()); err != nil {
 		return nil, err
 	}
 
-	return results, nil
+	return examsSlice, nil
 }

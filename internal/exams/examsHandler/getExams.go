@@ -24,12 +24,13 @@ func (eh *ExamsHandler) GetExams(
 	setId := r.URL.Query().Get("set_id")
 	if setId == "" {
 		// If set id not found then returning exams under user id
-		examsListOfUser, err := eh.store.GetExamsListByUserId(userId)
+		examsListOfUser, err := eh.getExamsByUserId(userId)
 		if err != nil {
 			slog.Error("failed to get exams for user DB issue", "error", err)
 			utils.WriteOk(&w)
 			return
 		}
+		fmt.Println("exams fetched for user", examsListOfUser)
 
 		utils.WriteJSON(w, 200, examsListOfUser)
 		return
@@ -53,6 +54,15 @@ func (eh *ExamsHandler) GetExams(
 		return
 	}
 
+}
+
+func (eh *ExamsHandler) getExamsByUserId(userId string) ([]models.Exam, error) {
+	exams, err := eh.store.GetExamsListByUserId(userId)
+	if err != nil {
+		slog.Error("failed to get exams for user DB issue", "error", err)
+		return nil, err
+	}
+	return exams, nil
 }
 
 func (eh *ExamsHandler) getExamsBySetId(setId string) ([]models.Exam, error) {
