@@ -382,12 +382,12 @@ function ExamsList({ set_id }: { set_id: string }) {
     <ScrollArea className="h-[calc(100vh-200px)]">
       <Scrollbar orientation="vertical" />
       <div className="flex flex-col gap-3">
-        {exams.map((xm: any) => {
-          const { exam, created_by } = xm;
+        {exams.map((exam: any) => {
+          const created_by = exam.created_by;
           const startTime = exam.start_time;
           const start = startTime ? new Date(startTime) : null;
           const isPast = start ? start < new Date() : false;
-          const duration = xm.duration_in_minutes;
+          const duration = exam.duration_in_minutes;
           const xmType = determineExamType(exam.visibility);
           const isOngoing =
             start &&

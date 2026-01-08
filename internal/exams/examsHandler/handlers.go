@@ -22,6 +22,7 @@ type Storage interface {
 	GetExamsBySetId(set_id string) ([]models.Exam, error)
 	IsExamExists(exam_id string) error
 	GetExamSetId(exam_id string) (string, error)
+	GetExamsListByUserId(user_id string) ([]models.Exam, error)
 	GetExamByExamId(examId string) (models.Exam, error)
 	RemoveExam(examId string) error
 	GetEvaluationResult(examID, userID string) (*models.EvaluationResult, error)

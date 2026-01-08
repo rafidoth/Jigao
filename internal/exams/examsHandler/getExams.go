@@ -6,14 +6,8 @@ import (
 	"net/http"
 
 	"github.com/rafidoth/onlyexams/internal/exams/models"
-	"github.com/rafidoth/onlyexams/internal/users"
 	"github.com/rafidoth/onlyexams/internal/utils"
 )
-
-type ExamWithCreatedBy struct {
-	Exam      models.Exam `json:"exam"`
-	CreatedBy users.User  `json:"created_by"`
-}
 
 func (eh *ExamsHandler) GetExams(
 	w http.ResponseWriter,
@@ -26,12 +20,18 @@ func (eh *ExamsHandler) GetExams(
 		http.Error(w, "user_id is required", http.StatusUnauthorized)
 		return
 	}
-	fmt.Println("userId extracted from context ", userId)
 
 	setId := r.URL.Query().Get("set_id")
 	if setId == "" {
-		slog.Warn("set_id is required")
-		http.Error(w, "set_id is required", http.StatusBadRequest)
+		// If set id not found then returning exams under user id
+		examsListOfUser, err := eh.store.GetExamsListByUserId(userId)
+		if err != nil {
+			slog.Error("failed to get exams for user DB issue", "error", err)
+			utils.WriteOk(&w)
+			return
+		}
+
+		utils.WriteJSON(w, 200, examsListOfUser)
 		return
 	}
 
@@ -55,25 +55,20 @@ func (eh *ExamsHandler) GetExams(
 
 }
 
-func (eh *ExamsHandler) getExamsBySetId(setId string) ([]ExamWithCreatedBy, error) {
+func (eh *ExamsHandler) getExamsBySetId(setId string) ([]models.Exam, error) {
 	exams, err := eh.store.GetExamsBySetId(setId)
-	fmt.Println("exams fetched with userId ", exams)
+	fmt.Println("exams fetched with setId", exams)
 	if err != nil {
 		slog.Error("failed to get exams on a set DB issue", "error", err)
 		return nil, err
 	}
-	var examList []ExamWithCreatedBy
-	for _, exam := range exams {
-		user, err := eh.uStore.GetUserFromId(exam.UserId)
+	for i := range exams {
+		user, err := eh.uStore.GetUserFromId(exams[i].UserId)
 		if err != nil {
 			slog.Error("failed to get user", "error", err)
 			continue
 		}
-		examList = append(examList, ExamWithCreatedBy{
-			Exam:      exam,
-			CreatedBy: user,
-		})
+		exams[i].CreatedBy = user
 	}
-	return examList, nil
-
+	return exams, nil
 }
