@@ -15,6 +15,7 @@ import useThemeStore from "../store/themeStore";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import useAuthStore from "@/store/authStore";
+import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 
 interface NavItem {
   to: string;
@@ -66,8 +67,6 @@ function ThinSidebar() {
   const isActive = (to: string) =>
     matchPath({ path: to, end: true }, location.pathname) !== null;
 
-  const currentUserDetails = useAuthStore((state) => state.currentUserDetails);
-  const clerkFns = useAuthStore((state) => state.clerkFns);
   return (
     <div className="flex-col w-full h-full  hidden lg:flex bg-sidebar text-sidebar-foreground justify-between">
       <div>
@@ -115,14 +114,29 @@ function ThinSidebar() {
         </div>
       </div>
       <div className="flex flex-col gap-y-2 items-center">
-        <Avatar className="w-10 h-10">
+        <LogoutButton />
+      </div>
+    </div>
+  );
+}
+
+const LogoutButton = () => {
+  const clerkFns = useAuthStore((state) => state.clerkFns);
+  const currentUserDetails = useAuthStore((state) => state.currentUserDetails);
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Avatar className="w-10 h-10 cursor-pointer">
           <AvatarImage src={currentUserDetails?.imageUrl} />
           <AvatarFallback>
             {currentUserDetails?.fullName?.substring(0, 2)}
           </AvatarFallback>
         </Avatar>
+      </PopoverTrigger>
+      <PopoverContent className="w-fit p-2" align="center" side="top">
         <Button
-          variant={"outline"}
+          variant="ghost"
           onClick={async () => {
             try {
               await clerkFns?.signOut();
@@ -131,11 +145,11 @@ function ThinSidebar() {
             }
           }}
         >
-          <LogOut />
+          <LogOut className="mr-2 h-4 w-4" /> Logout
         </Button>
-      </div>
-    </div>
+      </PopoverContent>
+    </Popover>
   );
-}
+};
 
 export default ThinSidebar;
