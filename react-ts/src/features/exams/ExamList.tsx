@@ -1,7 +1,6 @@
 import type { Exam } from "./types";
 import ExamListItem from "./ExamListItem";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ExamList({
   exams,
@@ -43,10 +42,10 @@ export default function ExamList({
   }
 
   return (
-    <ScrollArea className="rounded-md border h-96 h-[calc(100vh-100px)]">
+    <>
       {exams.map((e) => (
         <ExamListItem key={e.id} exam={e} />
       ))}
-    </ScrollArea>
+    </>
   );
 }

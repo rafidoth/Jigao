@@ -13,15 +13,19 @@ function Exams() {
   }, []);
 
   return (
-    <div className="h-full flex flex-col px-3 lg:px-9 py-3">
+    <div className="h-full w-full flex flex-col px-3 lg:px-9 py-3 font-bold">
       <div className="mb-4">
         <h1 className="text-2xl font-semibold">Exams</h1>
       </div>
       <ExamsToolbar initialSearch={search} onSearch={handleSearch} />
-      <div className="flex-1 pr-2">
-        <ScrollArea className="h-full">
+      <div className="flex-1 pr-2 w-full">
+        <ScrollArea className="rounded-md border h-96 h-[calc(100vh-100px)] w-full">
           <ExamList
-            exams={data}
+            exams={data?.filter(
+              (exam) =>
+                exam.title.toLowerCase().includes(search.toLowerCase()) ||
+                exam.set?.title?.toLowerCase().includes(search.toLowerCase()),
+            )}
             isLoading={isLoading}
             isError={isError}
             errorMessage={(error as any)?.message}

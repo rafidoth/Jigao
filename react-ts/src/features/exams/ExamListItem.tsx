@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import type { Exam } from "./types";
-import { getExamAction, isRunning, isUpcoming } from "./types";
+import { getExamAction, isRunning, isUpcoming } from "./helper";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Calendar, Clock, FileText } from "lucide-react";
@@ -24,29 +24,28 @@ export default function ExamListItem({ exam }: { exam: Exam }) {
   const setTitle = exam.set?.title ? exam.set.title : "";
 
   return (
-    <div className="flex items-start justify-between p-5 border-b hover:bg-muted/50 transition-colors">
+    <div className="w-full flex items-start justify-between p-5 border-b hover:bg-muted/50 transition-colors">
       <div className="flex-1 space-y-3">
-        <div>
-          <h3 className="font-semibold text-base leading-tight">
-            {exam.title}
-          </h3>
+        <div className="flex gap-x-2 text-xl items-center">
+          <span className="font-semibold  leading-tight">{exam.title}</span>
           {setTitle && (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{setTitle}</span>
-            </div>
+            <span className="flex items-center  gap-x-2 bg-primary/20 text-primary-foreground/80 px-3 py-1 rounded-full ">
+              On
+              <FileText className="h-5 w-5 " />
+              <span>{setTitle}</span>
+            </span>
           )}
         </div>
 
         {/* Time and Duration Info */}
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-md text-muted-foreground">
             <Calendar className="h-4 w-4" />
             <span>
-              {start} – {end}
+              {start} to {end}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-md text-muted-foreground">
             <Clock className="h-4 w-4" />
             <span>Duration: {formatDuration(exam.duration)}</span>
           </div>
