@@ -35,3 +35,7 @@ prod_run:
 
 ai_prod_buld:
 	cd jigao_ai && docker build -t aiTsNodeProd -f Dockerfile.prod .
+
+
+project:
+	zellij -l jigao_zellij.kdl 
