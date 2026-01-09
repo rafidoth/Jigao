@@ -28,7 +28,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useEffect } from "react";
+// import { useEffect } from "react";
 
 const lastModified = (dateString: string) => {
   const date = new Date(dateString);
@@ -139,18 +139,8 @@ function SetList() {
   const { data: sets, isLoading } = useQuery({
     queryKey: ["sets"],
     queryFn: getRecentSets,
-    initialData: () => {
-      const stored = localStorage.getItem("sets-cache");
-      return stored ? JSON.parse(stored) : [];
-    },
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000,
   });
-  useEffect(() => {
-    if (sets) {
-      localStorage.setItem("sets-cache", JSON.stringify(sets));
-    }
-  }, [sets]);
-
   const navigate = useNavigate();
   const { mutateAsync, isPending } = useMutation({
     mutationFn: createNewSetPost,

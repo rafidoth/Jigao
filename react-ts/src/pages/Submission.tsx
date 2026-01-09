@@ -167,11 +167,14 @@ function Submission() {
   const {
     data: submissionData,
     isLoading: submissionDataLoading,
-    isError,
+    isError: errorFetchingSubmissionData,
     error,
   } = useSubmission(exam_id);
-  const { data: questionsData, isLoading: questionsDataLoading } =
-    useQuestions(exam_id);
+  const {
+    data: questionsData,
+    isLoading: questionsDataLoading,
+    isError: errorFetchingQuestionData,
+  } = useQuestions(exam_id);
 
   const { data: examData, isLoading: examDataLoading } = useExams(exam_id);
   const entries = useMemo(() => {
@@ -181,8 +184,13 @@ function Submission() {
 
   console.log("entries", entries);
 
-  if (isError) {
+  if (errorFetchingQuestionData || errorFetchingSubmissionData) {
     console.error("Error fetching submission data:", error);
+    return (
+      <div className="w-full h-full flex justify-center items-center text-4xl text-muted-foreground font-bold">
+        No Submission Found for this exam.
+      </div>
+    );
   }
   if (submissionDataLoading || questionsDataLoading || examDataLoading) {
     return (
