@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import type { Exam } from "./types";
-import { getExamAction, isRunning, isUpcoming } from "./helper";
+import { getExamAction, isEnded, isRunning, isUpcoming } from "./helper";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Calendar, Clock, FileText } from "lucide-react";
@@ -18,6 +18,7 @@ export default function ExamListItem({ exam }: { exam: Exam }) {
   const action = getExamAction(exam);
   const upcoming = isUpcoming(exam);
   const running = isRunning(exam);
+  const ended = isEnded(exam);
 
   const start = format(new Date(exam.start_time), "dd MMM, yyyy h:mm a");
   const end = format(new Date(exam.end_time), "dd MMM, yyyy h:mm a");
@@ -36,8 +37,6 @@ export default function ExamListItem({ exam }: { exam: Exam }) {
             </span>
           )}
         </div>
-
-        {/* Time and Duration Info */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-md text-muted-foreground">
             <Calendar className="h-4 w-4" />
@@ -52,12 +51,13 @@ export default function ExamListItem({ exam }: { exam: Exam }) {
         </div>
 
         {/* Badges */}
-        {(upcoming || running) && (
+        {(upcoming || running || ended) && (
           <div className="flex gap-2">
             {upcoming && <Badge variant="secondary">Upcoming</Badge>}
             {running && (
               <Badge className="bg-green-600 hover:bg-green-700">Running</Badge>
             )}
+            {ended && <Badge variant="destructive">Ended</Badge>}
           </div>
         )}
       </div>
