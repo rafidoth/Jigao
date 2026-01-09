@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getExamById, getQuestionsByExamId } from "@/api/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LoaderIcon } from "lucide-react";
+import { ArrowLeft, LoaderIcon } from "lucide-react";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 type AnswerEntry = {
   answer: string | number | boolean | null;
@@ -215,6 +216,13 @@ function Submission() {
 
   return (
     <ScrollArea className="h-[100vh] w-full px-6 select-none">
+      <Button
+        className="absolute top-6 left-6 cursor-pointer hover:otransition-colors rounded-full p-2 w-10 h-10 flex justify-center items-center"
+        variant={"outline"}
+        onClick={() => window.history.back()}
+      >
+        <ArrowLeft />
+      </Button>
       <div className="flex flex-col font-bold justify-center items-center py-4 gap-2">
         <div className="text-2xl">{examData?.title}</div>
         <div className="flex items-center gap-2">
