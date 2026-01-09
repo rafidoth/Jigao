@@ -21,11 +21,17 @@ function Exams() {
       <div className="flex-1 pr-2 w-full">
         <ScrollArea className="rounded-md border h-96 h-[calc(100vh-100px)] w-full">
           <ExamList
-            exams={data?.filter(
-              (exam) =>
-                exam.title.toLowerCase().includes(search.toLowerCase()) ||
-                exam.set?.title?.toLowerCase().includes(search.toLowerCase()),
-            )}
+            exams={data
+              ?.filter(
+                (exam) =>
+                  exam.title.toLowerCase().includes(search.toLowerCase()) ||
+                  exam.set?.title?.toLowerCase().includes(search.toLowerCase()),
+              )
+              .sort(
+                (a, b) =>
+                  new Date(b.start_time).getTime() -
+                  new Date(a.start_time).getTime(),
+              )}
             isLoading={isLoading}
             isError={isError}
             errorMessage={(error as any)?.message}
