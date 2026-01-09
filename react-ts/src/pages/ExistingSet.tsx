@@ -143,10 +143,15 @@ function ExistingSet() {
 
   const results = useQueries({
     queries: [
-      { queryKey: ["set", set_id], queryFn: () => getSet(set_id as string) },
+      {
+        queryKey: ["set", set_id],
+        queryFn: () => getSet(set_id as string),
+        staleTime: 5 * 60 * 1000,
+      },
       {
         queryKey: ["questions", set_id],
         queryFn: () => getQuestions(set_id as string),
+        staleTime: 5 * 60 * 1000,
       },
     ],
   });
