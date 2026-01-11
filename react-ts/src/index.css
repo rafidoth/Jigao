@@ -3,6 +3,9 @@
 @import "tailwindcss";
 @import "@clerk/themes/shadcn.css";
 @import "tw-animate-css";
+/*
+ ---break--- */
+@custom-variant dark (&:is(.dark *));
 @theme {
   --font-display: "Manrope", sans-serif;
   --font-handwriting: "Gloria Hallelujah", cursive;
