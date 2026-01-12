@@ -9,11 +9,9 @@ function QuestionQuantitySelect() {
   const dec = () => setQuantity(Math.max(5, quantity - 5));
 
   return (
-    <div className="flex flex-col gap-2 items-center">
-      <span className="text-lg text-muted-foreground">
-        How many questions do you want ?
-      </span>
-      <div className="flex gap-1 flex-wrap items-center">
+    <div className="flex flex-col gap-2 ">
+      <strong>How many questions do you want ?</strong>
+      <div className="flex gap-1 flex-wrap items-center justify-center">
         {Array.from({ length: 6 }, (_, i) => (i + 1) * 5).map((n) => (
           <span
             key={n}
@@ -28,7 +26,7 @@ function QuestionQuantitySelect() {
           </span>
         ))}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 justify-center">
         <button
           type="button"
           onClick={dec}

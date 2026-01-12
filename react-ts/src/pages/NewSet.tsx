@@ -10,19 +10,17 @@ function NewSet() {
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center px-4">
-      <div className="w-11/12 h-5/6 bg-accent/40 rounded-xl p-5">
+      <div className="w-11/12 h-5/6  rounded-xl p-5">
         <div className="text-2xl font-semibold">Generate Question</div>
-        <div className="flex flex-wrap gap-4 mt-4 mb-8">
-          <DifficultySelect />
-          <QuestionQuantitySelect />
+        <div className="flex flex-col md:flex-row gap-7 items-start mt-4 mb-8">
+          <div className="flex flex-col gap-4 items-start">
+            <DifficultySelect />
+            <QuestionQuantitySelect />
+          </div>
           <QuestionTypeSelect />
         </div>
-        <div className="text-sm text-muted-foreground">
-          <span className="font-semibold">Preview:</span> {difficulty.label} ·{" "}
-          {questionTypes.map((qt) => qt.name).join(", ")} ·{" "}
-          {questionQuantity}{" "}
-        </div>
       </div>
+      <div></div>
     </div>
   );
 }
