@@ -1,5 +1,7 @@
 import { create } from "zustand";
+import { questionTypes } from "@/features/question_generation/QuestionTypeSelect";
 import type { TSelectData } from "@/components/ui/select_21stdev";
+import type { TTag } from "@/components/ui/multiple-select";
 
 //  dependency : last should be "mixed"
 export const difficultyTypes: TSelectData[] = [
@@ -34,20 +36,20 @@ export const difficultyTypes: TSelectData[] = [
     icon: "🎲",
   },
 ];
-export const questionQuantities: TSelectData[] = Array.from(
-  { length: 30 },
-  (_: any, i: number) => ({
-    id: (i + 1).toString(),
-    label: (i + 1).toString(),
-    value: (i + 1).toString(),
+export const questionQuantities: TSelectData[] = [5, 10, 15, 20, 25, 30].map(
+  (n) => ({
+    id: n.toString(),
+    label: n.toString(),
+    value: n.toString(),
   }),
 );
-
 type QuestionGenerationStoreType = {
   difficulty: TSelectData;
   setDifficulty: (d: TSelectData) => void;
   questionQuantity: number;
   setQuestionQuantity: (q: number) => void;
+  questionTypes: TTag[];
+  setQuestionTypes: (t: TTag[]) => void;
 };
 
 const useQGStore = create<QuestionGenerationStoreType>((set) => ({
@@ -55,6 +57,8 @@ const useQGStore = create<QuestionGenerationStoreType>((set) => ({
   setDifficulty: (d: TSelectData) => set({ difficulty: d }),
   questionQuantity: 15,
   setQuestionQuantity: (q: number) => set({ questionQuantity: q }),
+  questionTypes: [questionTypes[0]],
+  setQuestionTypes: (t: TTag[]) => set({ questionTypes: t }),
 }));
 
 export default useQGStore;
