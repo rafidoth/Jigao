@@ -4,7 +4,7 @@ import { saveQuestions } from "../utils/axios.js";
 
 type QuestionGenerationParams = {
   questionQuantity: number;
-  questionType: string;
+  questionTypes: string[];
   difficultyLevel: string;
   context: string;
   token: string;
@@ -15,7 +15,7 @@ async function generateQuestion(
   const generationChain = await getQuestionGenerationChain();
   const result: ExpectedLlmResponse = await generationChain.invoke({
     n: params.questionQuantity,
-    question_type: params.questionType,
+    question_type: params.questionTypes,
     difficulty: params.difficultyLevel,
     context: params.context,
   });

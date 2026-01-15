@@ -1,6 +1,6 @@
 import { ai_api } from "@/utils/axios_utils";
 export const generateQuestions = async (data: {
-  difficulty: string;
+  difficultyLevel: string;
   questionQuantity: number;
   questionTypes: string[];
   context: string;

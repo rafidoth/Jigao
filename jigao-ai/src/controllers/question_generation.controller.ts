@@ -6,8 +6,9 @@ import {
 import { generateQuestion } from "../services/question_generation.js";
 
 export async function generateQuestions(req: Request, res: Response) {
-  const { questionQuantity, questionType, difficultyLevel, context } = req.body;
-  if (!questionQuantity || !questionType || !difficultyLevel || !context) {
+  const { questionQuantity, questionTypes, difficultyLevel, context } =
+    req.body;
+  if (!questionQuantity || !questionTypes || !difficultyLevel || !context) {
     return badRequestResponse(
       "Missing required fields in the request body.",
       res,
@@ -20,10 +21,12 @@ export async function generateQuestions(req: Request, res: Response) {
   ) {
     return notAuthorizedResponse("Authorization token is missing.", res);
   }
+  console.log("reached request handler");
+  console.log("Request body:", req.body);
 
   const setId = generateQuestion({
     questionQuantity,
-    questionType,
+    questionTypes,
     difficultyLevel,
     context,
     token: req.headers["authorization"] || "",

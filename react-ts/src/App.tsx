@@ -15,6 +15,7 @@ import LoadingScreen from "./components/LoadingScreen.tsx";
 import Exams from "./pages/Exams.tsx";
 import QuestionBank from "./pages/Exams.tsx";
 import Submission from "./pages/Submission.tsx";
+import { ai_api } from "./utils/axios_utils.ts";
 
 function App() {
   const theme = useThemeStore((state) => state.theme);
@@ -60,6 +61,7 @@ function App() {
         const template = "jigao-jwt-1";
         const token = await session?.getToken({ template });
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        ai_api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         if (session.id !== lastSessionIdRef.current) {
           lastSessionIdRef.current = session.id;
           await mutateAsync({

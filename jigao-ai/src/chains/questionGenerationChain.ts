@@ -7,7 +7,7 @@ const getQuestionGenerationChain = async (
   style?: string,
 ): Promise<RunnableSequence> => {
   const prompt = PromptTemplate.fromTemplate(
-    `Generate {n} {difficulty} {question_type}  questions.
+    `Generate {n} {difficulty} {question_types}  questions.
 
     <Difficulty Rules>
     {difficulty_rules}

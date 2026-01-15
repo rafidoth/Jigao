@@ -10,7 +10,7 @@ import { useNavigate } from "react-router";
 import { generateQuestions } from "@/api/ai_api";
 
 function NewSet() {
-  const difficulty = useQGStore((state) => state.difficulty).value;
+  const difficultyLevel = useQGStore((state) => state.difficulty).value;
   const questionQuantity = useQGStore((state) => state.questionQuantity);
   const questionTypes = useQGStore((state) => state.questionTypes);
   const context = useQGStore((state) => state.context);
@@ -26,7 +26,7 @@ function NewSet() {
 
   const handleGenerate = async () => {
     await mutateAsync({
-      difficulty,
+      difficultyLevel,
       questionQuantity,
       questionTypes: questionTypes.map((qt) => qt.key),
       context,
