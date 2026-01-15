@@ -19,7 +19,7 @@ function NewSet() {
   const { mutateAsync, isPending } = useMutation({
     mutationFn: generateQuestions,
     onSuccess: (data) => {
-      const { set_id } = data.data;
+      const { set_id } = data;
       navigate(`/sets/${set_id}`);
     },
   });

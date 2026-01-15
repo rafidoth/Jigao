@@ -2,16 +2,50 @@ import z from "zod";
 
 export const QuestionSchema = z
   .object({
-    difficulty: z.enum(["easy", "medium", "hard"]),
-    question_type: z.enum([
-      "multiple_choice_questions",
-      "fill_in_the_blanks",
-      "short_question",
-      "true_false",
-    ]),
-    question: z.string(),
+    difficulty: z
+      .enum(["easy", "medium", "hard"])
+      .describe("The difficulty level of the question: easy, medium, or hard"),
+    question_type: z
+      .enum([
+        "multiple_choice_questions",
+        "fill_in_the_blanks",
+        "short_question",
+        "true_false",
+      ])
+      .describe("The type of question being generated"),
+    question: z.string().describe(
+      `The question text. Follow these rules based on question_type:
+      
+      fill_in_the_blanks:
+        - Single, unambiguous answer
+        - Blank tests the KEY concept, not trivial details
+        - Provide the complete sentence with _____ for the blank
+        - Answer should be 1-3 words
+        
+      multiple_choice_questions:
+        - Normal questions with question mark
+        - It will have exactly 4 options (A, B, C, D)
+        - Only ONE correct answer
+        - Distractors must be plausible but clearly wrong when analyzed
+        - All options same grammatical structure
+        - No "all of the above" or "none of the above"
+        
+      short_question:
+        - Answerable in 2-4 sentences
+        - Use specific verbs: "explain why", "describe how", "compare"
+        - NOT vague verbs like "discuss" or "comment on"
+        - Should force understanding, not memorization
+        
+      true_false:
+        - Statement must be completely true or completely false
+        - No "partially true" statements
+        - Avoid absolute words (always, never) unless factually accurate
+        - For hard difficulty, make false statements subtly wrong`,
+    ),
   })
-  .describe("Schema for a question");
+  .describe(
+    "Schema for a question containing difficulty, type, and question text",
+  );
 
 export const ChoiceSchema = z.object({
   choice_text: z.string(),
@@ -27,32 +61,7 @@ export const AnswerSchema = z
 export const QuestionsSchema = z.array(
   z.object({
     question: QuestionSchema.describe(
-      `
-      Rules : 
-      if question type is
-          fill_in_the_blanks : 
-            - Single, unambiguous answer
-            - Blank tests the KEY concept, not trivial details
-            - Provide the complete sentence with _____ for the blank
-            - Answer should be 1-3 words
-          multiple_choice_questions : 
-            - Normal questions with question mark.
-            - Provide exactly 4 options (A, B, C, D)
-            - Only ONE correct answer
-            - Distractors must be plausible but clearly wrong when analyzed
-            - All options same grammatical structure
-            - No "all of the above" or "none of the above"
-          short_question : 
-            - Answerable in 2-4 sentences
-            - Use specific verbs: "explain why", "describe how", "compare"
-            - NOT vague verbs like "discuss" or "comment on"
-            - Should force understanding, not memorization
-          true_false : 
-            - Statement must be completely true or completely false
-            - No "partially true" statements
-            - Avoid absolute words (always, never) unless factually accurate
-            - For hard difficulty, make false statements subtly wrong
-           `,
+      "Schema for a question containing difficulty, type, and question text",
     ),
     choices: z.array(ChoiceSchema).describe(
       `Array of answer choices. Requirements by question type:

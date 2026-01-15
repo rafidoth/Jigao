@@ -24,13 +24,14 @@ export async function generateQuestions(req: Request, res: Response) {
   console.log("reached request handler");
   console.log("Request body:", req.body);
 
-  const setId = generateQuestion({
+  const setId = await generateQuestion({
     questionQuantity,
     questionTypes,
     difficultyLevel,
     context,
     token: req.headers["authorization"] || "",
   });
+  console.log("Generated set ID:", setId);
   res.json({
     set_id: setId,
   });

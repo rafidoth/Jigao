@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import axios from "axios";
-import type { ExpectedLlmResponse } from "../schema.js";
+import type { ExpectedLlmResponse } from "../chains/schema.js";
 
 const GO_BACKEND_URL = process.env.GO_BACKEND_URL;
 if (!GO_BACKEND_URL) {
@@ -23,7 +23,7 @@ const saveQuestions = async (
   questionsSet: ExpectedLlmResponse,
   token: string,
 ): Promise<SaveQuestionsResponse> => {
-  console.log("Saving questions with token:", token);
+  // console.log("Saving questions with token:", token);
   try {
     const response = await axiosClient.post(
       "sets/save_generated",
