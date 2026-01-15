@@ -10,7 +10,11 @@ class Router {
   }
 
   bindRoutes(): Express {
-    this.server.post("/api/chat", upload.array("attachments", 5));
+    this.server.post(
+      "/api/chat",
+      upload.array("attachments", 5),
+      generateQuestions,
+    );
     return this.server;
   }
 }
