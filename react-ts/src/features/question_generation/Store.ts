@@ -50,6 +50,8 @@ type QuestionGenerationStoreType = {
   setQuestionQuantity: (q: number) => void;
   questionTypes: TTag[];
   setQuestionTypes: (t: TTag[]) => void;
+  context: string;
+  setContext: (c: string) => void;
 };
 
 const useQGStore = create<QuestionGenerationStoreType>((set) => ({
@@ -59,6 +61,8 @@ const useQGStore = create<QuestionGenerationStoreType>((set) => ({
   setQuestionQuantity: (q: number) => set({ questionQuantity: q }),
   questionTypes: [questionTypes[0]],
   setQuestionTypes: (t: TTag[]) => set({ questionTypes: t }),
+  context: "Make questions on How Internet Works",
+  setContext: (c: string) => set({ context: c }),
 }));
 
 export default useQGStore;
