@@ -73,7 +73,7 @@ const Select = ({ title, data, defaultValue, onChange }: SelectProps) => {
                 borderRadius: 20,
               }}
               layoutId="dropdown"
-              className="overflow-hidden rounded-[20px] w-[400px] border border-input bg-background py-2 shadow-md"
+              className="overflow-hidden rounded-[20px]  w-full md:w-[400px] border border-input bg-background py-2 shadow-md"
               ref={ref}
             >
               <Head title={title} setOpen={setOpen} />

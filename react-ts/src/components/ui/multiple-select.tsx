@@ -51,7 +51,7 @@ export const MultipleSelect = ({
 
   return (
     <AnimatePresence mode={"popLayout"}>
-      <div className={"flex w-[450px] flex-col gap-2"}>
+      <div className={"flex md:w-[450px] flex-col gap-2 text-sm items-center"}>
         <strong>{title}</strong>
         <motion.div
           layout
