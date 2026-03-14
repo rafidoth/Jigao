@@ -218,15 +218,21 @@ make jrun
 - `GET /api/v1/submissions/{exam_id}` - Get submission results
 
 ## Migration
-Migration files are inside migrations/ in root. Using Goose for migration. 
+Migration files are inside migrations/ in root. Using Goose for migration. Need to set environment variables before running Goose.
+```
+# Envs for migrations
+GOOSE_DRIVER=postgres
+GOOSE_DBSTRING=<DBSTRING>
+GOOSE_MIGRATION_DIR=./migrations
+```
 
 ```bash
 # Create a new migration
-goose -dir=./migrations create migration_name sql
+goose create migration_name sql
 
 # Run migrations up
-goose -dir=./migrations up
+goose up
 
 # Rollback migrations
-goose -dir=./migrations down
+goose down
 ``` 
