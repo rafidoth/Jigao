@@ -53,8 +53,10 @@ func LoadConfig() (*Config, error) {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
 
 	k := koanf.New(".")
-	err := k.Load(env.Provider("MYAPP_", ".", func(s string) string {
-		return strings.ToLower(strings.TrimPrefix(s, "MYAPP_"))
+
+	prefix := "JIGAO_"
+	err := k.Load(env.Provider(prefix, ".", func(s string) string {
+		return strings.ToLower(strings.TrimPrefix(s, prefix))
 	}), nil)
 
 	if err != nil {
