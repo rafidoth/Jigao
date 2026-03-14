@@ -217,6 +217,16 @@ make jrun
 ### Submissions
 - `GET /api/v1/submissions/{exam_id}` - Get submission results
 
-## License
+## Migration
+Migration files are inside migrations/ in root. Using Goose for migration. 
 
-MIT
+```bash
+# Create a new migration
+goose -dir=./migrations create migration_name sql
+
+# Run migrations up
+goose -dir=./migrations up
+
+# Rollback migrations
+goose -dir=./migrations down
+``` 
