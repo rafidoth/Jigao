@@ -1,23 +1,5 @@
-
-CREATE TYPE visibility AS ENUM (
-  'public',
-  'private',
-  'restricted'
-);
-
-CREATE TYPE difficulty AS ENUM (
-  'easy',
-  'medium',
-  'hard'
-);
-
-CREATE TYPE question_type AS ENUM (
-  'multiple_choice_questions',
-  'fill_in_the_blanks',
-  'short_question',
-  'true_false'
-);
-
+-- +goose Up
+SELECT 'up SQL query';
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -71,7 +53,7 @@ CREATE TABLE IF NOT EXISTS choices (
   FOREIGN KEY (question_id) REFERENCES questions(id)
 );
 
-
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -79,13 +61,12 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 CREATE TRIGGER sets_updated_at_trigger
 BEFORE UPDATE ON sets
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
-
-
 
 CREATE TABLE IF NOT EXISTS shared_set_users (
     set_id UUID NOT NULL,
@@ -95,7 +76,6 @@ CREATE TABLE IF NOT EXISTS shared_set_users (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- exams sqls
 CREATE TABLE IF NOT EXISTS exams (
     id UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
     title TEXT NOT NULL DEFAULT 'untitled exam',
@@ -111,12 +91,10 @@ CREATE TABLE IF NOT EXISTS exams (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-
 CREATE TRIGGER exams_updated_at_trigger
 BEFORE UPDATE ON exams
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
-
 
 CREATE TABLE IF NOT EXISTS exam_participants (
     id UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
@@ -127,37 +105,34 @@ CREATE TABLE IF NOT EXISTS exam_participants (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-
 CREATE TRIGGER exam_participants_updated_at_trigger
 BEFORE UPDATE ON exam_participants
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
-
-
---
--- CREATE TABLE IF NOT EXISTS exam_answers (
---     exam_id UUID NOT NULL,
---     FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
---     user_id TEXT NOT NULL,
---     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
---     question_id UUID NOT NULL,
---     FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
---     answer TEXT NOT NULL,
---     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
--- );
-
-
-
 
 CREATE TABLE IF NOT EXISTS exam_submissions(
     exam_id UUID NOT NULL,
     FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    score NUMERIC,  -- score is nullable -> grading not completed yet
-    answers JSONB NOT NULL, -- store answers as JSONB
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- submission time
+    score NUMERIC,
+    answers JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (exam_id, user_id)
 );
 
+-- +goose Down
+-- Order matters: Drop tables with foreign keys first
+DROP TABLE IF EXISTS exam_submissions;
+DROP TABLE IF EXISTS exam_participants;
+DROP TABLE IF EXISTS exams;
+DROP TABLE IF EXISTS shared_set_users;
+DROP TABLE IF EXISTS choices;
+DROP TABLE IF EXISTS answers;
+DROP TABLE IF EXISTS questions;
+DROP TABLE IF EXISTS contexts;
+DROP TABLE IF EXISTS sets;
+DROP TABLE IF EXISTS users;
 
+-- Remove triggers and functions
+DROP FUNCTION IF EXISTS update_updated_at CASCADE;
