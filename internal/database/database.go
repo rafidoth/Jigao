@@ -89,7 +89,6 @@ func New(cfg *config.Config, logger *zerolog.Logger, loggerService *loggerConfig
 				LogLevel: tracelog.LogLevel(loggerConfig.GetPgxTraceLogLevel(globalLevel)),
 			}
 		}
-
 	}
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), pgxPoolConfig)
