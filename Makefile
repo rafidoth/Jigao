@@ -1,9 +1,5 @@
-############################################################
-#Docker Network for communication between AI service and backend
-############################################################
 net:
 	docker network create jigao-network
-
 
 server :
 	CGO_ENABLED=0 go build -ldflags="-s -w" -o main && ./main

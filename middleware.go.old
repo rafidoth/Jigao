@@ -10,16 +10,16 @@ import (
 	"github.com/clerk/clerk-sdk-go/v2/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-	"github.com/rafidoth/onlyexams/config"
+	"github.com/rafidoth/onlyexams/internal/config"
 )
 
 func addCorsMiddleware(router *chi.Mux, cfg *config.Config) {
-	origin := cfg.CorsAllowed
-	if origin == "" {
-		slog.Warn("Cors origin not found")
+	origins := cfg.Server.CORSAllowedOrigins
+	if len(origins) == 0 {
+		slog.Warn("Cors origins not found")
 	}
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{origin, "http://localhost:8081"},
+		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},

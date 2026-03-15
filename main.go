@@ -4,56 +4,72 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/rafidoth/onlyexams/config"
-	"github.com/rafidoth/onlyexams/db"
+	"github.com/rafidoth/onlyexams/internal/config"
 	"github.com/rafidoth/onlyexams/internal/exams"
-	"github.com/rafidoth/onlyexams/internal/exams/examsHandler"
-	"github.com/rafidoth/onlyexams/internal/exams/examsStore"
-	"github.com/rafidoth/onlyexams/internal/questions/questionsHandler"
-	"github.com/rafidoth/onlyexams/internal/questions/questionsStore"
-	"github.com/rafidoth/onlyexams/internal/users"
+	"github.com/rafidoth/onlyexams/internal/handler"
+	"github.com/rafidoth/onlyexams/internal/logger"
+	"github.com/rafidoth/onlyexams/internal/repository"
+	"github.com/rafidoth/onlyexams/internal/router"
+	"github.com/rafidoth/onlyexams/internal/server"
+	"github.com/rafidoth/onlyexams/internal/service"
 	"github.com/rafidoth/onlyexams/proto"
 )
 
 func init() {
-	// setting up the logger
 	opts := &slog.HandlerOptions{
 		AddSource: true,
 		Level:     slog.LevelDebug,
 	}
-	handler := slog.NewTextHandler(os.Stdout, opts)
-	myLogger := slog.New(handler)
+	h := slog.NewTextHandler(os.Stdout, opts)
+	myLogger := slog.New(h)
 	slog.SetDefault(myLogger)
 }
 
 func main() {
-	slog.Info("jigao is starting .....")
-
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		slog.Error("problem loading env vars", "error", err)
+		os.Exit(1)
 	}
 
-	db, err := db.NewDatabase(cfg)
+	loggerService := logger.NewLoggerService(cfg.Observability)
+	log := logger.NewLoggerWithService(cfg.Observability, loggerService)
+
+	// Create server (initializes database)
+	srv, err := server.New(cfg, &log, loggerService)
 	if err != nil {
-		slog.Error("unable to configure db : ", "error", err)
+		log.Error().Err(err).Msg("failed to create server")
+		os.Exit(1)
 	}
 
+	// Create AI service gRPC client
 	aiSvc := proto.NewAiServiceClient()
 	defer aiSvc.Close()
 
-	uStore := users.NewStore(db.GetPgxPool())
-	qStore := questionsStore.New(db.GetPgxPool())
-	qH := questionsHandler.New(qStore, uStore, aiSvc.Client)
+	// Create repository layer
+	repos := repository.NewRepositories(srv)
 
-	eStore := examsStore.New(db.GetPgxPool())
-	eHub := exams.New(eStore)
-	eH := examsHandler.New(eHub, eStore, qStore, uStore)
+	// Create ExamHub (repos.Exam satisfies HubStorage interface)
+	hub := exams.New(repos.Exam)
 
-	uH := users.NewHandler(uStore)
+	// Create service layer
+	svc := service.NewServices(repos, aiSvc.Client, hub)
 
-	go eHub.Run()
+	// Create handler layer
+	handlers := handler.NewHandlers(svc)
 
-	application := NewServer(qH, eH, uH, cfg)
-	application.Start(cfg.Port)
+	// Create router with all routes and middleware
+	mux := router.New(srv, handlers)
+
+	// Wire HTTP server
+	srv.SetupHTTPServer(mux)
+
+	// Start ExamHub event loop
+	go hub.Run()
+
+	// Start serving
+	if err := srv.Start(); err != nil {
+		log.Error().Err(err).Msg("server stopped")
+		os.Exit(1)
+	}
 }

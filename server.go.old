@@ -10,7 +10,7 @@ import (
 	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/rafidoth/onlyexams/config"
+	"github.com/rafidoth/onlyexams/internal/config"
 )
 
 type QuestionsHandler interface {
@@ -119,10 +119,10 @@ func (s *Server) useMiddlewares() {
 }
 
 func (s *Server) Start(addr string) {
-	if s.cfg.CLERK_SECRET_KEY == "" {
+	if s.cfg.Auth.SecretKey == "" {
 		slog.Warn("CLERK_SECRET_KEY is not set")
 	}
-	clerk.SetKey(s.cfg.CLERK_SECRET_KEY)
+	clerk.SetKey(s.cfg.Auth.SecretKey)
 	s.useMiddlewares()
 	s.registerRoutes()
 	if addr == "" {
