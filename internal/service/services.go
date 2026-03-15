@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/rafidoth/onlyexams/internal/exams"
 	"github.com/rafidoth/onlyexams/internal/repository"
-	"github.com/rafidoth/onlyexams/proto"
 )
 
 type Services struct {
@@ -14,7 +13,6 @@ type Services struct {
 
 func NewServices(
 	repos *repository.Repositories,
-	aiClient proto.JigaoAIClient,
 	hub *exams.ExamHub,
 ) *Services {
 	return &Services{
@@ -23,7 +21,6 @@ func NewServices(
 			repos.Set,
 			repos.Question,
 			repos.User,
-			aiClient,
 		),
 		Exam: NewExamService(
 			repos.Exam,

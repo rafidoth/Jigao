@@ -2,13 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/service"
 	"github.com/rafidoth/onlyexams/internal/utils"
 )
@@ -27,14 +26,13 @@ func NewSetHandler(svc *service.QuestionService) *SetHandler {
 func (h *SetHandler) CreateNewSet(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "create set: missing user-id")
 		return
 	}
 
 	set, err := h.svc.CreateNewSet(r.Context(), uid)
 	if err != nil {
-		slog.Warn("create new set failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "create new set failed")
 		return
 	}
 
@@ -45,7 +43,7 @@ func (h *SetHandler) CreateNewSet(w http.ResponseWriter, r *http.Request) {
 func (h *SetHandler) GetASet(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "get set: missing user-id")
 		return
 	}
 
@@ -53,12 +51,7 @@ func (h *SetHandler) GetASet(w http.ResponseWriter, r *http.Request) {
 
 	set, setCtx, err := h.svc.GetSetWithContext(r.Context(), uid, setID)
 	if err != nil {
-		if errors.Is(err, service.ErrForbidden) {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		slog.Warn("get set failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "get set failed")
 		return
 	}
 
@@ -81,7 +74,7 @@ func (h *SetHandler) GetASet(w http.ResponseWriter, r *http.Request) {
 func (h *SetHandler) UpdateASet(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "update set: missing user-id")
 		return
 	}
 	setID := chi.URLParam(r, "set_id")
@@ -93,13 +86,12 @@ func (h *SetHandler) UpdateASet(w http.ResponseWriter, r *http.Request) {
 
 	var req reqBody
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "update set: decode body")
 		return
 	}
 
 	if _, err := h.svc.UpdateSet(r.Context(), uid, setID, req.Visibility, req.Title); err != nil {
-		slog.Warn("update set failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "update set failed")
 		return
 	}
 
@@ -110,15 +102,14 @@ func (h *SetHandler) UpdateASet(w http.ResponseWriter, r *http.Request) {
 func (h *SetHandler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "delete set: missing user-id")
 		return
 	}
 	setID := chi.URLParam(r, "set_id")
 
 	deleted, err := h.svc.DeleteSetWithContext(r.Context(), uid, setID)
 	if err != nil {
-		slog.Warn("delete set failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "delete set failed")
 		return
 	}
 
@@ -133,24 +124,23 @@ func (h *SetHandler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 func (h *SetHandler) GetRecentSets(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "get recent sets: missing user-id")
 		return
 	}
 	limitStr := r.URL.Query().Get("recent")
 	if limitStr == "" {
-		http.Error(w, "Bad Request: limit not found", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("'recent' query parameter is required", false, nil, nil, nil), "get recent sets: missing limit")
 		return
 	}
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		http.Error(w, "Bad Request: limit must be an integer", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("'recent' must be an integer", false, nil, nil, nil), "get recent sets: invalid limit")
 		return
 	}
 
 	results, err := h.svc.GetRecentSetsWithOwners(r.Context(), uid, limit)
 	if err != nil {
-		slog.Error("get recent sets failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "get recent sets failed")
 		return
 	}
 
@@ -161,14 +151,13 @@ func (h *SetHandler) GetRecentSets(w http.ResponseWriter, r *http.Request) {
 func (h *SetHandler) GetSetAccessList(w http.ResponseWriter, r *http.Request) {
 	setID := chi.URLParam(r, "set_id")
 	if setID == "" {
-		http.Error(w, "set_id is required", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("set_id is required", false, nil, nil, nil), "get access list: missing set_id")
 		return
 	}
 
 	userList, err := h.svc.GetSetAccessList(r.Context(), setID)
 	if err != nil {
-		slog.Error("get access list failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "get access list failed")
 		return
 	}
 
@@ -184,64 +173,28 @@ func (h *SetHandler) AllowSetAccess(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("Failed to read request body", false, nil, nil, nil), "allow access: read body")
 		return
 	}
 	var req reqBody
 	if err := json.Unmarshal(body, &req); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "allow access: unmarshal body")
 		return
 	}
 
 	if err := h.svc.AllowSetAccess(r.Context(), req.SetID, req.UserID); err != nil {
-		slog.Error("allow set access failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "allow set access failed")
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 }
 
-// GenerateQuestionSet handles POST /sets/gen — calls AI to generate a question set.
-func (h *SetHandler) GenerateQuestionSet(w http.ResponseWriter, r *http.Request) {
-	uid, err := extractUserID(r)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	type reqBody struct {
-		NumQuestions int    `json:"n"`
-		SetContext   string `json:"context"`
-		QuestionType string `json:"type"`
-	}
-
-	var req reqBody
-	if !utils.ExtractRequestBody(r, &req) {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	setID, err := h.svc.GenerateQuestionSet(
-		r.Context(), uid, req.NumQuestions, req.SetContext, req.QuestionType,
-	)
-	if err != nil {
-		slog.Error("generate question set failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	type resp struct {
-		SetID string `json:"set_id"`
-	}
-	writeJSON(w, http.StatusOK, resp{SetID: setID})
-}
-
 // SaveGeneratedQuestions handles POST /sets/save_generated — saves pre-generated questions.
 func (h *SetHandler) SaveGeneratedQuestions(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "save generated: missing user-id")
 		return
 	}
 
@@ -253,7 +206,7 @@ func (h *SetHandler) SaveGeneratedQuestions(w http.ResponseWriter, r *http.Reque
 
 	var req reqBody
 	if !utils.ExtractRequestBody(r, &req) {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "save generated: decode body")
 		return
 	}
 
@@ -261,8 +214,7 @@ func (h *SetHandler) SaveGeneratedQuestions(w http.ResponseWriter, r *http.Reque
 		r.Context(), uid, req.Title, req.Context, req.Questions,
 	)
 	if err != nil {
-		slog.Error("save generated questions failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "save generated questions failed")
 		return
 	}
 

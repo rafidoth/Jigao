@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/service"
 )
 
@@ -23,20 +23,19 @@ func NewSubmissionHandler(svc *service.ExamService) *SubmissionHandler {
 func (h *SubmissionHandler) GetSubmissionResult(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
-		http.Error(w, "exam_id is required", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "get submission: missing exam_id")
 		return
 	}
 
 	uid, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "get submission: missing user-id")
 		return
 	}
 
 	result, err := h.svc.GetSubmissionResult(r.Context(), examID, uid)
 	if err != nil {
-		slog.Error("get submission result failed", "error", err)
-		http.Error(w, "Failed to get evaluation result: "+err.Error(), http.StatusInternalServerError)
+		writeError(w, err, "get submission result failed")
 		return
 	}
 

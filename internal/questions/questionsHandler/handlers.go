@@ -8,7 +8,6 @@ import (
 
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 	"github.com/rafidoth/onlyexams/internal/users"
-	"github.com/rafidoth/onlyexams/proto"
 )
 
 type Storage interface {
@@ -42,18 +41,16 @@ type UsersStorage interface {
 }
 
 type Handler struct {
-	ctx             context.Context
-	store           Storage
-	usersStore      UsersStorage
-	aiServiceClient proto.JigaoAIClient
+	ctx        context.Context
+	store      Storage
+	usersStore UsersStorage
 }
 
-func New(store Storage, usersStorage UsersStorage, ai proto.JigaoAIClient) *Handler {
+func New(store Storage, usersStorage UsersStorage) *Handler {
 	return &Handler{
-		ctx:             context.Background(),
-		store:           store,
-		usersStore:      usersStorage,
-		aiServiceClient: ai,
+		ctx:        context.Background(),
+		store:      store,
+		usersStore: usersStorage,
 	}
 }
 

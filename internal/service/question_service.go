@@ -2,33 +2,29 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
+	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 	"github.com/rafidoth/onlyexams/internal/repository"
 	"github.com/rafidoth/onlyexams/internal/users"
-	"github.com/rafidoth/onlyexams/proto"
 )
 
 type QuestionService struct {
 	setRepo      *repository.SetRepository
 	questionRepo *repository.QuestionRepository
 	userRepo     *repository.UserRepository
-	aiClient     proto.JigaoAIClient
 }
 
 func NewQuestionService(
 	setRepo *repository.SetRepository,
 	questionRepo *repository.QuestionRepository,
 	userRepo *repository.UserRepository,
-	aiClient proto.JigaoAIClient,
 ) *QuestionService {
 	return &QuestionService{
 		setRepo:      setRepo,
 		questionRepo: questionRepo,
 		userRepo:     userRepo,
-		aiClient:     aiClient,
 	}
 }
 
@@ -37,7 +33,7 @@ func NewQuestionService(
 // ---------------------------------------------------------------------------
 
 // ErrForbidden is returned when a user does not have access to a resource.
-var ErrForbidden = errors.New("forbidden")
+var ErrForbidden = errs.NewForbiddenError("You do not have access to this resource", false)
 
 // AuthorizeSetAccess checks whether the given user may view the set identified
 // by setID. It returns the owner's user ID on success or ErrForbidden.
@@ -302,52 +298,8 @@ func (s *QuestionService) BatchCreateQuestions(ctx context.Context, input BatchC
 }
 
 // ---------------------------------------------------------------------------
-// AI-Powered Question Generation
+// Save Pre-Generated Questions
 // ---------------------------------------------------------------------------
-
-// GenerateQuestionSet calls the AI service, creates a new set with context,
-// and batch-inserts all generated questions, choices, and answers.
-// Returns the created set ID.
-func (s *QuestionService) GenerateQuestionSet(
-	ctx context.Context,
-	userID string,
-	numQuestions int,
-	setContext string,
-	questionType string,
-) (string, error) {
-	// 1. Call AI service
-	gReq := &proto.GenerateQuestionsRequest{
-		Quantity:     int32(numQuestions),
-		Context:      setContext,
-		QuestionType: questionType,
-		Instructions: "",
-	}
-	resp, err := s.aiClient.GenerateQuestions(ctx, gReq)
-	if err != nil {
-		return "", fmt.Errorf("ai generate questions: %w", err)
-	}
-
-	// 2. Create set with context
-	set := &questionsModels.Set{
-		Visibility: "public",
-		Title:      resp.Title,
-		UserId:     userID,
-	}
-	setID, err := s.setRepo.CreateSetWithContextRetSetId(set, setContext)
-	if err != nil {
-		return "", fmt.Errorf("create set with context: %w", err)
-	}
-
-	// 3. Transform AI response into batch input
-	input := buildBatchInputFromAIResponse(resp, setID)
-
-	// 4. Batch insert
-	if err := s.BatchCreateQuestions(ctx, input); err != nil {
-		return "", fmt.Errorf("batch create after generation: %w", err)
-	}
-
-	return setID, nil
-}
 
 // SaveGeneratedQuestions creates a new set and batch-inserts pre-generated questions
 // (used when the client has already generated questions and sends them for saving).
@@ -391,45 +343,6 @@ type GeneratedQuestionInput struct {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-func buildBatchInputFromAIResponse(resp *proto.GenerateQuestionsResponse, setID string) BatchCreateQuestionsInput {
-	var (
-		questions []questionsModels.Question
-		cwqt      []questionsModels.ChoicesWithQuestionType
-		awqi      []questionsModels.AnswerWithQuestionInfo
-	)
-
-	for _, que := range resp.Questions {
-		q := questionsModels.Question{
-			Question:     que.Question.Question,
-			Difficulty:   que.Question.Difficulty,
-			QuestionType: que.Question.QuestionType,
-			SetId:        setID,
-		}
-		questions = append(questions, q)
-
-		var choices []questionsModels.Choice
-		for _, c := range que.Choices {
-			choices = append(choices, questionsModels.Choice{ChoiceText: c.ChoiceText})
-		}
-		cwqt = append(cwqt, questionsModels.ChoicesWithQuestionType{
-			Choices:      choices,
-			QuestionType: que.Question.QuestionType,
-		})
-
-		awqi = append(awqi, questionsModels.AnswerWithQuestionInfo{
-			QuestionType: que.Question.QuestionType,
-			AnswerText:   que.Answer.Answer,
-			Explanation:  que.Answer.Explanation,
-		})
-	}
-
-	return BatchCreateQuestionsInput{
-		Questions:               questions,
-		ChoicesWithQuestionType: cwqt,
-		AnswersWithQuestionInfo: awqi,
-	}
-}
 
 func buildBatchInputFromClientQuestions(input []GeneratedQuestionInput, setID string) BatchCreateQuestionsInput {
 	var (

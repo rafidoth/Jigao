@@ -12,18 +12,7 @@ import (
 	"github.com/rafidoth/onlyexams/internal/router"
 	"github.com/rafidoth/onlyexams/internal/server"
 	"github.com/rafidoth/onlyexams/internal/service"
-	"github.com/rafidoth/onlyexams/proto"
 )
-
-func init() {
-	opts := &slog.HandlerOptions{
-		AddSource: true,
-		Level:     slog.LevelDebug,
-	}
-	h := slog.NewTextHandler(os.Stdout, opts)
-	myLogger := slog.New(h)
-	slog.SetDefault(myLogger)
-}
 
 func main() {
 	cfg, err := config.LoadConfig()
@@ -42,10 +31,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create AI service gRPC client
-	aiSvc := proto.NewAiServiceClient()
-	defer aiSvc.Close()
-
 	// Create repository layer
 	repos := repository.NewRepositories(srv)
 
@@ -53,7 +38,7 @@ func main() {
 	hub := exams.New(repos.Exam)
 
 	// Create service layer
-	svc := service.NewServices(repos, aiSvc.Client, hub)
+	svc := service.NewServices(repos, hub)
 
 	// Create handler layer
 	handlers := handler.NewHandlers(svc)

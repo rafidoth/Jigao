@@ -1,10 +1,9 @@
 package handler
 
 import (
-	"errors"
-	"log/slog"
 	"net/http"
 
+	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
 	"github.com/rafidoth/onlyexams/internal/service"
 	"github.com/rafidoth/onlyexams/internal/utils"
@@ -24,13 +23,13 @@ func NewQuestionHandler(svc *service.QuestionService) *QuestionHandler {
 func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	_, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "create question: missing user-id")
 		return
 	}
 
 	setID := r.URL.Query().Get("set_id")
 	if setID == "" {
-		http.Error(w, "Bad Request: set_id is required", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("set_id is required", false, nil, nil, nil), "create question: missing set_id")
 		return
 	}
 
@@ -40,15 +39,14 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 		Answer   questionsModels.Answer   `json:"answer"`
 	}
 	if !utils.ExtractRequestBody(r, &req) {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create question: decode body")
 		return
 	}
 
 	if err := h.svc.CreateSingleQuestion(
 		r.Context(), req.Question, req.Choices, req.Answer, setID,
 	); err != nil {
-		slog.Warn("create question failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "create question failed")
 		return
 	}
 
@@ -59,24 +57,19 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 func (h *QuestionHandler) GetAllQuestions(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "get questions: missing user-id")
 		return
 	}
 
 	setID := r.URL.Query().Get("set_id")
 	if setID == "" {
-		http.Error(w, "Bad Request: set_id is required", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("set_id is required", false, nil, nil, nil), "get questions: missing set_id")
 		return
 	}
 
 	questions, err := h.svc.GetAllQuestionsInASet(r.Context(), uid, setID)
 	if err != nil {
-		if errors.Is(err, service.ErrForbidden) {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		slog.Warn("get all questions failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "get all questions failed")
 		return
 	}
 

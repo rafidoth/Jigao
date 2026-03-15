@@ -2,10 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 
+	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/service"
 )
 
@@ -46,4 +48,19 @@ func writeJSON(w http.ResponseWriter, status int, payload interface{}) {
 	if err := json.NewEncoder(w).Encode(payload); err != nil {
 		slog.Warn("failed to encode JSON response", "error", err)
 	}
+}
+
+// writeError inspects the error and writes an appropriate JSON error response.
+// If the error is an *errs.HTTPError, it uses the structured status/code/message.
+// Otherwise it logs the error and returns a generic 500 Internal Server Error.
+func writeError(w http.ResponseWriter, err error, logMsg string) {
+	var httpErr *errs.HTTPError
+	if errors.As(err, &httpErr) {
+		writeJSON(w, httpErr.Status, httpErr)
+		return
+	}
+
+	// Unrecognised error — log and return 500.
+	slog.Error(logMsg, "error", err)
+	writeJSON(w, http.StatusInternalServerError, errs.NewInternalServerError())
 }

@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/repository"
 	"github.com/rafidoth/onlyexams/internal/users"
 )
@@ -28,6 +31,9 @@ func (s *UserService) LoginUser(ctx context.Context, userID, email, name, imageU
 func (s *UserService) GetUserByEmail(ctx context.Context, email string) (users.User, error) {
 	user, err := s.userRepo.GetUserFromEmail(email)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return users.User{}, errs.NewNotFoundError("User not found", false, nil)
+		}
 		return users.User{}, fmt.Errorf("get user by email: %w", err)
 	}
 	return user, nil

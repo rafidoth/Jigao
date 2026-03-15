@@ -3,9 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"io"
-	"log/slog"
 	"net/http"
 
+	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/service"
 )
 
@@ -23,7 +23,7 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value("user-id").(string)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "login: missing user-id")
 		return
 	}
 
@@ -36,19 +36,17 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("Failed to read request body", false, nil, nil, nil), "login: read body")
 		return
 	}
 	var req reqBody
 	if err := json.Unmarshal(body, &req); err != nil {
-		slog.Warn("failed to unmarshal login body", "error", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "login: unmarshal body")
 		return
 	}
 
 	if err := h.svc.LoginUser(r.Context(), uid, req.Email, req.Name, req.ImageURL); err != nil {
-		slog.Error("login user failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "login user failed")
 		return
 	}
 
@@ -60,14 +58,13 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) GetUserFromEmail(w http.ResponseWriter, r *http.Request) {
 	email := r.URL.Query().Get("email")
 	if email == "" {
-		http.Error(w, "email is required", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("email is required", false, nil, nil, nil), "get user: missing email")
 		return
 	}
 
 	user, err := h.svc.GetUserByEmail(r.Context(), email)
 	if err != nil {
-		slog.Error("get user by email failed", "error", err)
-		http.Error(w, "User Not Found", http.StatusNotFound)
+		writeError(w, err, "get user by email failed")
 		return
 	}
 

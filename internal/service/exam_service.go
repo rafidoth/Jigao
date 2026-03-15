@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/exams"
 	"github.com/rafidoth/onlyexams/internal/exams/models"
 	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
@@ -40,16 +42,16 @@ func NewExamService(
 // ValidateCreateExam checks business rules for creating an exam.
 func ValidateCreateExam(setID, title string, startTime time.Time, durationMinutes int) error {
 	if setID == "" {
-		return errors.New("set_id is required")
+		return errs.NewBadRequestError("set_id is required", false, nil, nil, nil)
 	}
 	if title == "" {
-		return errors.New("title is required")
+		return errs.NewBadRequestError("title is required", false, nil, nil, nil)
 	}
 	if durationMinutes <= 0 {
-		return errors.New("duration_in_minutes must be greater than 0")
+		return errs.NewBadRequestError("duration_in_minutes must be greater than 0", false, nil, nil, nil)
 	}
 	if startTime.Before(time.Now()) {
-		return errors.New("start_time must be in the future")
+		return errs.NewBadRequestError("start_time must be in the future", false, nil, nil, nil)
 	}
 	return nil
 }
@@ -66,7 +68,7 @@ func (s *ExamService) CreateExam(
 	durationMinutes int,
 ) error {
 	if err := ValidateCreateExam(setID, title, startTime, durationMinutes); err != nil {
-		return fmt.Errorf("validation: %w", err)
+		return err // already an *errs.HTTPError
 	}
 
 	if err := s.examRepo.CreateExamOnASet(userID, setID, title, description, startTime, durationMinutes); err != nil {
@@ -79,6 +81,9 @@ func (s *ExamService) CreateExam(
 func (s *ExamService) GetExamByID(ctx context.Context, examID string) (models.Exam, error) {
 	exam, err := s.examRepo.GetExamByExamId(examID)
 	if err != nil {
+		if err.Error() == "exam not found" {
+			return models.Exam{}, errs.NewNotFoundError("Exam not found", false, nil)
+		}
 		return models.Exam{}, fmt.Errorf("get exam by id: %w", err)
 	}
 	return exam, nil
@@ -87,6 +92,10 @@ func (s *ExamService) GetExamByID(ctx context.Context, examID string) (models.Ex
 // RemoveExam deletes an exam by ID.
 func (s *ExamService) RemoveExam(ctx context.Context, examID string) error {
 	if err := s.examRepo.RemoveExam(examID); err != nil {
+		// The repository returns "exam not found" when no rows were affected.
+		if err.Error() == "exam not found" {
+			return errs.NewNotFoundError("Exam not found", false, nil)
+		}
 		return fmt.Errorf("remove exam: %w", err)
 	}
 	return nil
@@ -158,6 +167,9 @@ func (s *ExamService) GetQuestionsOfExam(ctx context.Context, examID string) ([]
 func (s *ExamService) GetSubmissionResult(ctx context.Context, examID, userID string) (*models.EvaluationResult, error) {
 	result, err := s.examRepo.GetEvaluationResult(examID, userID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errs.NewNotFoundError("No submission found for this exam", false, nil)
+		}
 		return nil, fmt.Errorf("get evaluation result: %w", err)
 	}
 	return result, nil

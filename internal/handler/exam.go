@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"io"
 	"log/slog"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
+	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/exams"
 	"github.com/rafidoth/onlyexams/internal/service"
 )
@@ -37,7 +37,7 @@ var upgrader = websocket.Upgrader{
 func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "create exam: missing user-id")
 		return
 	}
 
@@ -51,12 +51,12 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("Failed to read request body", false, nil, nil, nil), "create exam: read body")
 		return
 	}
 	var req reqBody
 	if err := json.Unmarshal(body, &req); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create exam: unmarshal body")
 		return
 	}
 
@@ -64,18 +64,7 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 		r.Context(), uid, req.SetID, req.Title, req.Description,
 		req.StartTime, req.DurationInMinutes,
 	); err != nil {
-		// Check if validation error by unwrapping.
-		var validationErr string
-		if errors.Unwrap(err) != nil {
-			validationErr = errors.Unwrap(err).Error()
-		}
-		// The service wraps validation errors with "validation: <msg>".
-		if len(err.Error()) > 12 && err.Error()[:11] == "validation:" {
-			http.Error(w, validationErr, http.StatusBadRequest)
-			return
-		}
-		slog.Error("create exam failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "create exam failed")
 		return
 	}
 
@@ -86,15 +75,14 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 func (h *ExamHandler) GetExams(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "get exams: missing user-id")
 		return
 	}
 
 	setID := r.URL.Query().Get("set_id")
 	examsList, err := h.svc.GetExams(r.Context(), uid, setID)
 	if err != nil {
-		slog.Error("get exams failed", "error", err)
-		w.WriteHeader(http.StatusOK)
+		writeError(w, err, "get exams failed")
 		return
 	}
 
@@ -105,14 +93,13 @@ func (h *ExamHandler) GetExams(w http.ResponseWriter, r *http.Request) {
 func (h *ExamHandler) GetExamByID(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
-		http.Error(w, "exam_id is required", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "get exam: missing exam_id")
 		return
 	}
 
 	exam, err := h.svc.GetExamByID(r.Context(), examID)
 	if err != nil {
-		slog.Error("get exam by id failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "get exam by id failed")
 		return
 	}
 
@@ -123,17 +110,12 @@ func (h *ExamHandler) GetExamByID(w http.ResponseWriter, r *http.Request) {
 func (h *ExamHandler) RemoveExam(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
-		http.Error(w, "exam_id is required", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "remove exam: missing exam_id")
 		return
 	}
 
 	if err := h.svc.RemoveExam(r.Context(), examID); err != nil {
-		if err.Error() == "remove exam: exam not found" {
-			http.Error(w, "Exam not found", http.StatusNotFound)
-			return
-		}
-		slog.Error("remove exam failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "remove exam failed")
 		return
 	}
 
@@ -144,14 +126,13 @@ func (h *ExamHandler) RemoveExam(w http.ResponseWriter, r *http.Request) {
 func (h *ExamHandler) GetQuestionsOfExam(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
-		http.Error(w, "exam_id is required", http.StatusBadRequest)
+		writeError(w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "get exam questions: missing exam_id")
 		return
 	}
 
 	questions, err := h.svc.GetQuestionsOfExam(r.Context(), examID)
 	if err != nil {
-		slog.Warn("get questions of exam failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		writeError(w, err, "get questions of exam failed")
 		return
 	}
 
@@ -162,14 +143,14 @@ func (h *ExamHandler) GetQuestionsOfExam(w http.ResponseWriter, r *http.Request)
 func (h *ExamHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value("user-id").(string)
 	if !ok || uid == "" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "join room: missing user-id")
 		return
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		slog.Error("websocket upgrade failed", "error", err)
-		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
+		// Cannot use writeError here — the upgrade already wrote headers.
 		return
 	}
 

@@ -12,6 +12,12 @@ import (
 	"github.com/rafidoth/onlyexams/internal/utils"
 )
 
+// GenerateNewSetRes was previously in generateNewQuestionSet.go which was deleted
+// during proto/gRPC removal. Kept here for old code compatibility.
+type GenerateNewSetRes struct {
+	SetId string `json:"set_id"`
+}
+
 type GeneratedQuestion struct {
 	Question questionsModels.Question `json:"question"`
 	Answer   questionsModels.Answer   `json:"answer"`
