@@ -31,6 +31,8 @@ export default function ShortAnswerCard({
   selected,
   selectAnswer,
 }: Props) {
+  const modelAnswer = q.answer?.model_answer;
+
   return (
     <Card className="p-4 min-h-[400px] border-none">
       <div className="flex flex-col gap-3">
@@ -49,17 +51,26 @@ export default function ShortAnswerCard({
         </div>
         <Textarea
           className="text-sm"
-          placeholder="Write your answer…"
+          placeholder="Write your answer..."
           value={selected}
-          onChange={(e) => selectAnswer(q.id, e.target.value)}
+          onChange={(e) => selectAnswer(q.question_id, e.target.value)}
         />
-        {q.type === "short_question" && showAnswer && (
+        {showAnswer && (
           <div className="flex flex-col gap-2">
+            <p className="font-semibold text-sm">Model Answer</p>
             <Card className="p-3 text-sm text-muted-foreground">
-              {q.answerText || "No answer provided."}
+              {modelAnswer || "No answer provided."}
             </Card>
           </div>
         )}
+        {showAnswer && q.answer?.explanation ? (
+          <div className="space-y-2">
+            <p className="font-semibold text-sm">Explanation</p>
+            <Card className="p-3 bg-blue-500/10 text-white">
+              {q.answer.explanation}
+            </Card>
+          </div>
+        ) : null}
       </div>
     </Card>
   );

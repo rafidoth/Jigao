@@ -31,8 +31,14 @@ export default function FillInTheBlanksCard({
   selected,
   selectAnswer,
 }: Props) {
-  const isCorrect = q.choices.some((choice) => choice === selected);
+  const acceptedAnswers = q.answer?.accepted_answers || [];
+  const caseSensitive = q.answer?.case_sensitive ?? false;
+
+  const isCorrect = acceptedAnswers.some((ans) =>
+    caseSensitive ? ans === selected : ans.toLowerCase() === selected.toLowerCase(),
+  );
   const isEmpty = selected === "";
+
   return (
     <Card className="p-4 min-h-[400px] border-none">
       <div className="flex flex-col gap-3">
@@ -50,9 +56,9 @@ export default function FillInTheBlanksCard({
           </p>
         </div>
         <Input
-          placeholder="Write your answer…"
+          placeholder="Write your answer..."
           value={selected}
-          onChange={(e) => selectAnswer(q.id, e.target.value)}
+          onChange={(e) => selectAnswer(q.question_id, e.target.value)}
           className={cn(
             "text-sm",
             isCorrect
@@ -62,29 +68,29 @@ export default function FillInTheBlanksCard({
                 : "border-rose-500 bg-rose-50 dark:bg-rose-500/10",
           )}
         />
-        {showAnswer && (
+        {showAnswer && acceptedAnswers.length > 0 && (
           <div className="space-y-2">
-            <p className="font-semibold text-sm">Answer</p>
+            <p className="font-semibold text-sm">Accepted Answers</p>
             <div className="flex flex-col gap-2">
-              {q.choices?.map((c, idx: number) => (
+              {acceptedAnswers.map((ans, idx) => (
                 <div
-                  key={`${q.id}-choice-${idx}`}
+                  key={`${q.question_id}-answer-${idx}`}
                   className="flex items-center gap-2 rounded-md border p-2 bg-green-800/40 border-green-700"
                 >
                   <Badge variant="default" className="text-xs">
                     Correct
                   </Badge>
-                  <span>{c}</span>
+                  <span>{ans}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
-        {showAnswer && q.explanation ? (
+        {showAnswer && q.answer?.explanation ? (
           <div className="space-y-2">
             <p className="font-semibold text-sm">Explanation</p>
             <Card className="p-3 bg-blue-500/10 text-white">
-              {q.explanation}
+              {q.answer.explanation}
             </Card>
           </div>
         ) : null}

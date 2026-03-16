@@ -30,6 +30,15 @@ export default function TrueFalseCard({
   selected,
   selectAnswer,
 }: Props) {
+  // correct_bool: true means "True" is correct, false means "False" is correct
+  const correctBool = q.answer?.correct_bool;
+
+  // For true_false, choices are implicit (not returned by backend)
+  const trueFalseChoices = [
+    { choice_id: "true", text: "True", position: 1 },
+    { choice_id: "false", text: "False", position: 2 },
+  ];
+
   return (
     <Card className="p-4 min-h-[400px] border-none">
       <div className="flex flex-col gap-3">
@@ -47,14 +56,19 @@ export default function TrueFalseCard({
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          {q.choices?.map((c, idx) => {
-            const isAnswer = idx === q.answerIdx;
-            const isSelected = selected === c;
+          {trueFalseChoices.map((c, idx) => {
+            // Determine if this choice is the correct answer
+            const isAnswer =
+              correctBool !== undefined
+                ? (correctBool === true && c.choice_id === "true") ||
+                  (correctBool === false && c.choice_id === "false")
+                : false;
+            const isSelected = selected === c.choice_id;
             return (
               <button
-                key={`${q.id}-choice-${idx}`}
+                key={c.choice_id}
                 type="button"
-                onClick={() => selectAnswer(q.id, c)}
+                onClick={() => selectAnswer(q.question_id, c.choice_id)}
                 className={cn(
                   "w-full flex items-center gap-2 rounded-md border p-2 text-left transition",
                   isSelected
@@ -71,16 +85,16 @@ export default function TrueFalseCard({
                     {String.fromCharCode(65 + idx)}
                   </Badge>
                 )}
-                <span className="flex-1 text-sm">{c}</span>
+                <span className="flex-1 text-sm">{c.text}</span>
               </button>
             );
           })}
         </div>
-        {showAnswer && q.explanation ? (
+        {showAnswer && q.answer?.explanation ? (
           <div className="space-y-2">
             <p className="font-semibold text-sm">Explanation</p>
             <Card className="p-3 bg-blue-500/10 text-white">
-              {q.explanation}
+              {q.answer.explanation}
             </Card>
           </div>
         ) : null}

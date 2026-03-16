@@ -30,6 +30,8 @@ export default function McqCard({
   selected,
   selectAnswer,
 }: Props) {
+  const correctPosition = q.answer?.correct_choice_position;
+
   return (
     <Card className="p-4 min-h-[400px] border-none">
       <div className="flex flex-col gap-3">
@@ -48,13 +50,13 @@ export default function McqCard({
         </div>
         <div className="flex flex-col gap-2">
           {q.choices?.map((c, idx) => {
-            const isAnswer = idx === q.answerIdx;
-            const isSelected = selected === c;
+            const isAnswer = c.position === correctPosition;
+            const isSelected = selected === c.choice_id;
             return (
               <button
-                key={`${q.id}-choice-${idx}`}
+                key={c.choice_id}
                 type="button"
-                onClick={() => selectAnswer(q.id, c)}
+                onClick={() => selectAnswer(q.question_id, c.choice_id)}
                 className={cn(
                   "w-full flex items-center gap-2 rounded-md border p-2 text-left transition cursor-pointer",
                   isSelected
@@ -67,7 +69,7 @@ export default function McqCard({
                 <Badge variant="outline" className="w-7 justify-center">
                   {String.fromCharCode(65 + idx)}
                 </Badge>
-                <span className="flex-1 text-sm">{c}</span>
+                <span className="flex-1 text-sm">{c.text}</span>
                 {showAnswer && isAnswer && (
                   <Badge variant="default" className="text-xs">
                     Correct
@@ -77,11 +79,11 @@ export default function McqCard({
             );
           })}
         </div>
-        {showAnswer && q.explanation ? (
+        {showAnswer && q.answer?.explanation ? (
           <div className="space-y-2">
             <p className="font-semibold text-sm">Explanation</p>
             <Card className="p-3 bg-blue-500/10 text-white">
-              {q.explanation}
+              {q.answer.explanation}
             </Card>
           </div>
         ) : null}
