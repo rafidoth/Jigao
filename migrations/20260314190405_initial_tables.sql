@@ -38,8 +38,7 @@ CREATE TABLE IF NOT EXISTS questions (
 CREATE TABLE IF NOT EXISTS answers (
   id UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  answer TEXT NOT NULL,
-  choice_id UUID,
+  answer JSONB NOT NULL,
   explanation TEXT NOT NULL,
   question_id UUID NOT NULL,
   FOREIGN KEY (question_id) REFERENCES questions(id)
