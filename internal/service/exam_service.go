@@ -141,17 +141,46 @@ func (s *ExamService) GetExams(ctx context.Context, userID, setID string) ([]mod
 // ---------------------------------------------------------------------------
 
 // GetQuestionsOfExam returns all questions belonging to the exam's set.
-func (s *ExamService) GetQuestionsOfExam(ctx context.Context, examID string) ([]model.CompleteQuestion, error) {
+func (s *ExamService) GetQuestionsOfExam(ctx context.Context, examID string) ([]model.QuestionWithAnswer, error) {
 	setID, err := s.examRepo.GetExamSetId(examID)
 	if err != nil {
 		return nil, fmt.Errorf("get exam set id: %w", err)
 	}
 
-	questions, err := s.questionRepo.GetAllQuestionsInASet(setID)
+	questions, err := s.questionRepo.GetQuestionsBySetID(setID)
 	if err != nil {
 		return nil, fmt.Errorf("get questions for exam: %w", err)
 	}
-	return questions, nil
+
+	if len(questions) == 0 {
+		return []model.QuestionWithAnswer{}, nil
+	}
+
+	questionIDs := make([]string, len(questions))
+	for i, q := range questions {
+		questionIDs[i] = q.Id
+	}
+
+	choicesMap, err := s.questionRepo.GetChoicesForQuestions(questionIDs)
+	if err != nil {
+		return nil, fmt.Errorf("get choices for exam questions: %w", err)
+	}
+
+	answersMap, err := s.questionRepo.GetAnswersForQuestions(questionIDs)
+	if err != nil {
+		return nil, fmt.Errorf("get answers for exam questions: %w", err)
+	}
+
+	results := make([]model.QuestionWithAnswer, 0, len(questions))
+	for _, q := range questions {
+		results = append(results, model.QuestionWithAnswer{
+			Question: q,
+			Choices:  choicesMap[q.Id],
+			Answer:   answersMap[q.Id],
+		})
+	}
+
+	return results, nil
 }
 
 // ---------------------------------------------------------------------------

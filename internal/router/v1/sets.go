@@ -9,7 +9,6 @@ func registerSetRoutes(r chi.Router, h *handler.SetHandler) {
 	r.Route("/sets", func(r chi.Router) {
 		r.Get("/", h.GetRecentSets)
 		r.Post("/", h.CreateNewSet)
-		r.Post("/save_generated", h.SaveGeneratedQuestions)
 		r.Get("/{set_id}", h.GetASet)
 		r.Put("/{set_id}", h.UpdateASet)
 		r.Delete("/{set_id}", h.DeleteASet)
