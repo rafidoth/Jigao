@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"log/slog"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/rafidoth/onlyexams/internal/model"
@@ -18,105 +18,177 @@ func NewQuestionRepository(s *server.Server) *QuestionRepository {
 	return &QuestionRepository{s: s}
 }
 
-func (r *QuestionRepository) CreateMultipleChoiceQuestion(Q model.Question, choices []model.Choice, answer model.Answer, set_id string) error {
-	// open a transaction
-	// store questions in db
-	// store choices in db
+func (r *QuestionRepository) insertQuestion(tx pgx.Tx, Q model.Question, setID string) (string, error) {
+	var questionID string
+	err := tx.QueryRow(context.Background(),
+		`INSERT INTO questions (difficulty, question_type, question, set_id)
+		 VALUES ($1, $2, $3, $4)
+		 RETURNING id`,
+		Q.Difficulty, Q.QuestionType, Q.Question, setID,
+	).Scan(&questionID)
+	if err != nil {
+		r.s.Logger.Warn().Err(err).Msg("failed to insert question")
+		return "", err
+	}
+	return questionID, nil
+}
+
+func (r *QuestionRepository) insertChoices(tx pgx.Tx, choices []model.Choice, questionID string) ([]model.Choice, error) {
+	inserted := make([]model.Choice, 0, len(choices))
+	for i, c := range choices {
+		position := i + 1 // 1-indexed position
+		var ic model.Choice
+		err := tx.QueryRow(context.Background(),
+			`INSERT INTO choices (choice, question_id, position)
+			 VALUES ($1, $2, $3)
+			 RETURNING id, created_at, choice, question_id, position`,
+			c.ChoiceText, questionID, position,
+		).Scan(&ic.Id, &ic.CreatedAt, &ic.ChoiceText, &ic.QuestionId, &ic.Position)
+		if err != nil {
+			r.s.Logger.Warn().Err(err).Msg("failed to insert choice")
+			return nil, err
+		}
+		inserted = append(inserted, ic)
+	}
+	return inserted, nil
+}
+
+func (r *QuestionRepository) insertAnswer(tx pgx.Tx, correctAnswer model.CorrectAnswer, explanation string, questionID string) error {
+	answerJSON, err := json.Marshal(correctAnswer)
+	if err != nil {
+		return fmt.Errorf("marshal correct answer: %w", err)
+	}
+	_, err = tx.Exec(context.Background(),
+		`INSERT INTO answers (answer, explanation, question_id)
+		 VALUES ($1, $2, $3)`,
+		answerJSON, explanation, questionID,
+	)
+	if err != nil {
+		r.s.Logger.Warn().Err(err).Msg("failed to insert answer")
+		return err
+	}
 	return nil
 }
 
-func (r *QuestionRepository) CreateANewQuestionInASet(Q model.Question,
-	choices []model.Choice, answer model.Answer, set_id string) error {
-
+func (r *QuestionRepository) CreateMultipleChoiceQuestion(Q model.Question, choices []model.Choice, answer model.Answer, set_id string) error {
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback(context.Background())
-	// inserting question and get its ID
-	var questionID string
-	insertQuestionSQL := `
-		INSERT INTO questions (difficulty, question_type, question, set_id)
-		VALUES ($1, $2, $3, $4 )
-		RETURNING id`
 
-	err = tx.QueryRow(context.Background(), insertQuestionSQL,
-		Q.Difficulty,
-		Q.QuestionType,
-		Q.Question,
-		set_id,
-	).Scan(&questionID)
-	if err != nil {
-		slog.Warn("failed to insert question", "error", err)
-		return err
-	}
-
-	insertChoiceSQL := `
-		INSERT INTO choices ( choice, question_id)
-		VALUES ($1, $2)
-		RETURNING *
-		`
-
-	// choices len zero means it's a descriptive question (short question)
-	if len(choices) != 0 {
-		choice := make([]model.Choice, len(choices))
-		for i, c := range choices {
-			var insertedChoice model.Choice
-			err := tx.QueryRow(context.Background(), insertChoiceSQL,
-				c.ChoiceText,
-				questionID,
-			).Scan(
-				&insertedChoice.Id,
-				&insertedChoice.CreatedAt,
-				&insertedChoice.ChoiceText,
-				&insertedChoice.QuestionId,
-			)
-			choice[i] = insertedChoice
-			if err != nil {
-				slog.Warn("failed to insert choice", "error", err)
-				return err
-			}
-		}
-
-		// for fill in the blanks
-		// all the choices are correct answers
-		if Q.QuestionType != "fill_in_the_blanks" {
-			var choiceId string
-			for _, c := range choice {
-				if c.ChoiceText == answer.AnswerText {
-					choiceId = c.Id
-					break
-				}
-			}
-
-			// Insert answer for the question
-			insertAnswerSQL := `
-		INSERT INTO answers (answer, explanation, question_id, choice_id)
-		VALUES ($1, $2, $3, $4)`
-			_, err = tx.Exec(context.Background(), insertAnswerSQL,
-				answer.AnswerText,
-				answer.Explanation,
-				questionID,
-				choiceId,
-			)
-		}
-
-		if err != nil {
-			slog.Warn("failed to insert answer", "error", err)
-			return err
-		}
-	}
-
-	// Commit transaction
-	err = tx.Commit(context.Background())
+	questionID, err := r.insertQuestion(tx, Q, set_id)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	insertedChoices, err := r.insertChoices(tx, choices, questionID)
+	if err != nil {
+		return err
+	}
+
+	// Find the choice ID that matches the correct answer position (1-indexed)
+	correctPosition := answer.CorrectAnswer.MCQ_CorrectChoicePosition
+	var correctChoiceID string
+	for _, c := range insertedChoices {
+		if c.Position == correctPosition {
+			correctChoiceID = c.Id
+			break
+		}
+	}
+
+	if correctChoiceID == "" {
+		r.s.Logger.Warn().Int("position", correctPosition).Msg("no choice found for correct position")
+		return fmt.Errorf("invalid correct choice position: %d", correctPosition)
+	}
+
+	correctAnswer := model.CorrectAnswer{
+		MCQ_CorrectChoiceID: correctChoiceID,
+	}
+
+	if err := r.insertAnswer(tx, correctAnswer, answer.Explanation, questionID); err != nil {
+		return err
+	}
+
+	return tx.Commit(context.Background())
 }
 
+func (r *QuestionRepository) CreateFillInTheBlanks(Q model.Question, answer model.Answer, set_id string) error {
+	tx, err := r.s.DB.Pool.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
+	questionID, err := r.insertQuestion(tx, Q, set_id)
+	if err != nil {
+		return err
+	}
+
+	correctAnswer := model.CorrectAnswer{
+		FIB_AcceptedAnswers: answer.CorrectAnswer.FIB_AcceptedAnswers,
+		FIB_CaseSensitive:   answer.CorrectAnswer.FIB_CaseSensitive,
+	}
+
+	if err := r.insertAnswer(tx, correctAnswer, answer.Explanation, questionID); err != nil {
+		return err
+	}
+
+	return tx.Commit(context.Background())
+}
+
+func (r *QuestionRepository) CreateTrueFalse(Q model.Question, answer model.Answer, set_id string) error {
+	tx, err := r.s.DB.Pool.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
+	questionID, err := r.insertQuestion(tx, Q, set_id)
+	if err != nil {
+		return err
+	}
+
+	correctAnswer := model.CorrectAnswer{
+		TF_CorrectChoice: answer.CorrectAnswer.TF_CorrectChoice,
+	}
+
+	if err := r.insertAnswer(tx, correctAnswer, answer.Explanation, questionID); err != nil {
+		return err
+	}
+
+	return tx.Commit(context.Background())
+}
+
+func (r *QuestionRepository) CreateShortQuestion(Q model.Question, answer model.Answer, set_id string) error {
+	tx, err := r.s.DB.Pool.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
+	questionID, err := r.insertQuestion(tx, Q, set_id)
+	if err != nil {
+		return err
+	}
+
+	correctAnswer := model.CorrectAnswer{
+		SQ_ModelAnswer: answer.CorrectAnswer.SQ_ModelAnswer,
+	}
+
+	if err := r.insertAnswer(tx, correctAnswer, answer.Explanation, questionID); err != nil {
+		return err
+	}
+
+	return tx.Commit(context.Background())
+}
+
+// CreateANewQuestionInASet is deprecated. Use type-specific methods:
+// CreateMultipleChoiceQuestion, CreateFillInTheBlanks, CreateTrueFalse, CreateShortQuestion.
+
 func (r *QuestionRepository) CreateQuestionsInBatchReturnIds(questions []model.Question) ([]string, error) {
+	// TODO: Add support for position field in batch question creation
+	// For now, use single question creation methods instead
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return nil, err
@@ -139,7 +211,7 @@ func (r *QuestionRepository) CreateQuestionsInBatchReturnIds(questions []model.Q
 
 	rows, err := tx.Query(context.Background(), insertQuestionSQL, args...)
 	if err != nil {
-		slog.Warn("failed to execute batch insert query of questions", "error", err)
+		r.s.Logger.Warn().Err(err).Msg("failed to execute batch insert query of questions")
 		return nil, err
 	}
 	defer rows.Close()
@@ -149,14 +221,14 @@ func (r *QuestionRepository) CreateQuestionsInBatchReturnIds(questions []model.Q
 	for rows.Next() {
 		var qID string
 		if err := rows.Scan(&qID); err != nil {
-			slog.Warn("failed to scan question ID", "error", err)
+			r.s.Logger.Warn().Err(err).Msg("failed to scan question ID")
 			return nil, err
 		}
 		questionIds = append(questionIds, qID)
 	}
 
 	if err := rows.Err(); err != nil {
-		slog.Warn("error during rows iteration", "error", err)
+		r.s.Logger.Warn().Err(err).Msg("error during rows iteration")
 		return nil, err
 	}
 
@@ -172,6 +244,9 @@ func (r *QuestionRepository) CreateQuestionsInBatchReturnIds(questions []model.Q
 }
 
 func (r *QuestionRepository) SaveChoicesInBatch(choicesWithQuestionType []model.ChoicesWithQuestionType) (map[string][]model.Choice, error) {
+	// TODO: Add support for position field in batch choice creation
+	// Current implementation does not include position column
+
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return nil, err
@@ -194,7 +269,7 @@ func (r *QuestionRepository) SaveChoicesInBatch(choicesWithQuestionType []model.
 		} else if qType == "short_question" {
 			// no choices to insert for short questions
 			if len(cwqt.Choices) != 0 {
-				slog.Warn("short question should not have choices, skipping insertion")
+				r.s.Logger.Warn().Msg("short question should not have choices, skipping insertion")
 			}
 			continue
 		}
@@ -203,7 +278,7 @@ func (r *QuestionRepository) SaveChoicesInBatch(choicesWithQuestionType []model.
 
 	rows, err := tx.Query(context.Background(), sql, args...)
 	if err != nil {
-		slog.Warn("failed to execute batch insert query of choices", "error", err)
+		r.s.Logger.Warn().Err(err).Msg("failed to execute batch insert query of choices")
 		return nil, err
 	}
 	defer rows.Close()
@@ -216,7 +291,7 @@ func (r *QuestionRepository) SaveChoicesInBatch(choicesWithQuestionType []model.
 			&choice.ChoiceText,
 			&choice.QuestionId,
 		); err != nil {
-			slog.Warn("failed to scan choice", "error", err)
+			r.s.Logger.Warn().Err(err).Msg("failed to scan choice")
 			return nil, err
 		}
 		choicesMapWithQuestionId[choice.QuestionId] = append(choicesMapWithQuestionId[choice.QuestionId], choice)
@@ -234,7 +309,7 @@ func (r *QuestionRepository) SaveAnswersInBatch(answersWithQuestionInfo []model.
 	}
 	defer tx.Rollback(context.Background())
 
-	insertAnswerSQL := `INSERT INTO answers (answer, explanation, question_id, choice_id) VALUES `
+	insertAnswerSQL := `INSERT INTO answers (answer, explanation, question_id) VALUES `
 	var args []any
 	count := 0
 
@@ -242,41 +317,51 @@ func (r *QuestionRepository) SaveAnswersInBatch(answersWithQuestionInfo []model.
 		qType := awqi.QuestionType
 		qId := awqi.QuestionId
 
-		// Short questions: no choice_id needed
-		if qType == "short_question" {
-			single_sql := fmt.Sprintf("($%d, $%d, $%d, NULL), ", count+1, count+2, count+3)
-			insertAnswerSQL += single_sql
-			args = append(args, awqi.AnswerText, awqi.Explanation, qId)
-			count += 3
-		} else if qType == "multiple_choice_questions" || qType == "true_false" {
+		var correctAnswer model.CorrectAnswer
+
+		switch qType {
+		case "short_question":
+			correctAnswer = model.CorrectAnswer{
+				SQ_ModelAnswer: awqi.CorrectAnswer.SQ_ModelAnswer,
+			}
+		case "multiple_choice_questions":
 			// Find the matching choice_id for the answer
-			var choiceId *string
 			if choices, exists := choicesMap[qId]; exists {
 				for _, c := range choices {
-					if c.ChoiceText == awqi.AnswerText {
-						choiceId = &c.Id
+					if c.ChoiceText == awqi.CorrectAnswer.MCQ_CorrectChoiceID {
+						correctAnswer = model.CorrectAnswer{
+							MCQ_CorrectChoiceID: c.Id,
+						}
 						break
 					}
 				}
 			}
-
-			if choiceId == nil {
-				slog.Warn("no matching choice found for answer",
-					"question_id", qId,
-					"answer_text", awqi.AnswerText,
-				)
-				// Insert with NULL choice_id rather than failing
-				single_sql := fmt.Sprintf("($%d, $%d, $%d, NULL), ", count+1, count+2, count+3)
-				insertAnswerSQL += single_sql
-				args = append(args, awqi.AnswerText, awqi.Explanation, qId)
-				count += 3
-			} else {
-				single_sql := fmt.Sprintf("($%d, $%d, $%d, $%d), ", count+1, count+2, count+3, count+4)
-				insertAnswerSQL += single_sql
-				args = append(args, awqi.AnswerText, awqi.Explanation, qId, *choiceId)
-				count += 4
+			if correctAnswer.MCQ_CorrectChoiceID == "" {
+				r.s.Logger.Warn().Str("question_id", qId).Msg("no matching choice found for MCQ answer")
+				correctAnswer = awqi.CorrectAnswer
 			}
+		case "true_false":
+			correctAnswer = model.CorrectAnswer{
+				TF_CorrectChoice: awqi.CorrectAnswer.TF_CorrectChoice,
+			}
+		case "fill_in_the_blanks":
+			correctAnswer = model.CorrectAnswer{
+				FIB_AcceptedAnswers: awqi.CorrectAnswer.FIB_AcceptedAnswers,
+				FIB_CaseSensitive:   awqi.CorrectAnswer.FIB_CaseSensitive,
+			}
+		default:
+			correctAnswer = awqi.CorrectAnswer
 		}
+
+		answerJSON, err := json.Marshal(correctAnswer)
+		if err != nil {
+			return fmt.Errorf("marshal answer for question %s: %w", qId, err)
+		}
+
+		single_sql := fmt.Sprintf("($%d, $%d, $%d), ", count+1, count+2, count+3)
+		insertAnswerSQL += single_sql
+		args = append(args, answerJSON, awqi.Explanation, qId)
+		count += 3
 	}
 
 	// Remove last comma and space
@@ -284,7 +369,7 @@ func (r *QuestionRepository) SaveAnswersInBatch(answersWithQuestionInfo []model.
 
 	_, err = tx.Exec(context.Background(), insertAnswerSQL, args...)
 	if err != nil {
-		slog.Warn("failed to execute batch insert query of answers", "error", err)
+		r.s.Logger.Warn().Err(err).Msg("failed to execute batch insert query of answers")
 		return err
 	}
 
@@ -336,7 +421,7 @@ func (r *QuestionRepository) GetAllQuestionsInASet(
 			return nil, err
 		}
 
-		aRows, err := tx.Query(context.Background(), `SELECT id, created_at, answer, COALESCE(choice_id::text, '') AS choice_id, explanation, question_id FROM answers WHERE question_id = $1 LIMIT 1`, q.Id)
+		aRows, err := tx.Query(context.Background(), `SELECT id, created_at, answer, explanation, question_id FROM answers WHERE question_id = $1 LIMIT 1`, q.Id)
 		if err != nil {
 			return nil, err
 		}

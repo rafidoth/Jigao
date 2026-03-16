@@ -3,14 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"io"
-	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/gorilla/websocket"
 	"github.com/rafidoth/onlyexams/internal/errs"
-	"github.com/rafidoth/onlyexams/internal/exams"
 	"github.com/rafidoth/onlyexams/internal/service"
 )
 
@@ -22,15 +19,6 @@ type ExamHandler struct {
 // NewExamHandler creates a new ExamHandler.
 func NewExamHandler(svc *service.ExamService) *ExamHandler {
 	return &ExamHandler{svc: svc}
-}
-
-// WebSocket upgrader for exam rooms.
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true // TODO: restrict origins in production
-	},
 }
 
 // CreateExam handles POST /exams/ — validates and creates an exam.
@@ -137,41 +125,4 @@ func (h *ExamHandler) GetQuestionsOfExam(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, questions)
-}
-
-// JoinRoom handles GET /exams/join/{room_id} — upgrades to WebSocket for exam room.
-func (h *ExamHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
-	uid, ok := r.Context().Value("user-id").(string)
-	if !ok || uid == "" {
-		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "join room: missing user-id")
-		return
-	}
-
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		slog.Error("websocket upgrade failed", "error", err)
-		// Cannot use writeError here — the upgrade already wrote headers.
-		return
-	}
-
-	roomID := chi.URLParam(r, "room_id")
-
-	// Ensure room exists (creates if needed).
-	if err := h.svc.EnsureRoomExists(r.Context(), roomID); err != nil {
-		slog.Error("ensure room exists failed", "error", err)
-		conn.Close()
-		return
-	}
-
-	clientType := h.svc.DetermineClientType(r.Context(), uid, roomID)
-	client := exams.NewClient(conn, clientType, uid, roomID)
-	if client == nil {
-		conn.Close()
-		return
-	}
-
-	hub := h.svc.GetHub()
-	hub.Register <- client
-	go client.Write()
-	go client.Read(hub)
 }

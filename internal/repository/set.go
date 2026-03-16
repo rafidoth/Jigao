@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/rafidoth/onlyexams/internal/model"
@@ -58,7 +57,7 @@ func (r *SetRepository) GetOwnerUserId(id string) (string, error) {
 			return fmt.Errorf("query owner user id: %w", err)
 		}
 
-		slog.Info("Success: fetched owner user id", "id", id, "ownerUserId", ownerUserId)
+		r.s.Logger.Info().Str("id", id).Str("ownerUserId", ownerUserId).Msg("Success: fetched owner user id")
 		return nil
 	})
 
@@ -84,7 +83,7 @@ func (r *SetRepository) GetVisibility(id string) (string, error) {
 			return fmt.Errorf("query visibility: %w", err)
 		}
 
-		slog.Info("Success: fetched visibility", "id", id, "visibility", visibility)
+		r.s.Logger.Info().Str("id", id).Str("visibility", visibility).Msg("Success: fetched visibility")
 		return nil
 	})
 
@@ -127,7 +126,7 @@ func (r *SetRepository) GetRecentSets(limit int, user_id string) ([]*model.Set, 
 			recentSets = append(recentSets, &sets[i])
 		}
 
-		slog.Info("Success: fetched recent sets", "count", len(recentSets))
+		r.s.Logger.Info().Int("count", len(recentSets)).Msg("Success: fetched recent sets")
 		return nil
 	})
 
@@ -161,7 +160,7 @@ func (r *SetRepository) CreateNewSet(qSet *model.Set) (*model.Set, error) {
 			return fmt.Errorf("collect inserted set: %w", err)
 		}
 
-		slog.Info("Created set", "id", set.ID, "title", set.Title)
+		r.s.Logger.Info().Str("id", set.ID).Str("title", set.Title).Msg("Created set")
 		return nil
 	})
 	if err != nil {
@@ -190,7 +189,7 @@ func (r *SetRepository) GetASet(qSet *model.Set) (*model.Set, error) {
 			return fmt.Errorf("collect set: %w", err)
 		}
 
-		slog.Info("Fetched set", "id", set.ID)
+		r.s.Logger.Info().Str("id", set.ID).Msg("Fetched set")
 		return nil
 	})
 	if err != nil {
@@ -221,7 +220,7 @@ func (r *SetRepository) UpdateASet(qSet *model.Set) (*model.Set, error) {
 			return fmt.Errorf("collect updated set: %w", err)
 		}
 
-		slog.Info("Updated set", "id", set.ID)
+		r.s.Logger.Info().Str("id", set.ID).Msg("Updated set")
 		return nil
 	})
 	if err != nil {
@@ -250,7 +249,7 @@ func (r *SetRepository) DeleteASet(qSet *model.Set) (*model.Set, error) {
 			return fmt.Errorf("collect deleted set: %w", err)
 		}
 
-		slog.Info("Deleted set", "id", set.ID)
+		r.s.Logger.Info().Str("id", set.ID).Msg("Deleted set")
 		return nil
 	})
 	if err != nil {
@@ -355,9 +354,9 @@ func (r *SetRepository) DeleteSetContext(set_id string) error {
 		}
 
 		if ct.RowsAffected() > 0 {
-			slog.Info("Success: deleted context", "set id", set_id)
+			r.s.Logger.Info().Str("set_id", set_id).Msg("Success: deleted context")
 		} else {
-			slog.Info("No context deleted (not found)", "set id", set_id)
+			r.s.Logger.Info().Str("set_id", set_id).Msg("No context deleted (not found)")
 		}
 		return nil
 	})
@@ -389,7 +388,7 @@ func (r *SetRepository) UpdateSetContext(set_id string, newContext string) (*mod
 			return fmt.Errorf("failed to map row to struct: %w", err)
 		}
 
-		slog.Info("Success: updated context", "set id", set_id)
+		r.s.Logger.Info().Str("set_id", set_id).Msg("Success: updated context")
 		return nil
 	})
 
@@ -419,7 +418,7 @@ func (r *SetRepository) GetSetContext(set_id string) (*model.SetContext, error) 
 			return fmt.Errorf("failed to map rows to struct: %w", err)
 		}
 
-		slog.Info("Success: fetched context", "set id", set_id)
+		r.s.Logger.Info().Str("set_id", set_id).Msg("Success: fetched context")
 		return nil
 	})
 
@@ -451,7 +450,7 @@ func (r *SetRepository) SaveContext(set_context, set_id string) (*model.SetConte
 			return fmt.Errorf("failed to map row to struct: %w", err)
 		}
 
-		slog.Info("Created New Row in contexts Table in DB ", "Created", setContext)
+		r.s.Logger.Info().Interface("context", setContext).Msg("Created new row in contexts table")
 		return err
 	})
 
@@ -474,7 +473,7 @@ func (r *SetRepository) AddSharedAccessUser(setId, userId string) error {
 		if err != nil {
 			return fmt.Errorf("add shared access user: %w", err)
 		}
-		slog.Info("Added shared access user", "set_id", setId, "email", userId)
+		r.s.Logger.Info().Str("set_id", setId).Str("user_id", userId).Msg("Added shared access user")
 		return nil
 	})
 
@@ -500,7 +499,7 @@ func (r *SetRepository) CheckUserAccess(userId, setId string) (bool, error) {
 			return fmt.Errorf("scan access exists: %w", err)
 		}
 
-		slog.Info("Checked shared access", "set_id", setId, "user_id", userId, "hasAccess", hasAccess)
+		r.s.Logger.Info().Str("set_id", setId).Str("user_id", userId).Bool("hasAccess", hasAccess).Msg("Checked shared access")
 		return nil
 	})
 
@@ -538,7 +537,7 @@ func (r *SetRepository) GetSharedAccessUsersList(setId string) ([]users.User, er
 			return fmt.Errorf("iterate rows: %w", err)
 		}
 
-		slog.Info("Retrieved shared access users", "set_id", setId, "count", len(userList))
+		r.s.Logger.Info().Str("set_id", setId).Int("count", len(userList)).Msg("Retrieved shared access users")
 		return nil
 	})
 

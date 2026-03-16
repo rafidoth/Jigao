@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/rafidoth/onlyexams/internal/config"
-	"github.com/rafidoth/onlyexams/internal/exams"
 	"github.com/rafidoth/onlyexams/internal/handler"
 	"github.com/rafidoth/onlyexams/internal/logger"
 	"github.com/rafidoth/onlyexams/internal/repository"
@@ -34,11 +33,8 @@ func main() {
 	// Create repository layer
 	repos := repository.NewRepositories(srv)
 
-	// Create ExamHub (repos.Exam satisfies HubStorage interface)
-	hub := exams.New(repos.Exam)
-
 	// Create service layer
-	svc := service.NewServices(repos, hub)
+	svc := service.NewServices(repos)
 
 	// Create handler layer
 	handlers := handler.NewHandlers(svc)
@@ -48,9 +44,6 @@ func main() {
 
 	// Wire HTTP server
 	srv.SetupHTTPServer(mux)
-
-	// Start ExamHub event loop
-	go hub.Run()
 
 	// Start serving
 	if err := srv.Start(); err != nil {

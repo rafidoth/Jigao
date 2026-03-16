@@ -38,6 +38,7 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 		Choices  []model.Choice `json:"choices"`
 		Answer   model.Answer   `json:"answer"`
 	}
+
 	if !utils.ExtractRequestBody(r, &req) {
 		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create question: decode body")
 		return

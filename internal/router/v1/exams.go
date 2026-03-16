@@ -12,6 +12,5 @@ func registerExamRoutes(r chi.Router, h *handler.ExamHandler) {
 		r.Get("/q/{exam_id}", h.GetQuestionsOfExam)
 		r.Get("/{exam_id}", h.GetExamByID)
 		r.Delete("/{exam_id}", h.RemoveExam)
-		r.Get("/join/{room_id}", h.JoinRoom)
 	})
 }

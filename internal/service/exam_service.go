@@ -8,7 +8,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/rafidoth/onlyexams/internal/errs"
-	"github.com/rafidoth/onlyexams/internal/exams"
 	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/repository"
 	"github.com/rafidoth/onlyexams/internal/users"
@@ -19,7 +18,6 @@ type ExamService struct {
 	setRepo      *repository.SetRepository
 	questionRepo *repository.QuestionRepository
 	userRepo     *repository.UserRepository
-	hub          *exams.ExamHub
 }
 
 func NewExamService(
@@ -27,14 +25,12 @@ func NewExamService(
 	setRepo *repository.SetRepository,
 	questionRepo *repository.QuestionRepository,
 	userRepo *repository.UserRepository,
-	hub *exams.ExamHub,
 ) *ExamService {
 	return &ExamService{
 		examRepo:     examRepo,
 		setRepo:      setRepo,
 		questionRepo: questionRepo,
 		userRepo:     userRepo,
-		hub:          hub,
 	}
 }
 
@@ -214,30 +210,6 @@ func (s *ExamService) DetermineClientType(ctx context.Context, userID, examID st
 
 	// Restricted visibility: participant by default.
 	return participant
-}
-
-// EnsureRoomExists makes sure a room exists for the given exam ID.
-// If no room exists and the exam is valid, it creates one.
-func (s *ExamService) EnsureRoomExists(ctx context.Context, roomID string) error {
-	room := s.hub.GetRoom(roomID)
-	if room != nil {
-		return nil // room already exists
-	}
-
-	// Verify the exam exists before creating a room.
-	if err := s.examRepo.IsExamExists(roomID); err != nil {
-		return fmt.Errorf("exam not found: %w", err)
-	}
-
-	if err := s.hub.CreateNewRoom(roomID); err != nil {
-		return fmt.Errorf("create room: %w", err)
-	}
-	return nil
-}
-
-// GetHub returns the ExamHub reference (needed by the WebSocket handler).
-func (s *ExamService) GetHub() *exams.ExamHub {
-	return s.hub
 }
 
 // ExamExists checks if an exam exists.

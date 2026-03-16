@@ -237,6 +237,7 @@ func (s *QuestionService) GetAllQuestionsInASet(ctx context.Context, userID, set
 }
 
 // CreateSingleQuestion creates a question with its choices and answer in a set.
+// It dispatches to the appropriate repository method based on the question type.
 func (s *QuestionService) CreateSingleQuestion(
 	ctx context.Context,
 	question model.Question,
@@ -244,8 +245,25 @@ func (s *QuestionService) CreateSingleQuestion(
 	answer model.Answer,
 	setID string,
 ) error {
-	if err := s.questionRepo.CreateANewQuestionInASet(question, choices, answer, setID); err != nil {
-		return fmt.Errorf("create question: %w", err)
+	switch question.QuestionType {
+	case "multiple_choice_questions":
+		if err := s.questionRepo.CreateMultipleChoiceQuestion(question, choices, answer, setID); err != nil {
+			return fmt.Errorf("create MCQ question: %w", err)
+		}
+	case "fill_in_the_blanks":
+		if err := s.questionRepo.CreateFillInTheBlanks(question, answer, setID); err != nil {
+			return fmt.Errorf("create FIB question: %w", err)
+		}
+	case "true_false":
+		if err := s.questionRepo.CreateTrueFalse(question, answer, setID); err != nil {
+			return fmt.Errorf("create true/false question: %w", err)
+		}
+	case "short_question":
+		if err := s.questionRepo.CreateShortQuestion(question, answer, setID); err != nil {
+			return fmt.Errorf("create short question: %w", err)
+		}
+	default:
+		return fmt.Errorf("unsupported question type: %s", question.QuestionType)
 	}
 	return nil
 }
@@ -364,9 +382,9 @@ func buildBatchInputFromClientQuestions(input []GeneratedQuestionInput, setID st
 		})
 
 		awqi = append(awqi, model.AnswerWithQuestionInfo{
-			QuestionType: gq.Question.QuestionType,
-			AnswerText:   gq.Answer.AnswerText,
-			Explanation:  gq.Answer.Explanation,
+			QuestionType:  gq.Question.QuestionType,
+			CorrectAnswer: gq.Answer.CorrectAnswer,
+			Explanation:   gq.Answer.Explanation,
 		})
 	}
 

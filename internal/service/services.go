@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/rafidoth/onlyexams/internal/exams"
 	"github.com/rafidoth/onlyexams/internal/repository"
 )
 
@@ -13,7 +12,6 @@ type Services struct {
 
 func NewServices(
 	repos *repository.Repositories,
-	hub *exams.ExamHub,
 ) *Services {
 	return &Services{
 		User: NewUserService(repos.User),
@@ -27,7 +25,6 @@ func NewServices(
 			repos.Set,
 			repos.Question,
 			repos.User,
-			hub,
 		),
 	}
 }
