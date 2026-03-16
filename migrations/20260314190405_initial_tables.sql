@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS choices (
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   choice TEXT NOT NULL,
   question_id UUID NOT NULL,
+  position  INTEGER NOT NULL,
   FOREIGN KEY (question_id) REFERENCES questions(id)
 );
 
