@@ -6,21 +6,42 @@ export type QuestionKind =
   | "short_question"
   | "fill_in_the_blanks";
 
+// Matches backend ChoiceResponse
+export interface ChoiceResponse {
+  choice_id: string;
+  text: string;
+  position: number;
+}
+
+// Matches backend AnswerResponse
+export interface AnswerResponse {
+  explanation: string;
+  correct_choice_position?: number;
+  correct_choice_id?: string;
+  correct_bool?: boolean;
+  accepted_answers?: string[];
+  case_sensitive?: boolean;
+  model_answer?: string;
+}
+
+// Matches backend QuestionResponse
 export interface BaseQuestion {
-  id: string;
+  question_id: string;
+  answer_id: string;
   type: QuestionKind;
   difficulty: Difficulty;
   text: string;
+  answer: AnswerResponse;
 }
 
 export interface MultipleChoiceQuestion extends BaseQuestion {
   type: "multiple_choice_questions";
-  choices: string[]; // exactly 4 in current UI
+  choices: ChoiceResponse[];
 }
 
 export interface TrueFalseQuestion extends BaseQuestion {
   type: "true_false";
-  choices: [string, string];
+  choices: ChoiceResponse[];
 }
 
 export interface ShortQuestion extends BaseQuestion {
