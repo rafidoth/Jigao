@@ -389,7 +389,21 @@ function getChoicesBasedOnQuestionType(
   }
 }
 
-function getCorrectAnswerBasedOnQuestionType(
+function getCorrectAnswerIndexBasedOnQuestionType(
+  questionType: QuestionKind,
+  state: CreateNewQuestionStoreState,
+): number {
+  switch (questionType) {
+    case "multiple_choice_questions":
+      return state.mcq.correctAnswer;
+    case "true_false":
+      return state.trueFalse.correctAnswer;
+    default:
+      return 0;
+  }
+}
+
+function getCorrectAnswerTextBasedOnQuestionType(
   questionType: QuestionKind,
   state: CreateNewQuestionStoreState,
 ) {
@@ -445,7 +459,8 @@ interface CreateQuestionVariables {
   questionType: QuestionKind;
   questionText: string;
   choices: string[];
-  correctAnswer: string;
+  correctAnswerIndex: number;
+  correctAnswerText: string;
   explanation: string;
 }
 
@@ -456,18 +471,51 @@ async function createNewQuestionApiPost(variables: CreateQuestionVariables) {
     questionType,
     questionText,
     choices,
-    correctAnswer,
     explanation,
   } = variables;
+
+  // Build correct answer payload based on question type
+  let correctAnswerPayload: Record<string, unknown> = {};
+
+  switch (questionType) {
+    case "multiple_choice_questions":
+      correctAnswerPayload = {
+        mcq_correct_choice_position: variables.correctAnswerIndex + 1, // Convert 0-indexed to 1-indexed
+      };
+      break;
+    case "true_false":
+      // correctAnswerIndex: 0 = True, 1 = False
+      correctAnswerPayload = {
+        tf_correct_choice: variables.correctAnswerIndex === 0,
+      };
+      break;
+    case "short_question":
+      correctAnswerPayload = {
+        sq_model_answer: variables.correctAnswerText,
+      };
+      break;
+    case "fill_in_the_blanks":
+      correctAnswerPayload = {
+        fib_accepted_answers: variables.correctAnswerText
+          .split(",")
+          .map((s: string) => s.trim()),
+        fib_case_sensitive: false,
+      };
+      break;
+  }
+
   const body = {
     question: {
       difficulty: difficulty,
       question_type: questionType,
       question: questionText,
     },
-    choices: choices.map((c) => ({ choice_text: c.trim() })),
+    choices: choices.map((c, idx) => ({
+      choice_text: c.trim(),
+      position: idx + 1,
+    })),
     answer: {
-      answer: correctAnswer,
+      ...correctAnswerPayload,
       explanation: explanation,
     },
   };
@@ -487,7 +535,11 @@ export default function CreateNewQuestionPopover({
   const questionText = useCreateNewQuestionStore((s) => s.questionText);
   const state = useCreateNewQuestionStore();
   const choices = getChoicesBasedOnQuestionType(questionType, state);
-  const correctAnswer = getCorrectAnswerBasedOnQuestionType(
+  const correctAnswerIndex = getCorrectAnswerIndexBasedOnQuestionType(
+    questionType,
+    state,
+  );
+  const correctAnswerText = getCorrectAnswerTextBasedOnQuestionType(
     questionType,
     state,
   );
@@ -532,7 +584,7 @@ export default function CreateNewQuestionPopover({
       questionType,
       questionText,
       choices,
-      correctAnswer,
+      correctAnswerText,
     );
     if (isError) {
       setError(error);
@@ -546,7 +598,8 @@ export default function CreateNewQuestionPopover({
         questionType,
         questionText,
         choices,
-        correctAnswer,
+        correctAnswerIndex,
+        correctAnswerText,
         explanation,
       });
     } catch {}
