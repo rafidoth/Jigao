@@ -222,18 +222,48 @@ func (s *QuestionService) AllowSetAccess(ctx context.Context, setID, userID stri
 
 // Questions
 
-// GetAllQuestionsInASet checks access then returns all complete questions.
-func (s *QuestionService) GetAllQuestionsInASet(ctx context.Context, userID, setID string) ([]model.CompleteQuestion, error) {
+// GetAllQuestionsInASet checks access then returns all questions with answers and choices.
+func (s *QuestionService) GetAllQuestionsInASet(ctx context.Context, userID, setID string) ([]model.QuestionWithAnswer, error) {
 	_, err := s.AuthorizeSetAccess(ctx, userID, setID)
 	if err != nil {
 		return nil, err
 	}
 
-	questions, err := s.questionRepo.GetAllQuestionsInASet(setID)
+	questions, err := s.questionRepo.GetQuestionsBySetID(setID)
 	if err != nil {
-		return nil, fmt.Errorf("get all questions: %w", err)
+		return nil, fmt.Errorf("get questions: %w", err)
 	}
-	return questions, nil
+
+	if len(questions) == 0 {
+		return []model.QuestionWithAnswer{}, nil
+	}
+
+	questionIDs := make([]string, len(questions))
+	for i, q := range questions {
+		questionIDs[i] = q.Id
+	}
+
+	choicesMap, err := s.questionRepo.GetChoicesForQuestions(questionIDs)
+	if err != nil {
+		return nil, fmt.Errorf("get choices: %w", err)
+	}
+
+	answersMap, err := s.questionRepo.GetAnswersForQuestions(questionIDs)
+	if err != nil {
+		return nil, fmt.Errorf("get answers: %w", err)
+	}
+
+	results := make([]model.QuestionWithAnswer, 0, len(questions))
+	for _, q := range questions {
+		qwa := model.QuestionWithAnswer{
+			Question: q,
+			Choices:  choicesMap[q.Id],
+			Answer:   answersMap[q.Id],
+		}
+		results = append(results, qwa)
+	}
+
+	return results, nil
 }
 
 // CreateSingleQuestion creates a question with its choices and answer in a set.
@@ -268,9 +298,7 @@ func (s *QuestionService) CreateSingleQuestion(
 	return nil
 }
 
-// ---------------------------------------------------------------------------
 // Batch Question Creation (shared by GenerateQuestionSet and SaveGeneratedQuestions)
-// ---------------------------------------------------------------------------
 
 // BatchCreateQuestionsInput is the input for batch question creation.
 type BatchCreateQuestionsInput struct {
