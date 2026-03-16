@@ -70,7 +70,7 @@ const ExistingSetAiChat = () => {
               <GhostIcon />
             </span>
             <span>Let Me Help You,</span>
-            <span className="font-black text-lg">
+            <span className="font-black text-base">
               {currentUserDetails?.firstName}
             </span>
           </div>

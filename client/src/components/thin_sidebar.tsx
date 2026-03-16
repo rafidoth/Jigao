@@ -71,7 +71,7 @@ function ThinSidebar() {
     <div className="flex-col w-full h-full  hidden lg:flex bg-sidebar text-sidebar-foreground justify-between">
       <div>
         <div className="flex flex-col items-center gap-3">
-          <span className="text-4xl font-bold">
+          <span className="text-2xl font-bold">
             <img
               src={"/logo2.png"}
               alt="Jigao"

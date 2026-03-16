@@ -65,7 +65,7 @@ function SetSettingsUpdatePopover({
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-[600px] p-4 space-y-4">
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Set Settings</h3>
+          <h3 className="text-base font-semibold">Set Settings</h3>
           <label className="text-sm font-medium">Title</label>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} />
           <label className="text-sm font-medium pt-2">Visibility</label>

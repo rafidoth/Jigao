@@ -87,7 +87,7 @@ function FullScreenSidebar() {
             >
               J
             </div>
-            <span className="text-xl font-bold tracking-normal">Menu</span>
+            <span className="text-base font-bold tracking-normal">Menu</span>
           </div>
           <div className="flex items-center gap-2">
             <button aria-label="Toggle theme" onClick={toggleTheme} className="rounded-full p-2 hover:bg-secondary/50">
@@ -135,7 +135,7 @@ function FullScreenSidebar() {
                 >
                   <div className="flex items-center gap-3" style={{ minHeight: 52 }}>
                     {item.icon}
-                    <span className={active ? "font-bold text-base" : "text-base"}>{item.label}</span>
+                    <span className={active ? "font-bold text-sm" : "text-sm"}>{item.label}</span>
                   </div>
                   <div
                     style={{

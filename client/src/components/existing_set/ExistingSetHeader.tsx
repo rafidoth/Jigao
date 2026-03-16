@@ -80,7 +80,7 @@ function ExistingSetHeader({
                 >
                   <ArrowLeft />
                 </Button>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight leading-tight break-words text-foreground ">
+                <h1 className="text-base sm:text-lg md:text-xl font-semibold tracking-tight leading-tight break-words text-foreground ">
                   {set.title}
                 </h1>
                 <CreateNewQuestionPopover set_id={set.id}>

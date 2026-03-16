@@ -16,8 +16,8 @@ function LogoToolBar() {
       }}
     >
       <div className="flex items-center gap-4">
-        <span className="font-bold text-xl mt-4">
-          <span className="text-2xl">Jigao</span>
+        <span className="font-bold text-base mt-4">
+          <span className="text-lg">Jigao</span>
         </span>
         <div className="flex items-center gap-2">
           <button aria-label="Toggle theme" onClick={toggleTheme} className="rounded-full p-2 hover:bg-secondary/50">

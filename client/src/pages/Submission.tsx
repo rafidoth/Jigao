@@ -188,7 +188,7 @@ function Submission() {
   if (errorFetchingQuestionData || errorFetchingSubmissionData) {
     console.error("Error fetching submission data:", error);
     return (
-      <div className="w-full h-full flex justify-center items-center text-4xl text-muted-foreground font-bold">
+      <div className="w-full h-full flex justify-center items-center text-2xl text-muted-foreground font-bold">
         No Submission Found for this exam.
       </div>
     );
@@ -196,7 +196,7 @@ function Submission() {
   if (submissionDataLoading || questionsDataLoading || examDataLoading) {
     return (
       <div className="flex justify-center items-center h-[100vh] gap-x-2">
-        <span className="text-lg font-medium animate-spin flex items-center gap-2">
+        <span className="text-base font-medium animate-spin flex items-center gap-2">
           <LoaderIcon />
         </span>
         Loading
@@ -224,7 +224,7 @@ function Submission() {
         <ArrowLeft />
       </Button>
       <div className="flex flex-col font-bold justify-center items-center py-4 gap-2">
-        <div className="text-2xl">{examData?.title}</div>
+        <div className="text-xl">{examData?.title}</div>
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-center gap-2 bg-primary/10 rounded-xl px-4 py-2">
             <span>Score</span>

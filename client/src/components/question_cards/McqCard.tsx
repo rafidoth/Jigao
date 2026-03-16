@@ -42,7 +42,7 @@ export default function McqCard({
               {typeLabel(q.type)}
             </Badge>
           </div>
-          <p className="text-xl">
+          <p className="text-base">
             {position}. {q.text}
           </p>
         </div>
@@ -67,7 +67,7 @@ export default function McqCard({
                 <Badge variant="outline" className="w-7 justify-center">
                   {String.fromCharCode(65 + idx)}
                 </Badge>
-                <span className="flex-1 text-xl">{c}</span>
+                <span className="flex-1 text-sm">{c}</span>
                 {showAnswer && isAnswer && (
                   <Badge variant="default" className="text-xs">
                     Correct

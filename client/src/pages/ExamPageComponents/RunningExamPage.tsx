@@ -211,7 +211,7 @@ function RunningExamHeader({
       )}
     >
       <div className="flex flex-col">
-        <div className="text-3xl">{title || "Exam"} </div>
+        <div className="text-xl">{title || "Exam"} </div>
         <Badge
           variant={"outline"}
           className="font-semibold select-none bg-blue-500/20 text-blue-500"
@@ -225,7 +225,7 @@ function RunningExamHeader({
       <div className="flex flex-col items-center justify-center gap-1 py-2">
         <div className="flex gap-x-2 items-center justify-center">
           <div className="text-muted-foreground">Ends in</div>
-          <div className="font-mono text-2xl">
+          <div className="font-mono text-lg">
             <CountdownText until={endTime} />
           </div>
         </div>

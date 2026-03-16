@@ -15,7 +15,7 @@ function Exams() {
   return (
     <div className="h-full w-full flex flex-col px-3 lg:px-9 py-3 font-bold">
       <div className="mb-4">
-        <h1 className="text-2xl font-semibold">Exams</h1>
+        <h1 className="text-xl font-semibold">Exams</h1>
       </div>
       <ExamsToolbar initialSearch={search} onSearch={handleSearch} />
       <div className="flex-1 pr-2 w-full">

@@ -371,7 +371,7 @@ function ExamsList({ set_id }: { set_id: string }) {
         <Button className="w-[100px]" variant="ghost" onClick={() => refetch()}>
           <RotateCcw />
         </Button>
-        <p className="text-3xl text-muted-foreground">
+        <p className="text-xl text-muted-foreground">
           No exams found for this set.
         </p>
       </div>
@@ -419,7 +419,7 @@ function ExamsList({ set_id }: { set_id: string }) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-2xl font-bold">
+                    <span className="font-semibold text-lg font-bold">
                       {exam.title}
                     </span>
                     <Badge
@@ -439,7 +439,7 @@ function ExamsList({ set_id }: { set_id: string }) {
                     </Avatar>
                     <div className="flex flex-col">
                       <span className="text-muted-foreground">created by</span>
-                      <span className="text-lg">{created_by.name}</span>
+                      <span className="text-sm">{created_by.name}</span>
                     </div>
                   </div>
                   {exam.description && (
@@ -552,8 +552,8 @@ export default function ExamsDialog({
         className="w-[92vw] sm:max-w-xl md:max-w-2xl p-3"
       >
         <SheetHeader className="pb-2">
-          <SheetTitle className="text-3xl">Exams</SheetTitle>
-          <SheetDescription className="text-lg">
+          <SheetTitle className="text-xl">Exams</SheetTitle>
+          <SheetDescription className="text-sm">
             Create new exam and review scheduled exams for this set.
           </SheetDescription>
         </SheetHeader>

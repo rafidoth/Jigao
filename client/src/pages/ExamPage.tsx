@@ -177,7 +177,7 @@ function ExamPage() {
 
       <div className="absolute bottom-5 right-5 flex  gap-x-2 justify-center items-center z-10">
         <img src="/logo.png" className="w-8 h-8 rounded-md" />
-        <Link to="/" className="text-3xl font-bold">
+        <Link to="/" className="text-xl font-bold">
           Jigao
         </Link>
       </div>

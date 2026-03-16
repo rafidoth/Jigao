@@ -188,7 +188,7 @@ function QuestionTypeSelector() {
             className={` flex flex-col p-3 border cursor-pointer transition ${active ? "border-primary bg-primary/10" : "hover:bg-muted"}`}
             onClick={() => setQuestionType(qt.value)}
           >
-            <p className="font-medium text-xl">{qt.label}</p>
+            <p className="font-medium text-base">{qt.label}</p>
             <p className=" text-muted-foreground mt-1 leading-relaxed">
               {qt.description}
             </p>
@@ -557,7 +557,7 @@ export default function CreateNewQuestionPopover({
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-[620px] p-4 space-y-4">
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Create New Question</h3>
+          <h3 className="text-base font-semibold">Create New Question</h3>
           <QuestionTypeSelector />
           {inputs}
           <div className="flex flex-col gap-2">

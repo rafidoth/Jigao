@@ -27,7 +27,7 @@ export default function ExamListItem({ exam }: { exam: Exam }) {
   return (
     <div className="w-full flex items-start justify-between p-5 border-b hover:bg-muted/50 transition-colors">
       <div className="flex-1 space-y-3">
-        <div className="flex gap-x-2 text-xl items-center">
+        <div className="flex gap-x-2 text-base items-center">
           <span className="font-semibold  leading-tight">{exam.title}</span>
           {setTitle && (
             <span className="flex items-center  gap-x-2 bg-primary/20 text-primary-foreground/80 px-3 py-1 rounded-full ">

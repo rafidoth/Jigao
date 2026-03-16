@@ -36,14 +36,14 @@ function NewSet() {
   if (isPending) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center px-2">
-        <div className="text-2xl md:text-5xl font-bold">Generating...</div>
+        <div className="text-xl md:text-3xl font-bold">Generating...</div>
       </div>
     );
   }
 
   return (
     <div className="flex h-full w-full flex-col items-center justify-center px-2">
-      <div className="text-2xl  md:text-5xl font-bold">Generate Question</div>
+      <div className="text-xl  md:text-3xl font-bold">Generate Question</div>
       <div className="flex flex-col md:w[700px]  md:flex-row md:justify-center gap-5 items-start mt-4 mb-8">
         <div className="w-full flex flex-col gap-4 items-center ">
           <DifficultySelect />

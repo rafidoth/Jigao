@@ -11,7 +11,7 @@ function ExamPageWaitingUI({
 }) {
   return (
     <div className="h-screen w-full flex flex-col justify-center items-center">
-      <h1 className="text-3xl font-bold m-3">{title}</h1>
+      <h1 className="text-2xl font-bold m-3">{title}</h1>
       <Card className="w-2/4">
         <CardContent className="flex flex-col">
           <div className="flex justify-between">
@@ -24,7 +24,7 @@ function ExamPageWaitingUI({
             </div>
             <div className="flex flex-col items-center justify-center gap-1 py-2">
               <div className="text-xs text-muted-foreground">Starts in</div>
-              <div className="font-mono text-2xl">
+              <div className="font-mono text-lg">
                 <CountdownText until={startTime} />
               </div>
             </div>

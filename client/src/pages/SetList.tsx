@@ -164,13 +164,13 @@ function SetList() {
   return (
     <div className="flex flex-col gap-4 px-3 lg:px-9 py-3">
       <div className="hidden md:flex flex-col gap-2 mb-10 align">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold  my-2">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold  my-2">
           My Sets
         </h2>
         <Button
           onClick={handleCreateNewSet}
           disabled={isPending}
-          className="w-16 sm:w-20 md:w-[100px] cursor-pointer sm:text-lg md:text-xl"
+          className="w-16 sm:w-20 md:w-[100px] cursor-pointer text-sm"
           variant="secondary"
         >
           <Plus className="" /> New
@@ -214,7 +214,7 @@ function SetList() {
                 return (
                   <TableRow
                     key={set.id}
-                    className="cursor-pointer text-base md:text-lg hover:bg-primary hover:font-medium hover:text-primary-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    className="cursor-pointer text-sm hover:bg-primary hover:font-medium hover:text-primary-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                     onClick={() => navigate(`/sets/${set.id}`)}
                     tabIndex={0}
                     onKeyDown={(e) => {
