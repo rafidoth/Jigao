@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rafidoth/onlyexams/internal/errs"
-	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
+	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/repository"
 	"github.com/rafidoth/onlyexams/internal/users"
 )
@@ -72,13 +72,11 @@ func (s *QuestionService) AuthorizeSetAccess(ctx context.Context, userID, setID 
 	return ownerUserID, nil
 }
 
-// ---------------------------------------------------------------------------
 // Set CRUD
-// ---------------------------------------------------------------------------
 
 // CreateNewSet creates a new empty set with default visibility="private" and title="untitled".
-func (s *QuestionService) CreateNewSet(ctx context.Context, userID string) (*questionsModels.Set, error) {
-	set := &questionsModels.Set{
+func (s *QuestionService) CreateNewSet(ctx context.Context, userID string) (*model.Set, error) {
+	set := &model.Set{
 		Visibility: "private",
 		Title:      "untitled",
 		UserId:     userID,
@@ -92,13 +90,13 @@ func (s *QuestionService) CreateNewSet(ctx context.Context, userID string) (*que
 
 // GetSetWithContext retrieves a set and its context after checking access.
 // Returns the set, context string, and any error.
-func (s *QuestionService) GetSetWithContext(ctx context.Context, userID, setID string) (*questionsModels.Set, string, error) {
+func (s *QuestionService) GetSetWithContext(ctx context.Context, userID, setID string) (*model.Set, string, error) {
 	ownerUserID, err := s.AuthorizeSetAccess(ctx, userID, setID)
 	if err != nil {
 		return nil, "", err
 	}
 
-	qSet := &questionsModels.Set{
+	qSet := &model.Set{
 		ID:     setID,
 		UserId: ownerUserID,
 	}
@@ -118,8 +116,8 @@ func (s *QuestionService) GetSetWithContext(ctx context.Context, userID, setID s
 }
 
 // UpdateSet updates a set's visibility and title.
-func (s *QuestionService) UpdateSet(ctx context.Context, userID, setID, visibility, title string) (*questionsModels.Set, error) {
-	qSet := &questionsModels.Set{
+func (s *QuestionService) UpdateSet(ctx context.Context, userID, setID, visibility, title string) (*model.Set, error) {
+	qSet := &model.Set{
 		ID:         setID,
 		Visibility: visibility,
 		Title:      title,
@@ -133,8 +131,8 @@ func (s *QuestionService) UpdateSet(ctx context.Context, userID, setID, visibili
 }
 
 // DeleteSetWithContext deletes a set and its associated context.
-func (s *QuestionService) DeleteSetWithContext(ctx context.Context, userID, setID string) (*questionsModels.Set, error) {
-	qSet := &questionsModels.Set{
+func (s *QuestionService) DeleteSetWithContext(ctx context.Context, userID, setID string) (*model.Set, error) {
+	qSet := &model.Set{
 		ID:     setID,
 		UserId: userID,
 	}
@@ -151,7 +149,7 @@ func (s *QuestionService) DeleteSetWithContext(ctx context.Context, userID, setI
 }
 
 // GetRecentSets returns the most recent sets for a user (owned + shared).
-func (s *QuestionService) GetRecentSets(ctx context.Context, userID string, limit int) ([]*questionsModels.Set, error) {
+func (s *QuestionService) GetRecentSets(ctx context.Context, userID string, limit int) ([]*model.Set, error) {
 	sets, err := s.setRepo.GetRecentSets(limit, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get recent sets: %w", err)
@@ -179,12 +177,12 @@ func (s *QuestionService) GetRecentSetsWithOwners(ctx context.Context, userID st
 
 // SetWithOwner pairs a set with its owner info (used by GetRecentSetsWithOwners).
 type SetWithOwner struct {
-	Set   questionsModels.Set `json:"set"`
-	Owner users.User          `json:"owner"`
+	Set   model.Set  `json:"set"`
+	Owner users.User `json:"owner"`
 }
 
 // GetSetContext retrieves the context for a set.
-func (s *QuestionService) GetSetContext(ctx context.Context, setID string) (*questionsModels.SetContext, error) {
+func (s *QuestionService) GetSetContext(ctx context.Context, setID string) (*model.SetContext, error) {
 	sc, err := s.setRepo.GetSetContext(setID)
 	if err != nil {
 		return nil, fmt.Errorf("get set context: %w", err)
@@ -192,9 +190,7 @@ func (s *QuestionService) GetSetContext(ctx context.Context, setID string) (*que
 	return sc, nil
 }
 
-// ---------------------------------------------------------------------------
 // Shared Access
-// ---------------------------------------------------------------------------
 
 // GetSetAccessList returns the owner + all shared users for a set.
 func (s *QuestionService) GetSetAccessList(ctx context.Context, setID string) ([]users.User, error) {
@@ -224,12 +220,10 @@ func (s *QuestionService) AllowSetAccess(ctx context.Context, setID, userID stri
 	return nil
 }
 
-// ---------------------------------------------------------------------------
 // Questions
-// ---------------------------------------------------------------------------
 
 // GetAllQuestionsInASet checks access then returns all complete questions.
-func (s *QuestionService) GetAllQuestionsInASet(ctx context.Context, userID, setID string) ([]questionsModels.CompleteQuestion, error) {
+func (s *QuestionService) GetAllQuestionsInASet(ctx context.Context, userID, setID string) ([]model.CompleteQuestion, error) {
 	_, err := s.AuthorizeSetAccess(ctx, userID, setID)
 	if err != nil {
 		return nil, err
@@ -245,9 +239,9 @@ func (s *QuestionService) GetAllQuestionsInASet(ctx context.Context, userID, set
 // CreateSingleQuestion creates a question with its choices and answer in a set.
 func (s *QuestionService) CreateSingleQuestion(
 	ctx context.Context,
-	question questionsModels.Question,
-	choices []questionsModels.Choice,
-	answer questionsModels.Answer,
+	question model.Question,
+	choices []model.Choice,
+	answer model.Answer,
 	setID string,
 ) error {
 	if err := s.questionRepo.CreateANewQuestionInASet(question, choices, answer, setID); err != nil {
@@ -262,9 +256,9 @@ func (s *QuestionService) CreateSingleQuestion(
 
 // BatchCreateQuestionsInput is the input for batch question creation.
 type BatchCreateQuestionsInput struct {
-	Questions               []questionsModels.Question
-	ChoicesWithQuestionType []questionsModels.ChoicesWithQuestionType
-	AnswersWithQuestionInfo []questionsModels.AnswerWithQuestionInfo
+	Questions               []model.Question
+	ChoicesWithQuestionType []model.ChoicesWithQuestionType
+	AnswersWithQuestionInfo []model.AnswerWithQuestionInfo
 }
 
 // BatchCreateQuestions inserts questions, choices, and answers in batch.
@@ -311,7 +305,7 @@ func (s *QuestionService) SaveGeneratedQuestions(
 	questions []GeneratedQuestionInput,
 ) (string, error) {
 	// 1. Create set with context
-	set := &questionsModels.Set{
+	set := &model.Set{
 		Visibility: "public",
 		Title:      title,
 		UserId:     userID,
@@ -335,9 +329,9 @@ func (s *QuestionService) SaveGeneratedQuestions(
 // GeneratedQuestionInput is the structure the client sends when saving
 // pre-generated questions.
 type GeneratedQuestionInput struct {
-	Question questionsModels.Question `json:"question"`
-	Answer   questionsModels.Answer   `json:"answer"`
-	Choices  []questionsModels.Choice `json:"choices"`
+	Question model.Question `json:"question"`
+	Answer   model.Answer   `json:"answer"`
+	Choices  []model.Choice `json:"choices"`
 }
 
 // ---------------------------------------------------------------------------
@@ -346,13 +340,13 @@ type GeneratedQuestionInput struct {
 
 func buildBatchInputFromClientQuestions(input []GeneratedQuestionInput, setID string) BatchCreateQuestionsInput {
 	var (
-		questions []questionsModels.Question
-		cwqt      []questionsModels.ChoicesWithQuestionType
-		awqi      []questionsModels.AnswerWithQuestionInfo
+		questions []model.Question
+		cwqt      []model.ChoicesWithQuestionType
+		awqi      []model.AnswerWithQuestionInfo
 	)
 
 	for _, gq := range input {
-		q := questionsModels.Question{
+		q := model.Question{
 			Question:     gq.Question.Question,
 			Difficulty:   gq.Question.Difficulty,
 			QuestionType: gq.Question.QuestionType,
@@ -360,16 +354,16 @@ func buildBatchInputFromClientQuestions(input []GeneratedQuestionInput, setID st
 		}
 		questions = append(questions, q)
 
-		var choices []questionsModels.Choice
+		var choices []model.Choice
 		for _, c := range gq.Choices {
-			choices = append(choices, questionsModels.Choice{ChoiceText: c.ChoiceText})
+			choices = append(choices, model.Choice{ChoiceText: c.ChoiceText})
 		}
-		cwqt = append(cwqt, questionsModels.ChoicesWithQuestionType{
+		cwqt = append(cwqt, model.ChoicesWithQuestionType{
 			Choices:      choices,
 			QuestionType: gq.Question.QuestionType,
 		})
 
-		awqi = append(awqi, questionsModels.AnswerWithQuestionInfo{
+		awqi = append(awqi, model.AnswerWithQuestionInfo{
 			QuestionType: gq.Question.QuestionType,
 			AnswerText:   gq.Answer.AnswerText,
 			Explanation:  gq.Answer.Explanation,

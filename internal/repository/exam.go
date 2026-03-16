@@ -8,8 +8,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/rafidoth/onlyexams/internal/exams/models"
-	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
+	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/server"
 )
 
@@ -103,8 +102,8 @@ func (r *ExamRepository) RemoveExam(examID string) error {
 	return nil
 }
 
-func (r *ExamRepository) GetExamsBySetId(set_id string) ([]models.Exam, error) {
-	var results []models.Exam
+func (r *ExamRepository) GetExamsBySetId(set_id string) ([]model.Exam, error) {
+	var results []model.Exam
 
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
@@ -134,7 +133,7 @@ func (r *ExamRepository) GetExamsBySetId(set_id string) ([]models.Exam, error) {
 		return nil, err
 	}
 
-	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Exam])
+	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Exam])
 	if err != nil {
 		return nil, err
 	}
@@ -171,9 +170,9 @@ func (r *ExamRepository) GetExamSetId(exam_id string) (string, error) {
 	return setId, nil
 }
 
-func (r *ExamRepository) GetExamByExamId(exam_id string) (models.Exam, error) {
+func (r *ExamRepository) GetExamByExamId(exam_id string) (model.Exam, error) {
 	fmt.Println("Getting exam by exam id:", exam_id)
-	var exam models.Exam
+	var exam model.Exam
 
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
@@ -203,7 +202,7 @@ func (r *ExamRepository) GetExamByExamId(exam_id string) (models.Exam, error) {
 		return exam, err
 	}
 
-	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Exam])
+	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Exam])
 	if err != nil {
 		return exam, err
 	}
@@ -219,7 +218,7 @@ func (r *ExamRepository) GetExamByExamId(exam_id string) (models.Exam, error) {
 	return exam, nil
 }
 
-func (r *ExamRepository) GetExamsListByUserId(user_id string) ([]models.Exam, error) {
+func (r *ExamRepository) GetExamsListByUserId(user_id string) ([]model.Exam, error) {
 
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
@@ -248,7 +247,7 @@ func (r *ExamRepository) GetExamsListByUserId(user_id string) ([]models.Exam, er
 		return nil, err
 	}
 
-	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.Exam])
+	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Exam])
 	if err != nil {
 		return nil, err
 	}
@@ -273,9 +272,9 @@ func (r *ExamRepository) GetExamsListByUserId(user_id string) ([]models.Exam, er
 		return nil, err
 	}
 
-	setsMap := make(map[string]questionsModels.Set)
+	setsMap := make(map[string]model.Set)
 	for rows.Next() {
-		var set questionsModels.Set
+		var set model.Set
 		if err := rows.Scan(
 			&set.ID,
 			&set.UserId,
@@ -314,9 +313,9 @@ func (r *ExamRepository) EvaluateSubmittedExam(submissionId string) error {
 	return r.EvaluateSubmission(parts[0], parts[1])
 }
 
-func (r *ExamRepository) GetEvaluationResult(examID, userID string) (*models.EvaluationResult, error) {
+func (r *ExamRepository) GetEvaluationResult(examID, userID string) (*model.EvaluationResult, error) {
 	ctx := context.Background()
-	var evaluatedResult models.EvaluationResult
+	var evaluatedResult model.EvaluationResult
 	var answerJson []byte
 
 	if err := r.s.DB.Pool.QueryRow(ctx, `

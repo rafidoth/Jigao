@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
+	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/server"
 )
 
@@ -18,8 +18,15 @@ func NewQuestionRepository(s *server.Server) *QuestionRepository {
 	return &QuestionRepository{s: s}
 }
 
-func (r *QuestionRepository) CreateANewQuestionInASet(Q questionsModels.Question,
-	choices []questionsModels.Choice, answer questionsModels.Answer, set_id string) error {
+func (r *QuestionRepository) CreateMultipleChoiceQuestion(Q model.Question, choices []model.Choice, answer model.Answer, set_id string) error {
+	// open a transaction
+	// store questions in db
+	// store choices in db
+	return nil
+}
+
+func (r *QuestionRepository) CreateANewQuestionInASet(Q model.Question,
+	choices []model.Choice, answer model.Answer, set_id string) error {
 
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
@@ -49,11 +56,12 @@ func (r *QuestionRepository) CreateANewQuestionInASet(Q questionsModels.Question
 		VALUES ($1, $2)
 		RETURNING *
 		`
+
 	// choices len zero means it's a descriptive question (short question)
 	if len(choices) != 0 {
-		choice := make([]questionsModels.Choice, len(choices))
+		choice := make([]model.Choice, len(choices))
 		for i, c := range choices {
-			var insertedChoice questionsModels.Choice
+			var insertedChoice model.Choice
 			err := tx.QueryRow(context.Background(), insertChoiceSQL,
 				c.ChoiceText,
 				questionID,
@@ -108,7 +116,7 @@ func (r *QuestionRepository) CreateANewQuestionInASet(Q questionsModels.Question
 	return nil
 }
 
-func (r *QuestionRepository) CreateQuestionsInBatchReturnIds(questions []questionsModels.Question) ([]string, error) {
+func (r *QuestionRepository) CreateQuestionsInBatchReturnIds(questions []model.Question) ([]string, error) {
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return nil, err
@@ -163,7 +171,7 @@ func (r *QuestionRepository) CreateQuestionsInBatchReturnIds(questions []questio
 	return questionIds, nil
 }
 
-func (r *QuestionRepository) SaveChoicesInBatch(choicesWithQuestionType []questionsModels.ChoicesWithQuestionType) (map[string][]questionsModels.Choice, error) {
+func (r *QuestionRepository) SaveChoicesInBatch(choicesWithQuestionType []model.ChoicesWithQuestionType) (map[string][]model.Choice, error) {
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return nil, err
@@ -199,9 +207,9 @@ func (r *QuestionRepository) SaveChoicesInBatch(choicesWithQuestionType []questi
 		return nil, err
 	}
 	defer rows.Close()
-	choicesMapWithQuestionId := make(map[string][]questionsModels.Choice)
+	choicesMapWithQuestionId := make(map[string][]model.Choice)
 	for rows.Next() {
-		var choice questionsModels.Choice
+		var choice model.Choice
 		if err := rows.Scan(
 			&choice.Id,
 			&choice.CreatedAt,
@@ -219,7 +227,7 @@ func (r *QuestionRepository) SaveChoicesInBatch(choicesWithQuestionType []questi
 	return choicesMapWithQuestionId, nil
 }
 
-func (r *QuestionRepository) SaveAnswersInBatch(answersWithQuestionInfo []questionsModels.AnswerWithQuestionInfo, choicesMap map[string][]questionsModels.Choice) error {
+func (r *QuestionRepository) SaveAnswersInBatch(answersWithQuestionInfo []model.AnswerWithQuestionInfo, choicesMap map[string][]model.Choice) error {
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return err
@@ -288,7 +296,7 @@ func (r *QuestionRepository) SaveAnswersInBatch(answersWithQuestionInfo []questi
 }
 
 func (r *QuestionRepository) GetAllQuestionsInASet(
-	setID string) ([]questionsModels.CompleteQuestion, error) {
+	setID string) ([]model.CompleteQuestion, error) {
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return nil, err
@@ -306,12 +314,12 @@ func (r *QuestionRepository) GetAllQuestionsInASet(
 	}
 
 	dbQuestions, err := pgx.CollectRows(qRows,
-		pgx.RowToStructByName[questionsModels.Question])
+		pgx.RowToStructByName[model.Question])
 	if err != nil {
 		return nil, err
 	}
 
-	results := make([]questionsModels.CompleteQuestion, 0, len(dbQuestions))
+	results := make([]model.CompleteQuestion, 0, len(dbQuestions))
 	for _, q := range dbQuestions {
 		cRows, err := tx.Query(context.Background(), `
 			SELECT *
@@ -323,7 +331,7 @@ func (r *QuestionRepository) GetAllQuestionsInASet(
 		}
 
 		choices, err := pgx.CollectRows(cRows,
-			pgx.RowToStructByName[questionsModels.Choice])
+			pgx.RowToStructByName[model.Choice])
 		if err != nil {
 			return nil, err
 		}
@@ -333,14 +341,14 @@ func (r *QuestionRepository) GetAllQuestionsInASet(
 			return nil, err
 		}
 
-		var answer questionsModels.Answer
+		var answer model.Answer
 		answer, err = pgx.CollectOneRow(aRows,
-			pgx.RowToStructByName[questionsModels.Answer])
+			pgx.RowToStructByName[model.Answer])
 		if err != nil && err != pgx.ErrNoRows {
 			return nil, err
 		}
 
-		newCompleteQuestion := questionsModels.NewCompleteQuestion(q, choices, answer)
+		newCompleteQuestion := model.NewCompleteQuestion(q, choices, answer)
 		results = append(results, newCompleteQuestion)
 	}
 

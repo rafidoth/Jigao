@@ -9,8 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/exams"
-	"github.com/rafidoth/onlyexams/internal/exams/models"
-	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
+	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/repository"
 	"github.com/rafidoth/onlyexams/internal/users"
 )
@@ -78,13 +77,13 @@ func (s *ExamService) CreateExam(
 }
 
 // GetExamByID returns a single exam by its ID.
-func (s *ExamService) GetExamByID(ctx context.Context, examID string) (models.Exam, error) {
+func (s *ExamService) GetExamByID(ctx context.Context, examID string) (model.Exam, error) {
 	exam, err := s.examRepo.GetExamByExamId(examID)
 	if err != nil {
 		if err.Error() == "exam not found" {
-			return models.Exam{}, errs.NewNotFoundError("Exam not found", false, nil)
+			return model.Exam{}, errs.NewNotFoundError("Exam not found", false, nil)
 		}
-		return models.Exam{}, fmt.Errorf("get exam by id: %w", err)
+		return model.Exam{}, fmt.Errorf("get exam by id: %w", err)
 	}
 	return exam, nil
 }
@@ -106,7 +105,7 @@ func (s *ExamService) RemoveExam(ctx context.Context, examID string) error {
 // ---------------------------------------------------------------------------
 
 // GetExamsBySetID returns exams for a set, enriched with the CreatedBy user.
-func (s *ExamService) GetExamsBySetID(ctx context.Context, setID string) ([]models.Exam, error) {
+func (s *ExamService) GetExamsBySetID(ctx context.Context, setID string) ([]model.Exam, error) {
 	examsList, err := s.examRepo.GetExamsBySetId(setID)
 	if err != nil {
 		return nil, fmt.Errorf("get exams by set: %w", err)
@@ -125,7 +124,7 @@ func (s *ExamService) GetExamsBySetID(ctx context.Context, setID string) ([]mode
 }
 
 // GetExamsByUserID returns all exams created by a user, enriched with set info.
-func (s *ExamService) GetExamsByUserID(ctx context.Context, userID string) ([]models.Exam, error) {
+func (s *ExamService) GetExamsByUserID(ctx context.Context, userID string) ([]model.Exam, error) {
 	examsList, err := s.examRepo.GetExamsListByUserId(userID)
 	if err != nil {
 		return nil, fmt.Errorf("get exams by user: %w", err)
@@ -134,7 +133,7 @@ func (s *ExamService) GetExamsByUserID(ctx context.Context, userID string) ([]mo
 }
 
 // GetExams returns exams filtered by set_id (if provided) or all user exams.
-func (s *ExamService) GetExams(ctx context.Context, userID, setID string) ([]models.Exam, error) {
+func (s *ExamService) GetExams(ctx context.Context, userID, setID string) ([]model.Exam, error) {
 	if setID == "" {
 		return s.GetExamsByUserID(ctx, userID)
 	}
@@ -146,7 +145,7 @@ func (s *ExamService) GetExams(ctx context.Context, userID, setID string) ([]mod
 // ---------------------------------------------------------------------------
 
 // GetQuestionsOfExam returns all questions belonging to the exam's set.
-func (s *ExamService) GetQuestionsOfExam(ctx context.Context, examID string) ([]questionsModels.CompleteQuestion, error) {
+func (s *ExamService) GetQuestionsOfExam(ctx context.Context, examID string) ([]model.CompleteQuestion, error) {
 	setID, err := s.examRepo.GetExamSetId(examID)
 	if err != nil {
 		return nil, fmt.Errorf("get exam set id: %w", err)
@@ -164,7 +163,7 @@ func (s *ExamService) GetQuestionsOfExam(ctx context.Context, examID string) ([]
 // ---------------------------------------------------------------------------
 
 // GetSubmissionResult retrieves the evaluation result for a user's exam submission.
-func (s *ExamService) GetSubmissionResult(ctx context.Context, examID, userID string) (*models.EvaluationResult, error) {
+func (s *ExamService) GetSubmissionResult(ctx context.Context, examID, userID string) (*model.EvaluationResult, error) {
 	result, err := s.examRepo.GetEvaluationResult(examID, userID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -251,7 +250,7 @@ func (s *ExamService) ExamExists(ctx context.Context, examID string) error {
 // ---------------------------------------------------------------------------
 
 // EnrichExamsWithCreatedBy adds the CreatedBy user info to each exam.
-func (s *ExamService) EnrichExamsWithCreatedBy(examsList []models.Exam) {
+func (s *ExamService) EnrichExamsWithCreatedBy(examsList []model.Exam) {
 	for i := range examsList {
 		user, err := s.userRepo.GetUserFromId(examsList[i].UserId)
 		if err != nil {

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
+	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/server"
 	"github.com/rafidoth/onlyexams/internal/users"
 )
@@ -94,8 +94,8 @@ func (r *SetRepository) GetVisibility(id string) (string, error) {
 	return visibility, nil
 }
 
-func (r *SetRepository) GetRecentSets(limit int, user_id string) ([]*questionsModels.Set, error) {
-	var recentSets []*questionsModels.Set
+func (r *SetRepository) GetRecentSets(limit int, user_id string) ([]*model.Set, error) {
+	var recentSets []*model.Set
 
 	err := r.txDB(func(tx pgx.Tx) error {
 		getRecentSetsSql := `
@@ -118,7 +118,7 @@ func (r *SetRepository) GetRecentSets(limit int, user_id string) ([]*questionsMo
 			return fmt.Errorf("query recent sets: %w", err)
 		}
 
-		sets, err := pgx.CollectRows(rows, pgx.RowToStructByName[questionsModels.Set])
+		sets, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Set])
 		if err != nil {
 			return fmt.Errorf("collect recent sets: %w", err)
 		}
@@ -137,8 +137,8 @@ func (r *SetRepository) GetRecentSets(limit int, user_id string) ([]*questionsMo
 	return recentSets, nil
 }
 
-func (r *SetRepository) CreateNewSet(qSet *questionsModels.Set) (*questionsModels.Set, error) {
-	var set questionsModels.Set
+func (r *SetRepository) CreateNewSet(qSet *model.Set) (*model.Set, error) {
+	var set model.Set
 	err := r.txDB(func(tx pgx.Tx) error {
 		createNewSet := `
 			INSERT INTO sets (visibility, title, user_id)
@@ -156,7 +156,7 @@ func (r *SetRepository) CreateNewSet(qSet *questionsModels.Set) (*questionsModel
 			return fmt.Errorf("insert set: %w", err)
 		}
 
-		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[questionsModels.Set])
+		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Set])
 		if err != nil {
 			return fmt.Errorf("collect inserted set: %w", err)
 		}
@@ -170,8 +170,8 @@ func (r *SetRepository) CreateNewSet(qSet *questionsModels.Set) (*questionsModel
 	return &set, nil
 }
 
-func (r *SetRepository) GetASet(qSet *questionsModels.Set) (*questionsModels.Set, error) {
-	var set questionsModels.Set
+func (r *SetRepository) GetASet(qSet *model.Set) (*model.Set, error) {
+	var set model.Set
 	err := r.txDB(func(tx pgx.Tx) error {
 		getASet := `SELECT * FROM sets WHERE id = $1 AND user_id = $2`
 
@@ -185,7 +185,7 @@ func (r *SetRepository) GetASet(qSet *questionsModels.Set) (*questionsModels.Set
 			return fmt.Errorf("select set: %w", err)
 		}
 
-		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[questionsModels.Set])
+		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Set])
 		if err != nil {
 			return fmt.Errorf("collect set: %w", err)
 		}
@@ -199,8 +199,8 @@ func (r *SetRepository) GetASet(qSet *questionsModels.Set) (*questionsModels.Set
 	return &set, nil
 }
 
-func (r *SetRepository) UpdateASet(qSet *questionsModels.Set) (*questionsModels.Set, error) {
-	var set questionsModels.Set
+func (r *SetRepository) UpdateASet(qSet *model.Set) (*model.Set, error) {
+	var set model.Set
 	err := r.txDB(func(tx pgx.Tx) error {
 		updateSet := `UPDATE sets SET visibility = $1, title = $2 WHERE id = $3 AND user_id = $4 RETURNING *`
 
@@ -216,7 +216,7 @@ func (r *SetRepository) UpdateASet(qSet *questionsModels.Set) (*questionsModels.
 			return fmt.Errorf("update set: %w", err)
 		}
 
-		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[questionsModels.Set])
+		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Set])
 		if err != nil {
 			return fmt.Errorf("collect updated set: %w", err)
 		}
@@ -230,8 +230,8 @@ func (r *SetRepository) UpdateASet(qSet *questionsModels.Set) (*questionsModels.
 	return &set, nil
 }
 
-func (r *SetRepository) DeleteASet(qSet *questionsModels.Set) (*questionsModels.Set, error) {
-	var set questionsModels.Set
+func (r *SetRepository) DeleteASet(qSet *model.Set) (*model.Set, error) {
+	var set model.Set
 	err := r.txDB(func(tx pgx.Tx) error {
 		deleteSet := `DELETE FROM sets WHERE id = $1 AND user_id = $2 RETURNING *`
 
@@ -245,7 +245,7 @@ func (r *SetRepository) DeleteASet(qSet *questionsModels.Set) (*questionsModels.
 			return fmt.Errorf("delete set: %w", err)
 		}
 
-		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[questionsModels.Set])
+		set, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[model.Set])
 		if err != nil {
 			return fmt.Errorf("collect deleted set: %w", err)
 		}
@@ -261,7 +261,7 @@ func (r *SetRepository) DeleteASet(qSet *questionsModels.Set) (*questionsModels.
 
 // --- Set + Context creation ---
 
-func (r *SetRepository) CreateSetWithContext(qSet *questionsModels.Set, qSetContext string) error {
+func (r *SetRepository) CreateSetWithContext(qSet *model.Set, qSetContext string) error {
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
@@ -301,7 +301,7 @@ func (r *SetRepository) CreateSetWithContext(qSet *questionsModels.Set, qSetCont
 	return nil
 }
 
-func (r *SetRepository) CreateSetWithContextRetSetId(qSet *questionsModels.Set, qSetContext string) (string, error) {
+func (r *SetRepository) CreateSetWithContextRetSetId(qSet *model.Set, qSetContext string) (string, error) {
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return "", fmt.Errorf("begin tx: %w", err)
@@ -364,8 +364,8 @@ func (r *SetRepository) DeleteSetContext(set_id string) error {
 	return err
 }
 
-func (r *SetRepository) UpdateSetContext(set_id string, newContext string) (*questionsModels.SetContext, error) {
-	var setContext questionsModels.SetContext
+func (r *SetRepository) UpdateSetContext(set_id string, newContext string) (*model.SetContext, error) {
+	var setContext model.SetContext
 
 	err := r.txDB(func(tx pgx.Tx) error {
 		updateContextSql := `
@@ -384,7 +384,7 @@ func (r *SetRepository) UpdateSetContext(set_id string, newContext string) (*que
 			return err
 		}
 
-		setContext, err = pgx.CollectOneRow(row, pgx.RowToStructByName[questionsModels.SetContext])
+		setContext, err = pgx.CollectOneRow(row, pgx.RowToStructByName[model.SetContext])
 		if err != nil {
 			return fmt.Errorf("failed to map row to struct: %w", err)
 		}
@@ -399,8 +399,8 @@ func (r *SetRepository) UpdateSetContext(set_id string, newContext string) (*que
 	return &setContext, nil
 }
 
-func (r *SetRepository) GetSetContext(set_id string) (*questionsModels.SetContext, error) {
-	var setContext questionsModels.SetContext
+func (r *SetRepository) GetSetContext(set_id string) (*model.SetContext, error) {
+	var setContext model.SetContext
 
 	err := r.txDB(func(tx pgx.Tx) error {
 		getContextOfSet := `
@@ -414,7 +414,7 @@ func (r *SetRepository) GetSetContext(set_id string) (*questionsModels.SetContex
 			return err
 		}
 
-		setContext, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[questionsModels.SetContext])
+		setContext, err = pgx.CollectOneRow(rows, pgx.RowToStructByName[model.SetContext])
 		if err != nil {
 			return fmt.Errorf("failed to map rows to struct: %w", err)
 		}
@@ -429,8 +429,8 @@ func (r *SetRepository) GetSetContext(set_id string) (*questionsModels.SetContex
 	return &setContext, nil
 }
 
-func (r *SetRepository) SaveContext(set_context, set_id string) (*questionsModels.SetContext, error) {
-	var setContext questionsModels.SetContext
+func (r *SetRepository) SaveContext(set_context, set_id string) (*model.SetContext, error) {
+	var setContext model.SetContext
 
 	err := r.txDB(func(tx pgx.Tx) error {
 		saveContextSql := `
@@ -445,7 +445,7 @@ func (r *SetRepository) SaveContext(set_context, set_id string) (*questionsModel
 			set_id,
 		)
 
-		setContext, err = pgx.CollectOneRow(row, pgx.RowToStructByName[questionsModels.SetContext])
+		setContext, err = pgx.CollectOneRow(row, pgx.RowToStructByName[model.SetContext])
 
 		if err != nil {
 			return fmt.Errorf("failed to map row to struct: %w", err)

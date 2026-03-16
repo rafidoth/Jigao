@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/rafidoth/onlyexams/internal/errs"
-	"github.com/rafidoth/onlyexams/internal/questions/questionsModels"
+	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/service"
 	"github.com/rafidoth/onlyexams/internal/utils"
 )
@@ -34,9 +34,9 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 	}
 
 	var req struct {
-		Question questionsModels.Question `json:"question"`
-		Choices  []questionsModels.Choice `json:"choices"`
-		Answer   questionsModels.Answer   `json:"answer"`
+		Question model.Question `json:"question"`
+		Choices  []model.Choice `json:"choices"`
+		Answer   model.Answer   `json:"answer"`
 	}
 	if !utils.ExtractRequestBody(r, &req) {
 		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create question: decode body")
