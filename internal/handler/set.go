@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/service"
-	"github.com/rafidoth/onlyexams/internal/utils"
 )
 
 // SetHandler handles set-related HTTP requests.
@@ -188,38 +187,4 @@ func (h *SetHandler) AllowSetAccess(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-}
-
-// SaveGeneratedQuestions handles POST /sets/save_generated — saves pre-generated questions.
-func (h *SetHandler) SaveGeneratedQuestions(w http.ResponseWriter, r *http.Request) {
-	uid, err := extractUserID(r)
-	if err != nil {
-		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "save generated: missing user-id")
-		return
-	}
-
-	type reqBody struct {
-		Title     string                           `json:"title"`
-		Questions []service.GeneratedQuestionInput `json:"questions"`
-		Context   string                           `json:"context"`
-	}
-
-	var req reqBody
-	if !utils.ExtractRequestBody(r, &req) {
-		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "save generated: decode body")
-		return
-	}
-
-	setID, err := h.svc.SaveGeneratedQuestions(
-		r.Context(), uid, req.Title, req.Context, req.Questions,
-	)
-	if err != nil {
-		writeError(w, err, "save generated questions failed")
-		return
-	}
-
-	type resp struct {
-		SetID string `json:"set_id"`
-	}
-	writeJSON(w, http.StatusOK, resp{SetID: setID})
 }
