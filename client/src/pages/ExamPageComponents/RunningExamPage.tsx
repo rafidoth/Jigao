@@ -50,12 +50,12 @@ function McqExamCard({
         </div>
         <div className="flex flex-col gap-2">
           {q.choices?.map((c, idx) => {
-            const isSelected = selected === c;
+            const isSelected = selected === c.choice_id;
             return (
               <button
-                key={`${q.id}-choice-${idx}`}
+                key={c.choice_id}
                 type="button"
-                onClick={() => selectAnswer(q.id, c)}
+                onClick={() => selectAnswer(q.question_id, c.choice_id)}
                 className={cn(
                   "w-full flex items-center gap-2 rounded-md border p-2 text-left transition cursor-pointer",
                   isSelected
@@ -66,7 +66,7 @@ function McqExamCard({
                 <Badge variant="outline" className="w-7 justify-center">
                   {String.fromCharCode(65 + idx)}
                 </Badge>
-                <span className="flex-1">{c}</span>
+                <span className="flex-1">{c.text}</span>
               </button>
             );
           })}
@@ -82,6 +82,12 @@ function TrueFalseExamCard({
   selected,
   selectAnswer,
 }: SelectProps) {
+  // For true_false, choices are implicit (not returned by backend)
+  const trueFalseChoices = [
+    { choice_id: "true", text: "True", position: 1 },
+    { choice_id: "false", text: "False", position: 2 },
+  ];
+
   return (
     <Card className="p-4">
       <div className="flex flex-col gap-3">
@@ -96,13 +102,13 @@ function TrueFalseExamCard({
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          {q.choices?.map((c, idx) => {
-            const isSelected = selected === c;
+          {trueFalseChoices.map((c, idx) => {
+            const isSelected = selected === c.choice_id;
             return (
               <button
-                key={`${q.id}-choice-${idx}`}
+                key={c.choice_id}
                 type="button"
-                onClick={() => selectAnswer(q.id, c)}
+                onClick={() => selectAnswer(q.question_id, c.choice_id)}
                 className={cn(
                   "w-full flex items-center gap-2 rounded-md border p-2 text-left transition cursor-pointer",
                   isSelected
@@ -113,7 +119,7 @@ function TrueFalseExamCard({
                 <Badge variant="outline" className="w-7 justify-center">
                   {String.fromCharCode(65 + idx)}
                 </Badge>
-                <span className="flex-1">{c}</span>
+                <span className="flex-1">{c.text}</span>
               </button>
             );
           })}
@@ -149,9 +155,9 @@ function ShortAnswerExamCard({
           </p>
         </div>
         <Textarea
-          placeholder="Write your answer…"
+          placeholder="Write your answer..."
           value={selected}
-          onChange={(e) => selectAnswer(q.id, e.target.value)}
+          onChange={(e) => selectAnswer(q.question_id, e.target.value)}
         />
       </div>
     </Card>
@@ -184,9 +190,9 @@ function FillInTheBlanksExamCard({
           </p>
         </div>
         <Input
-          placeholder="Write your answer…"
+          placeholder="Write your answer..."
           value={selected}
-          onChange={(e) => selectAnswer(q.id, e.target.value)}
+          onChange={(e) => selectAnswer(q.question_id, e.target.value)}
         />
       </div>
     </Card>
@@ -352,7 +358,7 @@ function RunningExam({
 
     const initial = questions.reduce<Record<string, string | null>>(
       (acc, q) => {
-        acc[q.id] = null;
+        acc[q.question_id] = null;
         return acc;
       },
       {},
@@ -372,10 +378,10 @@ function RunningExam({
         <div className="flex flex-col gap-3 pb-6">
           {questions?.map((q, idx) => (
             <ExamQuestionCard
-              key={q.id}
+              key={q.question_id}
               question={q}
               position={idx + 1}
-              selected={selectedAnswers[q.id] || ""}
+              selected={selectedAnswers[q.question_id] || ""}
               selectAnswer={selectAnswer}
             />
           ))}

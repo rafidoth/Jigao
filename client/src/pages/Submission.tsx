@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, LoaderIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import type { Question } from "@/types/questions";
 
 type AnswerEntry = {
   answer: string | number | boolean | null;
@@ -24,21 +25,6 @@ type SubmissionResponse = {
     answer_sheet: Record<string | number, AnswerEntry>;
     created_at: Date;
   };
-};
-
-type QuestionType = {
-  id: string;
-  text: string;
-  type:
-    | "multiple_choice_questions"
-    | "true_false"
-    | "fill_in_the_blanks"
-    | "short_question";
-  difficulty: "easy" | "medium" | "hard";
-  choices: string[];
-  answer: string;
-  answerIdx: number;
-  explanation: string;
 };
 
 function useSubmission(examId: string | undefined) {
@@ -78,35 +64,26 @@ function CorrectedQuestionsList({
   questions,
   user_submission,
 }: {
-  questions: QuestionType[];
+  questions: Question[];
   user_submission: Record<string, AnswerEntry>;
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {questions.map((q) => {
-        const entry = user_submission[q.id];
+        const entry = user_submission[q.question_id];
         const isCorrect = entry?.is_correct === true;
-        // const unanswered = entry?.answer === null || entry?.answer === "";
         const userAns = entry?.answer;
-        const {
-          id: questionId,
-          text: questionText,
-          choices,
-          difficulty,
-          answer: correctAnswer,
-          explanation,
-        } = q;
 
         return (
           <div
-            key={questionId}
+            key={q.question_id}
             className={`rounded-xl border-none p-4 transition-colors ${
               isCorrect ? "bg-green-950/30" : " bg-red-950/30"
             }`}
           >
             <div className="flex items-start justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                {difficulty}
+                {q.difficulty}
               </span>
               <span
                 className={`text-sm font-semibold ${
@@ -117,43 +94,123 @@ function CorrectedQuestionsList({
               </span>
             </div>
 
-            <p className="font-medium text-foreground mb-3">{questionText}</p>
+            <p className="font-medium text-foreground mb-3">{q.text}</p>
 
-            <div className="space-y-2">
-              {choices?.map((choice, idx) => {
-                const isUserAnswer = userAns === choice;
-                const isCorrectAnswer = correctAnswer === choice;
+            {/* MCQ: show choices from response */}
+            {q.type === "multiple_choice_questions" && q.choices && (
+              <div className="space-y-2">
+                {q.choices.map((choice) => {
+                  const isUserAnswer = userAns === choice.choice_id;
+                  const isCorrectAnswer = choice.position === q.answer?.correct_choice_position;
 
-                return (
-                  <div
-                    key={idx}
-                    className={`p-2 rounded-md border transition-colors ${
-                      isCorrectAnswer
-                        ? "bg-green-950/30 border-green-700/50 text-green-200"
-                        : isUserAnswer
-                          ? "bg-red-950/30 border-red-700/50 text-red-200"
-                          : "bg-muted border-border text-muted-foreground"
-                    }`}
-                  >
-                    <span className="text-sm">{choice}</span>
-                    {isCorrectAnswer && (
-                      <span className="ml-2 text-xs font-semibold text-green-300">
-                        ✓ Correct
-                      </span>
-                    )}
-                    {isUserAnswer && !isCorrect && (
-                      <span className="ml-2 text-xs font-semibold text-red-300">
-                        Your answer
-                      </span>
-                    )}
+                  return (
+                    <div
+                      key={choice.choice_id}
+                      className={`p-2 rounded-md border transition-colors ${
+                        isCorrectAnswer
+                          ? "bg-green-950/30 border-green-700/50 text-green-200"
+                          : isUserAnswer
+                            ? "bg-red-950/30 border-red-700/50 text-red-200"
+                            : "bg-muted border-border text-muted-foreground"
+                      }`}
+                    >
+                      <span className="text-sm">{choice.text}</span>
+                      {isCorrectAnswer && (
+                        <span className="ml-2 text-xs font-semibold text-green-300">
+                          Correct
+                        </span>
+                      )}
+                      {isUserAnswer && !isCorrect && (
+                        <span className="ml-2 text-xs font-semibold text-red-300">
+                          Your answer
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* True/False: show implicit choices */}
+            {q.type === "true_false" && (
+              <div className="space-y-2">
+                {["True", "False"].map((choiceText) => {
+                  const choiceId = choiceText.toLowerCase();
+                  const isUserAnswer = userAns === choiceId;
+                  const isCorrectAnswer =
+                    q.answer?.correct_bool !== undefined
+                      ? (q.answer.correct_bool === true && choiceText === "True") ||
+                        (q.answer.correct_bool === false && choiceText === "False")
+                      : false;
+
+                  return (
+                    <div
+                      key={choiceId}
+                      className={`p-2 rounded-md border transition-colors ${
+                        isCorrectAnswer
+                          ? "bg-green-950/30 border-green-700/50 text-green-200"
+                          : isUserAnswer
+                            ? "bg-red-950/30 border-red-700/50 text-red-200"
+                            : "bg-muted border-border text-muted-foreground"
+                      }`}
+                    >
+                      <span className="text-sm">{choiceText}</span>
+                      {isCorrectAnswer && (
+                        <span className="ml-2 text-xs font-semibold text-green-300">
+                          Correct
+                        </span>
+                      )}
+                      {isUserAnswer && !isCorrect && (
+                        <span className="ml-2 text-xs font-semibold text-red-300">
+                          Your answer
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Short question: show model answer */}
+            {q.type === "short_question" && (
+              <div className="space-y-2">
+                {userAns && (
+                  <div className="p-2 rounded-md border bg-muted border-border">
+                    <span className="text-xs font-semibold text-muted-foreground">Your answer:</span>
+                    <p className="text-sm">{String(userAns)}</p>
                   </div>
-                );
-              })}
-            </div>
-            {explanation && (
+                )}
+                {q.answer?.model_answer && (
+                  <div className="p-2 rounded-md border bg-green-950/30 border-green-700/50 text-green-200">
+                    <span className="text-xs font-semibold">Model answer:</span>
+                    <p className="text-sm">{q.answer.model_answer}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Fill in the blanks: show accepted answers */}
+            {q.type === "fill_in_the_blanks" && (
+              <div className="space-y-2">
+                {userAns && (
+                  <div className={`p-2 rounded-md border ${isCorrect ? "bg-green-950/30 border-green-700/50 text-green-200" : "bg-red-950/30 border-red-700/50 text-red-200"}`}>
+                    <span className="text-xs font-semibold">Your answer:</span>
+                    <p className="text-sm">{String(userAns)}</p>
+                  </div>
+                )}
+                {q.answer?.accepted_answers && q.answer.accepted_answers.length > 0 && (
+                  <div className="p-2 rounded-md border bg-green-950/30 border-green-700/50 text-green-200">
+                    <span className="text-xs font-semibold">Accepted answers:</span>
+                    <p className="text-sm">{q.answer.accepted_answers.join(", ")}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {q.answer?.explanation && (
               <div className="mt-4 p-3 bg-secondary/10 rounded-md">
                 <span className="font-semibold">Explanation:</span>
-                <p className="text-sm mt-1">{explanation}</p>
+                <p className="text-sm mt-1">{q.answer.explanation}</p>
               </div>
             )}
           </div>
@@ -236,12 +293,12 @@ function Submission() {
           <div className="flex flex-col items-center gap-2 bg-primary/10 rounded-xl px-4 py-2">
             <span>Duration</span>
             <Badge className="bg-accent font-bold">
-              <span> {examData.duration}</span>
+              <span> {examData?.duration}</span>
             </Badge>
           </div>
           {submissionData?.data?.created_at && (
             <div className="flex flex-col items-center gap-2 bg-primary/10 rounded-xl px-4 py-2">
-              <span>Subimission Time</span>
+              <span>Submission Time</span>
               <div className="flex gap-2">
                 <Badge className="bg-accent font-bold">
                   <span>
@@ -263,7 +320,7 @@ function Submission() {
       <div className="lg:w-3/4 w-full mx-auto">
         {questionsData && submissionData?.data?.answer_sheet && (
           <CorrectedQuestionsList
-            questions={questionsData as QuestionType[]}
+            questions={questionsData as Question[]}
             user_submission={
               submissionData.data.answer_sheet as Record<string, AnswerEntry>
             }

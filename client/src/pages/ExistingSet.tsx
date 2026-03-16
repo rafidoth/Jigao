@@ -6,6 +6,7 @@ import { getSet, getQuestions } from "@/api/api.ts";
 import { Info as InfoIcon } from "lucide-react";
 import useExistingSetStore from "../store/existingSetStore.ts";
 import QuestionCard from "../components/question_cards/question_card.tsx";
+import type { Question } from "@/types/questions";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,7 +18,7 @@ function QuestionsList({
   items,
   gridLayout,
 }: {
-  items: any[];
+  items: Question[];
   gridLayout: boolean;
 }) {
   const [selectedAnswers, setSelectedAnswers] = useState<
@@ -35,13 +36,12 @@ function QuestionsList({
       <div
         className={`${gridLayout ? "grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3  px-3" : "flex flex-col items-center gap-3"}`}
       >
-        {items.map((q: any, i: number) => (
-          <span className={`${gridLayout ? "" : "w-[700px]"}`}>
+        {items.map((q, i: number) => (
+          <span key={q.question_id} className={`${gridLayout ? "" : "w-[700px]"}`}>
             <QuestionCard
-              key={q.id}
               question={q}
               position={i + 1}
-              selected={selectedAnswers[q.id] || ""}
+              selected={selectedAnswers[q.question_id] || ""}
               selectAnswer={handleSelectingAnswer}
             />
           </span>
@@ -161,13 +161,13 @@ function ExistingSet() {
     isLoading: isSetLoading,
     isError: isSetError,
     error: setError,
-  } = results[0] as any;
+  } = results[0];
   const {
     data: questions,
     isLoading: isQuestionsLoading,
     isError: isQuestionsError,
     error: questionsError,
-  } = results[1] as any;
+  } = results[1];
 
   const items = useMemo(() => questions || [], [questions]);
   const showAnswer = useExistingSetStore((state) => state.showAnswer);
