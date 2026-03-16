@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rafidoth/onlyexams/internal/errs"
+	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/service"
 )
 
@@ -124,5 +125,10 @@ func (h *ExamHandler) GetQuestionsOfExam(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, questions)
+	result := make([]model.QuestionResponse, len(questions))
+	for i, qwa := range questions {
+		result[i] = model.NewQuestionResponse(qwa)
+	}
+
+	writeJSON(w, http.StatusOK, result)
 }
