@@ -19,7 +19,7 @@ func NewQuestionHandler(svc *service.QuestionService) *QuestionHandler {
 	return &QuestionHandler{svc: svc}
 }
 
-// CreateQuestion handles POST /questions/?set_id= — creates a single question in a set.
+// POST /questions/?set_id= — creates a single question in a set.
 func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	_, err := extractUserID(r)
 	if err != nil {
@@ -38,7 +38,6 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 		Choices  []model.Choice `json:"choices"`
 		Answer   model.Answer   `json:"answer"`
 	}
-
 	if !utils.ExtractRequestBody(r, &req) {
 		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create question: decode body")
 		return
@@ -54,7 +53,7 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
-// GetAllQuestions handles GET /questions/?set_id= — returns all questions in a set.
+// GET /questions/?set_id= — returns all questions in a set.
 func (h *QuestionHandler) GetAllQuestions(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
@@ -74,5 +73,10 @@ func (h *QuestionHandler) GetAllQuestions(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusOK, questions)
+	result := make([]model.QuestionResponse, len(questions))
+	for i, qwa := range questions {
+		result[i] = model.NewQuestionResponse(qwa)
+	}
+
+	writeJSON(w, http.StatusOK, result)
 }
