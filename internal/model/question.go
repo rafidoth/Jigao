@@ -61,6 +61,15 @@ type CorrectAnswer struct {
 	TF_CorrectChoice *bool `json:"tf_correct_choice,omitempty"`
 }
 
+type QuestionWithAnswer struct {
+	Question Question
+	Answer   Answer
+	Choices  []Choice
+}
+
+// Deprecated: CompleteQuestion is superseded by QuestionResponse in http_responses.go.
+// Use NewQuestionResponse(QuestionWithAnswer) instead of NewCompleteQuestion.
+// This struct is kept temporarily for exam_service compatibility.
 type CompleteQuestion struct {
 	Id                string   `json:"id"`
 	Question          string   `json:"text"`
@@ -72,6 +81,8 @@ type CompleteQuestion struct {
 	Explanation       string   `json:"explanation"`
 }
 
+// Deprecated: NewCompleteQuestion is superseded by NewQuestionResponse.
+// See QuestionResponse in http_responses.go.
 func NewCompleteQuestion(
 	Q Question,
 	c []Choice,
