@@ -380,16 +380,8 @@ func (r *QuestionRepository) SaveAnswersInBatch(answersWithQuestionInfo []model.
 	return nil
 }
 
-func (r *QuestionRepository) GetAllQuestionsInASet(
-	setID string) ([]model.CompleteQuestion, error) {
-	tx, err := r.s.DB.Pool.Begin(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	defer tx.Rollback(context.Background())
-
-	qRows, err := tx.Query(context.Background(), `
+func (r *QuestionRepository) GetQuestionsBySetID(setID string) ([]model.Question, error) {
+	rows, err := r.s.DB.Pool.Query(context.Background(), `
 		SELECT *
 		FROM questions
 		WHERE set_id = $1
@@ -398,49 +390,64 @@ func (r *QuestionRepository) GetAllQuestionsInASet(
 		return nil, err
 	}
 
-	dbQuestions, err := pgx.CollectRows(qRows,
-		pgx.RowToStructByName[model.Question])
+	questions, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Question])
 	if err != nil {
 		return nil, err
 	}
 
-	results := make([]model.CompleteQuestion, 0, len(dbQuestions))
-	for _, q := range dbQuestions {
-		cRows, err := tx.Query(context.Background(), `
-			SELECT *
-			FROM choices
-			WHERE question_id = $1
-		`, q.Id)
-		if err != nil {
-			return nil, err
-		}
+	return questions, nil
+}
 
-		choices, err := pgx.CollectRows(cRows,
-			pgx.RowToStructByName[model.Choice])
-		if err != nil {
-			return nil, err
-		}
-
-		aRows, err := tx.Query(context.Background(), `SELECT id, created_at, answer, explanation, question_id FROM answers WHERE question_id = $1 LIMIT 1`, q.Id)
-		if err != nil {
-			return nil, err
-		}
-
-		var answer model.Answer
-		answer, err = pgx.CollectOneRow(aRows,
-			pgx.RowToStructByName[model.Answer])
-		if err != nil && err != pgx.ErrNoRows {
-			return nil, err
-		}
-
-		newCompleteQuestion := model.NewCompleteQuestion(q, choices, answer)
-		results = append(results, newCompleteQuestion)
+func (r *QuestionRepository) GetChoicesForQuestions(questionIDs []string) (map[string][]model.Choice, error) {
+	if len(questionIDs) == 0 {
+		return make(map[string][]model.Choice), nil
 	}
 
-	err = tx.Commit(context.Background())
+	rows, err := r.s.DB.Pool.Query(context.Background(), `
+		SELECT *
+		FROM choices
+		WHERE question_id = ANY($1)
+	`, questionIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	return results, nil
+	choices, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Choice])
+	if err != nil {
+		return nil, err
+	}
+
+	choicesMap := make(map[string][]model.Choice)
+	for _, c := range choices {
+		choicesMap[c.QuestionId] = append(choicesMap[c.QuestionId], c)
+	}
+
+	return choicesMap, nil
+}
+
+func (r *QuestionRepository) GetAnswersForQuestions(questionIDs []string) (map[string]model.Answer, error) {
+	if len(questionIDs) == 0 {
+		return make(map[string]model.Answer), nil
+	}
+
+	rows, err := r.s.DB.Pool.Query(context.Background(), `
+		SELECT id, created_at, answer, explanation, question_id
+		FROM answers
+		WHERE question_id = ANY($1)
+	`, questionIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	answers, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Answer])
+	if err != nil {
+		return nil, err
+	}
+
+	answersMap := make(map[string]model.Answer)
+	for _, a := range answers {
+		answersMap[a.QuestionId] = a
+	}
+
+	return answersMap, nil
 }
