@@ -11,12 +11,10 @@ import (
 	"github.com/rafidoth/onlyexams/internal/service"
 )
 
-// SetHandler handles set-related HTTP requests.
 type SetHandler struct {
 	svc *service.QuestionService
 }
 
-// NewSetHandler creates a new SetHandler.
 func NewSetHandler(svc *service.QuestionService) *SetHandler {
 	return &SetHandler{svc: svc}
 }

@@ -9,12 +9,10 @@ import (
 	"github.com/rafidoth/onlyexams/internal/utils"
 )
 
-// QuestionHandler handles question-related HTTP requests.
 type QuestionHandler struct {
 	svc *service.QuestionService
 }
 
-// NewQuestionHandler creates a new QuestionHandler.
 func NewQuestionHandler(svc *service.QuestionService) *QuestionHandler {
 	return &QuestionHandler{svc: svc}
 }

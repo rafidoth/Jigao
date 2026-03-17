@@ -267,7 +267,6 @@ func (s *QuestionService) GetAllQuestionsInASet(ctx context.Context, userID, set
 }
 
 // CreateSingleQuestion creates a question with its choices and answer in a set.
-// It dispatches to the appropriate repository method based on the question type.
 func (s *QuestionService) CreateSingleQuestion(
 	ctx context.Context,
 	question model.Question,
