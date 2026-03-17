@@ -10,8 +10,8 @@ type Set struct {
 	ID         string             `db:"id" json:"id"`
 	Visibility string             `db:"visibility" json:"visibility"`
 	Title      string             `db:"title" json:"title"`
-	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at" swaggertype:"string"`
+	UpdatedAt  pgtype.Timestamptz `db:"updated_at" json:"updated_at" swaggertype:"string"`
 	UserId     string             `db:"user_id" json:"user_id"`
 }
 
@@ -27,7 +27,7 @@ type Question struct {
 	QuestionType string             `db:"question_type" json:"question_type"`
 	Question     string             `db:"question" json:"question"`
 	SetId        string             `db:"set_id" json:"set_id"`
-	CreatedAt    pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	CreatedAt    pgtype.Timestamptz `db:"created_at" json:"created_at" swaggertype:"string"`
 }
 
 type Choice struct {
@@ -35,7 +35,7 @@ type Choice struct {
 	QuestionId string             `db:"question_id" json:"question_id"`
 	ChoiceText string             `db:"choice" json:"choice_text"`
 	Position   int                `db:"position" json:"position"`
-	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at" swaggertype:"string"`
 }
 
 type Answer struct {
@@ -43,7 +43,7 @@ type Answer struct {
 	QuestionId    string             `db:"question_id" json:"question_id"`
 	CorrectAnswer CorrectAnswer      `db:"answer" json:"correct_answer"`
 	Explanation   string             `db:"explanation" json:"explanation"`
-	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at" swaggertype:"string"`
 }
 
 type CorrectAnswer struct {

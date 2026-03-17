@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
@@ -22,15 +23,28 @@ func NewAuthMiddleware(srv *server.Server) *AuthMiddleware {
 }
 
 // Apply installs Clerk header-based auth and the clerkAuth user-extraction
-// middleware on the given router.
+// middleware on the given router. Paths under /docs/ and /reference are excluded.
 func (a *AuthMiddleware) Apply(r *chi.Mux) {
 	if a.srv.Config.Auth.SecretKey == "" {
 		a.srv.Logger.Warn().Msg("CLERK_SECRET_KEY is not set")
 	}
 	clerk.SetKey(a.srv.Config.Auth.SecretKey)
 
-	r.Use(clerkhttp.RequireHeaderAuthorization())
-	r.Use(a.clerkAuth)
+	r.Use(skipAuthPaths(clerkhttp.RequireHeaderAuthorization()))
+	r.Use(skipAuthPaths(a.clerkAuth))
+}
+
+func skipAuthPaths(mw func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		protected := mw(next)
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasPrefix(r.URL.Path, "/docs") || r.URL.Path == "/reference" {
+				next.ServeHTTP(w, r)
+				return
+			}
+			protected.ServeHTTP(w, r)
+		})
+	}
 }
 
 // clerkAuth extracts Clerk session claims, fetches the user, and injects

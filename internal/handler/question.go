@@ -17,7 +17,19 @@ func NewQuestionHandler(svc *service.QuestionService) *QuestionHandler {
 	return &QuestionHandler{svc: svc}
 }
 
-// POST /questions/?set_id= — creates a single question in a set.
+// CreateQuestion handles POST /questions/?set_id= — creates a single question in a set.
+//
+// @Summary      Create a question
+// @Description  Creates a single question with choices and answer in the specified set
+// @Tags         Questions
+// @Accept       json
+// @Param        set_id  query  string                                                              true  "Set ID to add the question to"
+// @Param        body    body   object{question=model.Question,choices=[]model.Choice,answer=model.Answer}  true  "Question creation payload"
+// @Success      200
+// @Failure      400  {object}  errs.HTTPError
+// @Failure      401  {object}  errs.HTTPError
+// @Failure      500  {object}  errs.HTTPError
+// @Router       /api/v1/questions/ [post]
 func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	_, err := extractUserID(r)
 	if err != nil {
@@ -51,7 +63,18 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
-// GET /questions/?set_id= — returns all questions in a set.
+// GetAllQuestions handles GET /questions/?set_id= — returns all questions in a set.
+//
+// @Summary      Get all questions in a set
+// @Description  Returns all questions with their choices and answers for the specified set
+// @Tags         Questions
+// @Produce      json
+// @Param        set_id  query     string  true  "Set ID to retrieve questions from"
+// @Success      200     {array}   model.QuestionResponse
+// @Failure      400     {object}  errs.HTTPError
+// @Failure      401     {object}  errs.HTTPError
+// @Failure      500     {object}  errs.HTTPError
+// @Router       /api/v1/questions/ [get]
 func (h *QuestionHandler) GetAllQuestions(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {

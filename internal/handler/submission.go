@@ -20,6 +20,17 @@ func NewSubmissionHandler(svc *service.ExamService) *SubmissionHandler {
 }
 
 // GetSubmissionResult handles GET /submissions/{exam_id} — returns evaluation result.
+//
+// @Summary      Get submission result
+// @Description  Returns the evaluation result (score and answer sheet) for the authenticated user's submission to the specified exam
+// @Tags         Submissions
+// @Produce      json
+// @Param        exam_id  path      string  true  "Exam ID"
+// @Success      200      {object}  object{success=bool,message=string,data=object{score=int,answer_sheet=object,created_at=string}}
+// @Failure      400      {object}  errs.HTTPError
+// @Failure      401      {object}  errs.HTTPError
+// @Failure      500      {object}  errs.HTTPError
+// @Router       /api/v1/submissions/{exam_id} [get]
 func (h *SubmissionHandler) GetSubmissionResult(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {

@@ -20,6 +20,16 @@ func NewSetHandler(svc *service.QuestionService) *SetHandler {
 }
 
 // CreateNewSet handles POST /sets/ — creates a new empty set.
+//
+// @Summary      Create a new set
+// @Description  Creates a new empty question set owned by the authenticated user
+// @Tags         Sets
+// @Produce      json
+// @Success      200  {object}  model.Set
+// @Failure      400  {object}  errs.HTTPError
+// @Failure      401  {object}  errs.HTTPError
+// @Failure      500  {object}  errs.HTTPError
+// @Router       /api/v1/sets/ [post]
 func (h *SetHandler) CreateNewSet(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
@@ -37,6 +47,17 @@ func (h *SetHandler) CreateNewSet(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetASet handles GET /sets/{set_id} — returns a set with its context.
+//
+// @Summary      Get a set by ID
+// @Description  Returns a set with its visibility, title, and context content
+// @Tags         Sets
+// @Produce      json
+// @Param        set_id  path      string  true  "Set ID"
+// @Success      200     {object}  object{id=string,visibility=string,title=string,context=string}
+// @Failure      400     {object}  errs.HTTPError
+// @Failure      401     {object}  errs.HTTPError
+// @Failure      500     {object}  errs.HTTPError
+// @Router       /api/v1/sets/{set_id} [get]
 func (h *SetHandler) GetASet(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
@@ -68,6 +89,18 @@ func (h *SetHandler) GetASet(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateASet handles PUT /sets/{set_id} — updates a set's visibility and title.
+//
+// @Summary      Update a set
+// @Description  Updates the visibility and title of an existing set
+// @Tags         Sets
+// @Accept       json
+// @Param        set_id  path  string                                      true  "Set ID"
+// @Param        body    body  object{visibility=string,title=string}      true  "Set update payload"
+// @Success      200
+// @Failure      400  {object}  errs.HTTPError
+// @Failure      401  {object}  errs.HTTPError
+// @Failure      500  {object}  errs.HTTPError
+// @Router       /api/v1/sets/{set_id} [put]
 func (h *SetHandler) UpdateASet(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
@@ -96,6 +129,17 @@ func (h *SetHandler) UpdateASet(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteASet handles DELETE /sets/{set_id} — deletes a set and its context.
+//
+// @Summary      Delete a set
+// @Description  Deletes a set and its associated context content
+// @Tags         Sets
+// @Produce      json
+// @Param        set_id  path      string  true  "Set ID"
+// @Success      200     {object}  object{id=string,title=string}
+// @Failure      400     {object}  errs.HTTPError
+// @Failure      401     {object}  errs.HTTPError
+// @Failure      500     {object}  errs.HTTPError
+// @Router       /api/v1/sets/{set_id} [delete]
 func (h *SetHandler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
@@ -118,6 +162,17 @@ func (h *SetHandler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetRecentSets handles GET /sets/?recent=N — returns recent sets with owner info.
+//
+// @Summary      Get recent sets
+// @Description  Returns the N most recent sets with their owner information
+// @Tags         Sets
+// @Produce      json
+// @Param        recent  query     int  true  "Number of recent sets to return"
+// @Success      200     {array}   service.SetWithOwner
+// @Failure      400     {object}  errs.HTTPError
+// @Failure      401     {object}  errs.HTTPError
+// @Failure      500     {object}  errs.HTTPError
+// @Router       /api/v1/sets/ [get]
 func (h *SetHandler) GetRecentSets(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
@@ -145,6 +200,17 @@ func (h *SetHandler) GetRecentSets(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetSetAccessList handles GET /sets/access_list/{set_id} — returns owner + shared users.
+//
+// @Summary      Get set access list
+// @Description  Returns the list of users (owner + shared) who have access to a set
+// @Tags         Sets
+// @Produce      json
+// @Param        set_id  path      string  true  "Set ID"
+// @Success      200     {array}   users.User
+// @Failure      400     {object}  errs.HTTPError
+// @Failure      401     {object}  errs.HTTPError
+// @Failure      500     {object}  errs.HTTPError
+// @Router       /api/v1/sets/access_list/{set_id} [get]
 func (h *SetHandler) GetSetAccessList(w http.ResponseWriter, r *http.Request) {
 	setID := chi.URLParam(r, "set_id")
 	if setID == "" {
@@ -162,6 +228,17 @@ func (h *SetHandler) GetSetAccessList(w http.ResponseWriter, r *http.Request) {
 }
 
 // AllowSetAccess handles POST /sets/access — grants a user shared access to a set.
+//
+// @Summary      Grant set access
+// @Description  Grants a user shared access to a set
+// @Tags         Sets
+// @Accept       json
+// @Param        body  body  object{user_id=string,set_id=string}  true  "Access grant payload"
+// @Success      200
+// @Failure      400  {object}  errs.HTTPError
+// @Failure      401  {object}  errs.HTTPError
+// @Failure      500  {object}  errs.HTTPError
+// @Router       /api/v1/sets/access [post]
 func (h *SetHandler) AllowSetAccess(w http.ResponseWriter, r *http.Request) {
 	type reqBody struct {
 		UserID string `json:"user_id"`

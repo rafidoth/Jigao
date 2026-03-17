@@ -20,6 +20,18 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 }
 
 // LoginUser handles POST /users/ — inserts a user if they don't already exist.
+//
+// @Summary      Log in or register a user
+// @Description  Inserts a user record if they don't already exist (upsert on first login)
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        body  body      object{id=string,email=string,name=string,image_url=string}  true  "User login payload"
+// @Success      200   {string}  string  "User logged in successfully"
+// @Failure      400   {object}  errs.HTTPError
+// @Failure      401   {object}  errs.HTTPError
+// @Failure      500   {object}  errs.HTTPError
+// @Router       /api/v1/users/ [post]
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value("user-id").(string)
 	if !ok {
@@ -55,6 +67,17 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUserFromEmail handles GET /users/user?email= — returns a user by email.
+//
+// @Summary      Get a user by email
+// @Description  Returns a user record matching the given email address
+// @Tags         Users
+// @Produce      json
+// @Param        email  query     string  true  "Email address of the user"
+// @Success      200    {object}  users.User
+// @Failure      400    {object}  errs.HTTPError
+// @Failure      401    {object}  errs.HTTPError
+// @Failure      500    {object}  errs.HTTPError
+// @Router       /api/v1/users/user [get]
 func (h *UserHandler) GetUserFromEmail(w http.ResponseWriter, r *http.Request) {
 	email := r.URL.Query().Get("email")
 	if email == "" {

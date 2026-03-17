@@ -23,6 +23,17 @@ func NewExamHandler(svc *service.ExamService) *ExamHandler {
 }
 
 // CreateExam handles POST /exams/ — validates and creates an exam.
+//
+// @Summary      Create an exam
+// @Description  Validates input and creates a new exam from a question set
+// @Tags         Exams
+// @Accept       json
+// @Param        body  body  object{set_id=string,title=string,description=string,start_time=string,duration_in_minutes=int}  true  "Exam creation payload (start_time in RFC3339 format)"
+// @Success      201
+// @Failure      400  {object}  errs.HTTPError
+// @Failure      401  {object}  errs.HTTPError
+// @Failure      500  {object}  errs.HTTPError
+// @Router       /api/v1/exams/ [post]
 func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
@@ -61,6 +72,17 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetExams handles GET /exams/?set_id= — returns exams filtered by set_id or user.
+//
+// @Summary      List exams
+// @Description  Returns exams filtered by set_id (if provided) or all exams for the authenticated user
+// @Tags         Exams
+// @Produce      json
+// @Param        set_id  query     string  false  "Optional set ID to filter exams"
+// @Success      200     {array}   model.Exam
+// @Failure      400     {object}  errs.HTTPError
+// @Failure      401     {object}  errs.HTTPError
+// @Failure      500     {object}  errs.HTTPError
+// @Router       /api/v1/exams/ [get]
 func (h *ExamHandler) GetExams(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
@@ -79,6 +101,17 @@ func (h *ExamHandler) GetExams(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetExamByID handles GET /exams/{exam_id} — returns a single exam.
+//
+// @Summary      Get an exam by ID
+// @Description  Returns a single exam by its ID
+// @Tags         Exams
+// @Produce      json
+// @Param        exam_id  path      string  true  "Exam ID"
+// @Success      200      {object}  model.Exam
+// @Failure      400      {object}  errs.HTTPError
+// @Failure      401      {object}  errs.HTTPError
+// @Failure      500      {object}  errs.HTTPError
+// @Router       /api/v1/exams/{exam_id} [get]
 func (h *ExamHandler) GetExamByID(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
@@ -96,6 +129,16 @@ func (h *ExamHandler) GetExamByID(w http.ResponseWriter, r *http.Request) {
 }
 
 // RemoveExam handles DELETE /exams/{exam_id} — deletes an exam.
+//
+// @Summary      Delete an exam
+// @Description  Deletes an exam by its ID
+// @Tags         Exams
+// @Param        exam_id  path  string  true  "Exam ID"
+// @Success      204
+// @Failure      400  {object}  errs.HTTPError
+// @Failure      401  {object}  errs.HTTPError
+// @Failure      500  {object}  errs.HTTPError
+// @Router       /api/v1/exams/{exam_id} [delete]
 func (h *ExamHandler) RemoveExam(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
@@ -112,6 +155,17 @@ func (h *ExamHandler) RemoveExam(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetQuestionsOfExam handles GET /exams/q/{exam_id} — returns all questions for an exam.
+//
+// @Summary      Get questions of an exam
+// @Description  Returns all questions with choices and answers for the specified exam
+// @Tags         Exams
+// @Produce      json
+// @Param        exam_id  path      string  true  "Exam ID"
+// @Success      200      {array}   model.QuestionResponse
+// @Failure      400      {object}  errs.HTTPError
+// @Failure      401      {object}  errs.HTTPError
+// @Failure      500      {object}  errs.HTTPError
+// @Router       /api/v1/exams/q/{exam_id} [get]
 func (h *ExamHandler) GetQuestionsOfExam(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
