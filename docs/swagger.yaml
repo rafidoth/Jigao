@@ -1,0 +1,819 @@
+definitions:
+  errs.Action:
+    properties:
+      message:
+        type: string
+      type:
+        $ref: '#/definitions/errs.ActionType'
+      value:
+        type: string
+    type: object
+  errs.ActionType:
+    enum:
+    - redirect
+    type: string
+    x-enum-varnames:
+    - ActionTypeRedirect
+  errs.FieldError:
+    properties:
+      error:
+        type: string
+      field:
+        type: string
+    type: object
+  errs.HTTPError:
+    properties:
+      action:
+        allOf:
+        - $ref: '#/definitions/errs.Action'
+        description: action to be taken
+      code:
+        type: string
+      errors:
+        description: field level errors
+        items:
+          $ref: '#/definitions/errs.FieldError'
+        type: array
+      message:
+        type: string
+      override:
+        type: boolean
+      status:
+        type: integer
+    type: object
+  model.Answer:
+    properties:
+      correct_answer:
+        $ref: '#/definitions/model.CorrectAnswer'
+      created_at:
+        type: string
+      explanation:
+        type: string
+      id:
+        type: string
+      question_id:
+        type: string
+    type: object
+  model.AnswerResponse:
+    properties:
+      accepted_answers:
+        items:
+          type: string
+        type: array
+      case_sensitive:
+        type: boolean
+      correct_bool:
+        type: boolean
+      correct_choice_id:
+        type: string
+      correct_choice_position:
+        type: integer
+      explanation:
+        type: string
+      model_answer:
+        type: string
+    type: object
+  model.Choice:
+    properties:
+      choice_text:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      position:
+        type: integer
+      question_id:
+        type: string
+    type: object
+  model.ChoiceResponse:
+    properties:
+      choice_id:
+        type: string
+      position:
+        type: integer
+      text:
+        type: string
+    type: object
+  model.CorrectAnswer:
+    properties:
+      fib_accepted_answers:
+        description: For fill_in_the_blanks
+        items:
+          type: string
+        type: array
+      fib_case_sensitive:
+        type: boolean
+      mcq_correct_choice_position:
+        description: For multiple_choice_questions (1-indexed position)
+        type: integer
+      sq_model_answer:
+        description: For short_question
+        type: string
+      tf_correct_choice:
+        description: For true_false
+        type: boolean
+    type: object
+  model.Exam:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/users.User'
+      description:
+        type: string
+      duration:
+        type: integer
+      end_time:
+        type: string
+      id:
+        type: string
+      set:
+        $ref: '#/definitions/model.Set'
+      set_id:
+        type: string
+      start_time:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      visibility:
+        type: string
+    type: object
+  model.Question:
+    properties:
+      created_at:
+        type: string
+      difficulty:
+        type: string
+      id:
+        type: string
+      question:
+        type: string
+      question_type:
+        type: string
+      set_id:
+        type: string
+    type: object
+  model.QuestionResponse:
+    properties:
+      answer:
+        $ref: '#/definitions/model.AnswerResponse'
+      answer_id:
+        type: string
+      choices:
+        items:
+          $ref: '#/definitions/model.ChoiceResponse'
+        type: array
+      difficulty:
+        type: string
+      question_id:
+        type: string
+      text:
+        type: string
+      type:
+        type: string
+    type: object
+  model.Set:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      visibility:
+        type: string
+    type: object
+  service.SetWithOwner:
+    properties:
+      owner:
+        $ref: '#/definitions/users.User'
+      set:
+        $ref: '#/definitions/model.Set'
+    type: object
+  users.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/exams/:
+    get:
+      description: Returns exams filtered by set_id (if provided) or all exams for
+        the authenticated user
+      parameters:
+      - description: Optional set ID to filter exams
+        in: query
+        name: set_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Exam'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: List exams
+      tags:
+      - Exams
+    post:
+      consumes:
+      - application/json
+      description: Validates input and creates a new exam from a question set
+      parameters:
+      - description: Exam creation payload (start_time in RFC3339 format)
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            description:
+              type: string
+            duration_in_minutes:
+              type: integer
+            set_id:
+              type: string
+            start_time:
+              type: string
+            title:
+              type: string
+          type: object
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Create an exam
+      tags:
+      - Exams
+  /api/v1/exams/{exam_id}:
+    delete:
+      description: Deletes an exam by its ID
+      parameters:
+      - description: Exam ID
+        in: path
+        name: exam_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Delete an exam
+      tags:
+      - Exams
+    get:
+      description: Returns a single exam by its ID
+      parameters:
+      - description: Exam ID
+        in: path
+        name: exam_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Exam'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Get an exam by ID
+      tags:
+      - Exams
+  /api/v1/exams/q/{exam_id}:
+    get:
+      description: Returns all questions with choices and answers for the specified
+        exam
+      parameters:
+      - description: Exam ID
+        in: path
+        name: exam_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.QuestionResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Get questions of an exam
+      tags:
+      - Exams
+  /api/v1/questions/:
+    get:
+      description: Returns all questions with their choices and answers for the specified
+        set
+      parameters:
+      - description: Set ID to retrieve questions from
+        in: query
+        name: set_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.QuestionResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Get all questions in a set
+      tags:
+      - Questions
+    post:
+      consumes:
+      - application/json
+      description: Creates a single question with choices and answer in the specified
+        set
+      parameters:
+      - description: Set ID to add the question to
+        in: query
+        name: set_id
+        required: true
+        type: string
+      - description: Question creation payload
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            answer:
+              $ref: '#/definitions/model.Answer'
+            choices:
+              items:
+                $ref: '#/definitions/model.Choice'
+              type: array
+            question:
+              $ref: '#/definitions/model.Question'
+          type: object
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Create a question
+      tags:
+      - Questions
+  /api/v1/sets/:
+    get:
+      description: Returns the N most recent sets with their owner information
+      parameters:
+      - description: Number of recent sets to return
+        in: query
+        name: recent
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/service.SetWithOwner'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Get recent sets
+      tags:
+      - Sets
+    post:
+      description: Creates a new empty question set owned by the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Set'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Create a new set
+      tags:
+      - Sets
+  /api/v1/sets/{set_id}:
+    delete:
+      description: Deletes a set and its associated context content
+      parameters:
+      - description: Set ID
+        in: path
+        name: set_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Delete a set
+      tags:
+      - Sets
+    get:
+      description: Returns a set with its visibility, title, and context content
+      parameters:
+      - description: Set ID
+        in: path
+        name: set_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              context:
+                type: string
+              id:
+                type: string
+              title:
+                type: string
+              visibility:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Get a set by ID
+      tags:
+      - Sets
+    put:
+      consumes:
+      - application/json
+      description: Updates the visibility and title of an existing set
+      parameters:
+      - description: Set ID
+        in: path
+        name: set_id
+        required: true
+        type: string
+      - description: Set update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            title:
+              type: string
+            visibility:
+              type: string
+          type: object
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Update a set
+      tags:
+      - Sets
+  /api/v1/sets/access:
+    post:
+      consumes:
+      - application/json
+      description: Grants a user shared access to a set
+      parameters:
+      - description: Access grant payload
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            set_id:
+              type: string
+            user_id:
+              type: string
+          type: object
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Grant set access
+      tags:
+      - Sets
+  /api/v1/sets/access_list/{set_id}:
+    get:
+      description: Returns the list of users (owner + shared) who have access to a
+        set
+      parameters:
+      - description: Set ID
+        in: path
+        name: set_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/users.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Get set access list
+      tags:
+      - Sets
+  /api/v1/submissions/{exam_id}:
+    get:
+      description: Returns the evaluation result (score and answer sheet) for the
+        authenticated user's submission to the specified exam
+      parameters:
+      - description: Exam ID
+        in: path
+        name: exam_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  answer_sheet:
+                    type: object
+                  created_at:
+                    type: string
+                  score:
+                    type: integer
+                type: object
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Get submission result
+      tags:
+      - Submissions
+  /api/v1/users/:
+    post:
+      consumes:
+      - application/json
+      description: Inserts a user record if they don't already exist (upsert on first
+        login)
+      parameters:
+      - description: User login payload
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            id:
+              type: string
+            image_url:
+              type: string
+            name:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User logged in successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Log in or register a user
+      tags:
+      - Users
+  /api/v1/users/user:
+    get:
+      description: Returns a user record matching the given email address
+      parameters:
+      - description: Email address of the user
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errs.HTTPError'
+      summary: Get a user by email
+      tags:
+      - Users
+swagger: "2.0"

@@ -12,7 +12,7 @@ import (
 // New creates a fully-configured chi.Mux with all middleware and routes.
 func New(srv *server.Server, h *handler.Handlers) *chi.Mux {
 	r := chi.NewRouter()
-
+	// OpenAPI spec and Scalar API reference UI
 	middlewares := mw.NewMiddlewares(srv)
 
 	// Global middleware (order matters)
@@ -24,6 +24,7 @@ func New(srv *server.Server, h *handler.Handlers) *chi.Mux {
 
 	// Authentication
 	middlewares.Auth.Apply(r)
+	RegisterOpenAPIRoutes(r)
 
 	// API v1 routes
 	r.Route("/api/v1", func(r chi.Router) {
