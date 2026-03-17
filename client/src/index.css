@@ -11,7 +11,7 @@
   --font-handwriting: "Gloria Hallelujah", cursive;
 }
 :root {
-  --background: oklch(0.9818 0.0054 264.0986);
+  --background: #000000;
   --foreground: oklch(0.3438 0.0269 264.7226);
   --card: oklch(0.9818 0.0054 264.0986);
   --card-foreground: oklch(0.1908 0.002 264.5859);
