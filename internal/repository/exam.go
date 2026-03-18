@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/rafidoth/onlyexams/internal/model"
@@ -49,14 +48,7 @@ func (r *ExamRepository) IsExamExists(set_id string) error {
 	return nil
 }
 
-func (r *ExamRepository) CreateExamOnASet(
-	user_id, set_id, title, description string,
-	start_time time.Time,
-	duration_in_minutes int,
-	start_mode string,
-	proctoring_enabled, camera_required bool,
-) error {
-
+func (r *ExamRepository) CreateExamOnASet(create *model.ExamCreate) error {
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return err
@@ -78,15 +70,15 @@ func (r *ExamRepository) CreateExamOnASet(
 			camera_required
 		)
 		VALUES ($1, $2, $3, $4, $5, make_interval(mins := $6), $7, $8, $9)`,
-		user_id,
-		set_id,
-		title,
-		description,
-		start_time,
-		duration_in_minutes,
-		start_mode,
-		proctoring_enabled,
-		camera_required,
+		create.UserID,
+		create.SetID,
+		create.Title,
+		create.Description,
+		create.StartTime,
+		create.DurationInMinutes,
+		create.StartMode,
+		create.ProctoringEnabled,
+		create.CameraRequired,
 	)
 	if err != nil {
 		return err
