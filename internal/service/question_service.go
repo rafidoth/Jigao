@@ -8,23 +8,27 @@ import (
 	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/repository"
 	"github.com/rafidoth/onlyexams/internal/users"
+	"github.com/rs/zerolog"
 )
 
 type QuestionService struct {
 	setRepo      *repository.SetRepository
 	questionRepo *repository.QuestionRepository
 	userRepo     *repository.UserRepository
+	log          zerolog.Logger
 }
 
 func NewQuestionService(
 	setRepo *repository.SetRepository,
 	questionRepo *repository.QuestionRepository,
 	userRepo *repository.UserRepository,
+	log zerolog.Logger,
 ) *QuestionService {
 	return &QuestionService{
 		setRepo:      setRepo,
 		questionRepo: questionRepo,
 		userRepo:     userRepo,
+		log:          log,
 	}
 }
 
@@ -38,34 +42,42 @@ var ErrForbidden = errs.NewForbiddenError("You do not have access to this resour
 // AuthorizeSetAccess checks whether the given user may view the set identified
 // by setID. It returns the owner's user ID on success or ErrForbidden.
 func (s *QuestionService) AuthorizeSetAccess(ctx context.Context, userID, setID string) (ownerUserID string, err error) {
+	s.log.Debug().Str("user_id", userID).Str("set_id", setID).Msg("authorize set access")
+
 	vis, err := s.setRepo.GetVisibility(setID)
 	if err != nil {
+		s.log.Error().Err(err).Str("set_id", setID).Msg("failed to get set visibility")
 		return "", fmt.Errorf("get visibility: %w", err)
 	}
 
 	ownerUserID, err = s.setRepo.GetOwnerUserId(setID)
 	if err != nil {
+		s.log.Error().Err(err).Str("set_id", setID).Msg("failed to get set owner")
 		return "", fmt.Errorf("get owner: %w", err)
 	}
 
 	switch vis {
 	case "private":
 		if userID != ownerUserID {
+			s.log.Warn().Str("user_id", userID).Str("set_id", setID).Str("visibility", vis).Msg("set access forbidden")
 			return "", ErrForbidden
 		}
 	case "restricted":
 		if userID != ownerUserID {
 			hasAccess, err := s.setRepo.CheckUserAccess(userID, setID)
 			if err != nil {
+				s.log.Error().Err(err).Str("user_id", userID).Str("set_id", setID).Msg("failed to check user access")
 				return "", fmt.Errorf("check user access: %w", err)
 			}
 			if !hasAccess {
+				s.log.Warn().Str("user_id", userID).Str("set_id", setID).Str("visibility", vis).Msg("set access forbidden")
 				return "", ErrForbidden
 			}
 		}
 	case "public":
 		// Everyone is allowed.
 	default:
+		s.log.Error().Str("set_id", setID).Str("visibility", vis).Msg("unknown set visibility")
 		return "", fmt.Errorf("unknown visibility %q", vis)
 	}
 
@@ -76,6 +88,8 @@ func (s *QuestionService) AuthorizeSetAccess(ctx context.Context, userID, setID 
 
 // CreateNewSet creates a new empty set with default visibility="private" and title="untitled".
 func (s *QuestionService) CreateNewSet(ctx context.Context, userID string) (*model.Set, error) {
+	s.log.Info().Str("user_id", userID).Msg("create set request")
+
 	set := &model.Set{
 		Visibility: "private",
 		Title:      "untitled",
@@ -83,8 +97,11 @@ func (s *QuestionService) CreateNewSet(ctx context.Context, userID string) (*mod
 	}
 	created, err := s.setRepo.CreateNewSet(set)
 	if err != nil {
+		s.log.Error().Err(err).Str("user_id", userID).Msg("failed to create set")
 		return nil, fmt.Errorf("create new set: %w", err)
 	}
+
+	s.log.Info().Str("user_id", userID).Str("set_id", created.ID).Msg("set created")
 	return created, nil
 }
 
@@ -117,6 +134,8 @@ func (s *QuestionService) GetSetWithContext(ctx context.Context, userID, setID s
 
 // UpdateSet updates a set's visibility and title.
 func (s *QuestionService) UpdateSet(ctx context.Context, userID, setID, visibility, title string) (*model.Set, error) {
+	s.log.Info().Str("user_id", userID).Str("set_id", setID).Msg("update set request")
+
 	qSet := &model.Set{
 		ID:         setID,
 		Visibility: visibility,
@@ -125,13 +144,18 @@ func (s *QuestionService) UpdateSet(ctx context.Context, userID, setID, visibili
 	}
 	updated, err := s.setRepo.UpdateASet(qSet)
 	if err != nil {
+		s.log.Error().Err(err).Str("user_id", userID).Str("set_id", setID).Msg("failed to update set")
 		return nil, fmt.Errorf("update set: %w", err)
 	}
+
+	s.log.Info().Str("user_id", userID).Str("set_id", setID).Msg("set updated")
 	return updated, nil
 }
 
 // DeleteSetWithContext deletes a set and its associated context.
 func (s *QuestionService) DeleteSetWithContext(ctx context.Context, userID, setID string) (*model.Set, error) {
+	s.log.Info().Str("user_id", userID).Str("set_id", setID).Msg("delete set request")
+
 	qSet := &model.Set{
 		ID:     setID,
 		UserId: userID,
@@ -139,11 +163,14 @@ func (s *QuestionService) DeleteSetWithContext(ctx context.Context, userID, setI
 
 	deleted, err := s.setRepo.DeleteASet(qSet)
 	if err != nil {
+		s.log.Error().Err(err).Str("user_id", userID).Str("set_id", setID).Msg("failed to delete set")
 		return nil, fmt.Errorf("delete set: %w", err)
 	}
 
 	// Best-effort context deletion — set might not have a context row.
 	_ = s.setRepo.DeleteSetContext(setID)
+
+	s.log.Info().Str("user_id", userID).Str("set_id", setID).Msg("set deleted")
 
 	return deleted, nil
 }
@@ -214,9 +241,14 @@ func (s *QuestionService) GetSetAccessList(ctx context.Context, setID string) ([
 
 // AllowSetAccess grants a user shared access to a set.
 func (s *QuestionService) AllowSetAccess(ctx context.Context, setID, userID string) error {
+	s.log.Info().Str("set_id", setID).Str("user_id", userID).Msg("grant set access request")
+
 	if err := s.setRepo.AddSharedAccessUser(setID, userID); err != nil {
+		s.log.Error().Err(err).Str("set_id", setID).Str("user_id", userID).Msg("failed to grant set access")
 		return fmt.Errorf("allow set access: %w", err)
 	}
+
+	s.log.Info().Str("set_id", setID).Str("user_id", userID).Msg("set access granted")
 	return nil
 }
 
@@ -274,25 +306,37 @@ func (s *QuestionService) CreateSingleQuestion(
 	answer model.Answer,
 	setID string,
 ) error {
+	s.log.Info().
+		Str("set_id", setID).
+		Str("question_type", question.QuestionType).
+		Msg("create question request")
+
 	switch question.QuestionType {
 	case "multiple_choice_questions":
 		if err := s.questionRepo.CreateMultipleChoiceQuestion(question, choices, answer, setID); err != nil {
+			s.log.Error().Err(err).Str("set_id", setID).Str("question_type", question.QuestionType).Msg("failed to create question")
 			return fmt.Errorf("create MCQ question: %w", err)
 		}
 	case "fill_in_the_blanks":
 		if err := s.questionRepo.CreateFillInTheBlanks(question, answer, setID); err != nil {
+			s.log.Error().Err(err).Str("set_id", setID).Str("question_type", question.QuestionType).Msg("failed to create question")
 			return fmt.Errorf("create FIB question: %w", err)
 		}
 	case "true_false":
 		if err := s.questionRepo.CreateTrueFalse(question, answer, setID); err != nil {
+			s.log.Error().Err(err).Str("set_id", setID).Str("question_type", question.QuestionType).Msg("failed to create question")
 			return fmt.Errorf("create true/false question: %w", err)
 		}
 	case "short_question":
 		if err := s.questionRepo.CreateShortQuestion(question, answer, setID); err != nil {
+			s.log.Error().Err(err).Str("set_id", setID).Str("question_type", question.QuestionType).Msg("failed to create question")
 			return fmt.Errorf("create short question: %w", err)
 		}
 	default:
+		s.log.Warn().Str("set_id", setID).Str("question_type", question.QuestionType).Msg("unsupported question type")
 		return fmt.Errorf("unsupported question type: %s", question.QuestionType)
 	}
+
+	s.log.Info().Str("set_id", setID).Str("question_type", question.QuestionType).Msg("question created")
 	return nil
 }
