@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rafidoth/onlyexams/internal/errs"
@@ -41,34 +40,21 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type reqBody struct {
-		SetID             string    `json:"set_id"`
-		Title             string    `json:"title"`
-		Description       string    `json:"description"`
-		StartTime         time.Time `json:"start_time"`
-		DurationInMinutes int       `json:"duration_in_minutes"`
-		StartMode         string    `json:"start_mode"`
-		ProctoringEnabled bool      `json:"proctoring_enabled"`
-		CameraRequired    bool      `json:"camera_required"`
-	}
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		writeError(h.log, w, errs.NewBadRequestError("Failed to read request body", false, nil, nil, nil), "create exam: read body")
 		return
 	}
-	var req reqBody
-	if err := json.Unmarshal(body, &req); err != nil {
+
+	var create model.ExamCreate
+	if err := json.Unmarshal(body, &create); err != nil {
 		writeError(h.log, w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create exam: unmarshal body")
 		return
 	}
 
-	if err := h.svc.CreateExam(
-		r.Context(), uid, req.SetID, req.Title, req.Description,
-		req.StartTime, req.DurationInMinutes,
-		req.StartMode,
-		req.ProctoringEnabled, req.CameraRequired,
-	); err != nil {
+	create.UserID = uid
+
+	if err := h.svc.CreateExam(r.Context(), &create); err != nil {
 		writeError(h.log, w, err, "create exam failed")
 		return
 	}
@@ -154,39 +140,16 @@ func (h *ExamHandler) UpdateExam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type reqBody struct {
-		Title             *string    `json:"title"`
-		Description       *string    `json:"description"`
-		StartTime         *time.Time `json:"start_time"`
-		DurationInMinutes *int       `json:"duration_in_minutes"`
-		StartMode         *string    `json:"start_mode"`
-		SessionStatus     *string    `json:"session_status"`
-		ProctoringEnabled *bool      `json:"proctoring_enabled"`
-		CameraRequired    *bool      `json:"camera_required"`
-		MaxViolations     *int       `json:"max_violations"`
-	}
-
-	var req reqBody
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	var update model.ExamUpdate
+	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
 		writeError(h.log, w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "update exam: decode body")
 		return
 	}
 
-	update := &model.ExamUpdate{
-		ID:                examID,
-		UserID:            uid,
-		Title:             req.Title,
-		Description:       req.Description,
-		StartTime:         req.StartTime,
-		DurationInMinutes: req.DurationInMinutes,
-		StartMode:         req.StartMode,
-		SessionStatus:     req.SessionStatus,
-		ProctoringEnabled: req.ProctoringEnabled,
-		CameraRequired:    req.CameraRequired,
-		MaxViolations:     req.MaxViolations,
-	}
+	update.ID = examID
+	update.UserID = uid
 
-	if err := h.svc.UpdateExam(r.Context(), update); err != nil {
+	if err := h.svc.UpdateExam(r.Context(), &update); err != nil {
 		writeError(h.log, w, err, "update exam failed")
 		return
 	}
