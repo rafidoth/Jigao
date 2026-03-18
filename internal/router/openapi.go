@@ -17,6 +17,7 @@ func RegisterOpenAPIRoutes(r chi.Router) {
 
 	r.Get("/reference", func(w http.ResponseWriter, r *http.Request) {
 		htmlContent, err := scalar.ApiReferenceHTML(&scalar.Options{
+			Theme:   "alternate",
 			SpecURL: "./docs/swagger.json",
 			CustomOptions: scalar.CustomOptions{
 				PageTitle: "Jigao API",
