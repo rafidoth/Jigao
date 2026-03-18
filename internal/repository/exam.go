@@ -53,7 +53,7 @@ func (r *ExamRepository) CreateExamOnASet(
 	user_id, set_id, title, description string,
 	start_time time.Time,
 	duration_in_minutes int,
-	start_mode, session_status, invite_code string,
+	start_mode string,
 	proctoring_enabled, camera_required bool,
 ) error {
 
@@ -74,12 +74,10 @@ func (r *ExamRepository) CreateExamOnASet(
 			start_time,
 			duration,
 			start_mode,
-			session_status,
-			invite_code,
 			proctoring_enabled,
 			camera_required
 		)
-		VALUES ($1, $2, $3, $4, $5, make_interval(mins := $6), $7, $8, $9, $10, $11)`,
+		VALUES ($1, $2, $3, $4, $5, make_interval(mins := $6), $7, $8, $9)`,
 		user_id,
 		set_id,
 		title,
@@ -87,8 +85,6 @@ func (r *ExamRepository) CreateExamOnASet(
 		start_time,
 		duration_in_minutes,
 		start_mode,
-		session_status,
-		invite_code,
 		proctoring_enabled,
 		camera_required,
 	)
@@ -104,7 +100,90 @@ func (r *ExamRepository) CreateExamOnASet(
 	return nil
 }
 
-func (r *ExamRepository) RemoveExam(examID string) error {
+func (r *ExamRepository) UpdateExam(update *model.ExamUpdate) error {
+	tx, err := r.s.DB.Pool.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
+	setClauses := make([]string, 0, 8)
+	args := make([]any, 0, 10)
+	argPos := 1
+
+	if update.Title != nil {
+		setClauses = append(setClauses, fmt.Sprintf("title = $%d", argPos))
+		args = append(args, *update.Title)
+		argPos++
+	}
+	if update.Description != nil {
+		setClauses = append(setClauses, fmt.Sprintf("description = $%d", argPos))
+		args = append(args, *update.Description)
+		argPos++
+	}
+	if update.StartTime != nil {
+		setClauses = append(setClauses, fmt.Sprintf("start_time = $%d", argPos))
+		args = append(args, *update.StartTime)
+		argPos++
+	}
+	if update.DurationInMinutes != nil {
+		setClauses = append(setClauses, fmt.Sprintf("duration = make_interval(mins := $%d)", argPos))
+		args = append(args, *update.DurationInMinutes)
+		argPos++
+	}
+	if update.StartMode != nil {
+		setClauses = append(setClauses, fmt.Sprintf("start_mode = $%d", argPos))
+		args = append(args, *update.StartMode)
+		argPos++
+	}
+	if update.SessionStatus != nil {
+		setClauses = append(setClauses, fmt.Sprintf("session_status = $%d", argPos))
+		args = append(args, *update.SessionStatus)
+		argPos++
+	}
+	if update.ProctoringEnabled != nil {
+		setClauses = append(setClauses, fmt.Sprintf("proctoring_enabled = $%d", argPos))
+		args = append(args, *update.ProctoringEnabled)
+		argPos++
+	}
+	if update.CameraRequired != nil {
+		setClauses = append(setClauses, fmt.Sprintf("camera_required = $%d", argPos))
+		args = append(args, *update.CameraRequired)
+		argPos++
+	}
+	if update.MaxViolations != nil {
+		setClauses = append(setClauses, fmt.Sprintf("max_violations = $%d", argPos))
+		args = append(args, *update.MaxViolations)
+		argPos++
+	}
+
+	if len(setClauses) == 0 {
+		return fmt.Errorf("no fields to update")
+	}
+
+	query := fmt.Sprintf(
+		"UPDATE exams SET %s WHERE id = $%d AND user_id = $%d",
+		strings.Join(setClauses, ", "),
+		argPos,
+		argPos+1,
+	)
+	args = append(args, update.ID, update.UserID)
+
+	ct, err := tx.Exec(context.Background(), query, args...)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return fmt.Errorf("exam not found")
+	}
+
+	if err := tx.Commit(context.Background()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ExamRepository) RemoveExam(userID, examID string) error {
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
 		return err
@@ -113,8 +192,9 @@ func (r *ExamRepository) RemoveExam(examID string) error {
 
 	ct, err := tx.Exec(
 		context.Background(),
-		"DELETE FROM exams WHERE id = $1",
+		"DELETE FROM exams WHERE id = $1 AND user_id = $2",
 		examID,
+		userID,
 	)
 	if err != nil {
 		return err
