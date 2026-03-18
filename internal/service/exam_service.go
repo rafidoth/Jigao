@@ -38,7 +38,6 @@ func NewExamService(
 	}
 }
 
-// ValidateCreateExam checks business rules for creating an exam.
 func ValidateCreateExam(setID, title string, startTime time.Time, durationMinutes int) error {
 	if setID == "" {
 		return errs.NewBadRequestError("set_id is required", false, nil, nil, nil)
@@ -54,10 +53,6 @@ func ValidateCreateExam(setID, title string, startTime time.Time, durationMinute
 	}
 	return nil
 }
-
-// ---------------------------------------------------------------------------
-// Exam CRUD
-// ---------------------------------------------------------------------------
 
 // CreateExam validates and creates an exam on a set.
 func (s *ExamService) CreateExam(
@@ -100,10 +95,6 @@ func (s *ExamService) RemoveExam(ctx context.Context, examID string) error {
 	return nil
 }
 
-// ---------------------------------------------------------------------------
-// Exam Listing with Enrichment
-// ---------------------------------------------------------------------------
-
 // GetExamsBySetID returns exams for a set, enriched with the CreatedBy user.
 func (s *ExamService) GetExamsBySetID(ctx context.Context, setID string) ([]model.Exam, error) {
 	examsList, err := s.examRepo.GetExamsBySetId(setID)
@@ -139,10 +130,6 @@ func (s *ExamService) GetExams(ctx context.Context, userID, setID string) ([]mod
 	}
 	return s.GetExamsBySetID(ctx, setID)
 }
-
-// ---------------------------------------------------------------------------
-// Exam Questions
-// ---------------------------------------------------------------------------
 
 // GetQuestionsOfExam returns all questions belonging to the exam's set.
 func (s *ExamService) GetQuestionsOfExam(ctx context.Context, examID string) ([]model.QuestionWithAnswer, error) {
@@ -187,10 +174,6 @@ func (s *ExamService) GetQuestionsOfExam(ctx context.Context, examID string) ([]
 	return results, nil
 }
 
-// ---------------------------------------------------------------------------
-// Submission & Evaluation
-// ---------------------------------------------------------------------------
-
 // GetSubmissionResult retrieves the evaluation result for a user's exam submission.
 func (s *ExamService) GetSubmissionResult(ctx context.Context, examID, userID string) (*model.EvaluationResult, error) {
 	result, err := s.examRepo.GetEvaluationResult(examID, userID)
@@ -202,10 +185,6 @@ func (s *ExamService) GetSubmissionResult(ctx context.Context, examID, userID st
 	}
 	return result, nil
 }
-
-// ---------------------------------------------------------------------------
-// WebSocket / Room Logic
-// ---------------------------------------------------------------------------
 
 // DetermineClientType decides whether a user joining an exam room is a
 // "monitor" (can observe) or "participant" (takes the exam).
@@ -249,10 +228,6 @@ func (s *ExamService) DetermineClientType(ctx context.Context, userID, examID st
 func (s *ExamService) ExamExists(ctx context.Context, examID string) error {
 	return s.examRepo.IsExamExists(examID)
 }
-
-// ---------------------------------------------------------------------------
-// User enrichment helper
-// ---------------------------------------------------------------------------
 
 // EnrichExamsWithCreatedBy adds the CreatedBy user info to each exam.
 func (s *ExamService) EnrichExamsWithCreatedBy(examsList []model.Exam) {
