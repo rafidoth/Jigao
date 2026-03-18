@@ -81,13 +81,28 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "properties": {
+                                "camera_required": {
+                                    "type": "boolean"
+                                },
                                 "description": {
                                     "type": "string"
                                 },
                                 "duration_in_minutes": {
                                     "type": "integer"
                                 },
+                                "invite_code": {
+                                    "type": "string"
+                                },
+                                "proctoring_enabled": {
+                                    "type": "boolean"
+                                },
+                                "session_status": {
+                                    "type": "string"
+                                },
                                 "set_id": {
+                                    "type": "string"
+                                },
+                                "start_mode": {
                                     "type": "string"
                                 },
                                 "start_time": {
@@ -1102,6 +1117,9 @@ const docTemplate = `{
         "model.Exam": {
             "type": "object",
             "properties": {
+                "camera_required": {
+                    "type": "boolean"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -1120,10 +1138,25 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "invite_code": {
+                    "type": "string"
+                },
+                "max_violations": {
+                    "type": "integer"
+                },
+                "proctoring_enabled": {
+                    "type": "boolean"
+                },
+                "session_status": {
+                    "type": "string"
+                },
                 "set": {
                     "$ref": "#/definitions/model.Set"
                 },
                 "set_id": {
+                    "type": "string"
+                },
+                "start_mode": {
                     "type": "string"
                 },
                 "start_time": {

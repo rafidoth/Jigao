@@ -25,7 +25,7 @@ func NewExamHandler(svc *service.ExamService, log zerolog.Logger) *ExamHandler {
 }
 
 // @Summary      Create an exam
-// @Description  Validates input and creates a new exam from a question set
+// @Description  Creates a new exam from a question set
 // @Tags         Exams
 // @Accept       json
 // @Param        body  body  object{set_id=string,title=string,description=string,start_time=string,duration_in_minutes=int,start_mode=string,session_status=string,invite_code=string,proctoring_enabled=bool,camera_required=bool}  true  "Exam creation payload (start_time in RFC3339 format)"
