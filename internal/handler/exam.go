@@ -28,7 +28,7 @@ func NewExamHandler(svc *service.ExamService, log zerolog.Logger) *ExamHandler {
 // @Description  Creates a new exam from a question set
 // @Tags         Exams
 // @Accept       json
-// @Param        body  body  object{set_id=string,title=string,description=string,start_time=string,duration_in_minutes=int,start_mode=string,session_status=string,invite_code=string,proctoring_enabled=bool,camera_required=bool}  true  "Exam creation payload (start_time in RFC3339 format)"
+// @Param        body  body  object{set_id=string,title=string,description=string,start_time=string,duration_in_minutes=int,start_mode=string,proctoring_enabled=bool,camera_required=bool}  true  "Exam creation payload (start_time in RFC3339 format)"
 // @Success      201
 // @Failure      400  {object}  errs.HTTPError
 // @Failure      401  {object}  errs.HTTPError
@@ -48,8 +48,6 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 		StartTime         time.Time `json:"start_time"`
 		DurationInMinutes int       `json:"duration_in_minutes"`
 		StartMode         string    `json:"start_mode"`
-		SessionStatus     string    `json:"session_status"`
-		InviteCode        string    `json:"invite_code"`
 		ProctoringEnabled bool      `json:"proctoring_enabled"`
 		CameraRequired    bool      `json:"camera_required"`
 	}
@@ -68,7 +66,7 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 	if err := h.svc.CreateExam(
 		r.Context(), uid, req.SetID, req.Title, req.Description,
 		req.StartTime, req.DurationInMinutes,
-		req.StartMode, req.SessionStatus, req.InviteCode,
+		req.StartMode,
 		req.ProctoringEnabled, req.CameraRequired,
 	); err != nil {
 		writeError(h.log, w, err, "create exam failed")
@@ -132,6 +130,70 @@ func (h *ExamHandler) GetExamByID(w http.ResponseWriter, r *http.Request) {
 	writeJSON(h.log, w, http.StatusOK, exam)
 }
 
+// @Summary      Update an exam
+// @Description  Updates editable fields of an existing exam
+// @Tags         Exams
+// @Accept       json
+// @Param        exam_id  path  string  true  "Exam ID"
+// @Param        body  body  object{title=string,description=string,start_time=string,duration_in_minutes=int,start_mode=string,session_status=string,proctoring_enabled=bool,camera_required=bool,max_violations=int}  true  "Exam update payload"
+// @Success      200
+// @Failure      400  {object}  errs.HTTPError
+// @Failure      401  {object}  errs.HTTPError
+// @Failure      500  {object}  errs.HTTPError
+// @Router       /api/v1/exams/{exam_id} [put]
+func (h *ExamHandler) UpdateExam(w http.ResponseWriter, r *http.Request) {
+	uid, err := extractUserID(r)
+	if err != nil {
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "update exam: missing user-id")
+		return
+	}
+
+	examID := chi.URLParam(r, "exam_id")
+	if examID == "" {
+		writeError(h.log, w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "update exam: missing exam_id")
+		return
+	}
+
+	type reqBody struct {
+		Title             *string    `json:"title"`
+		Description       *string    `json:"description"`
+		StartTime         *time.Time `json:"start_time"`
+		DurationInMinutes *int       `json:"duration_in_minutes"`
+		StartMode         *string    `json:"start_mode"`
+		SessionStatus     *string    `json:"session_status"`
+		ProctoringEnabled *bool      `json:"proctoring_enabled"`
+		CameraRequired    *bool      `json:"camera_required"`
+		MaxViolations     *int       `json:"max_violations"`
+	}
+
+	var req reqBody
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(h.log, w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "update exam: decode body")
+		return
+	}
+
+	update := &model.ExamUpdate{
+		ID:                examID,
+		UserID:            uid,
+		Title:             req.Title,
+		Description:       req.Description,
+		StartTime:         req.StartTime,
+		DurationInMinutes: req.DurationInMinutes,
+		StartMode:         req.StartMode,
+		SessionStatus:     req.SessionStatus,
+		ProctoringEnabled: req.ProctoringEnabled,
+		CameraRequired:    req.CameraRequired,
+		MaxViolations:     req.MaxViolations,
+	}
+
+	if err := h.svc.UpdateExam(r.Context(), update); err != nil {
+		writeError(h.log, w, err, "update exam failed")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 // RemoveExam handles DELETE /exams/{exam_id} — deletes an exam.
 //
 // @Summary      Delete an exam
@@ -144,13 +206,19 @@ func (h *ExamHandler) GetExamByID(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  errs.HTTPError
 // @Router       /api/v1/exams/{exam_id} [delete]
 func (h *ExamHandler) RemoveExam(w http.ResponseWriter, r *http.Request) {
+	uid, err := extractUserID(r)
+	if err != nil {
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "remove exam: missing user-id")
+		return
+	}
+
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
 		writeError(h.log, w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "remove exam: missing exam_id")
 		return
 	}
 
-	if err := h.svc.RemoveExam(r.Context(), examID); err != nil {
+	if err := h.svc.RemoveExam(r.Context(), uid, examID); err != nil {
 		writeError(h.log, w, err, "remove exam failed")
 		return
 	}
