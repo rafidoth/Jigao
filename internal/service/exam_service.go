@@ -155,13 +155,13 @@ func (s *ExamService) GetExamsByUserID(ctx context.Context, userID string) ([]mo
 	return examsList, nil
 }
 
-// GetExams returns exams filtered by set_id (if provided) or all user exams.
-func (s *ExamService) GetExams(ctx context.Context, userID, setID string) ([]model.Exam, error) {
-	if setID == "" {
-		return s.GetExamsByUserID(ctx, userID)
-	}
-	return s.GetExamsBySetID(ctx, setID)
-}
+// // GetExams returns exams filtered by set_id (if provided) or all user exams.
+// func (s *ExamService) GetExams(ctx context.Context, userID, setID string) ([]model.Exam, error) {
+// 	if setID == "" {
+// 		return s.GetExamsByUserID(ctx, userID)
+// 	}
+// 	return s.GetExamsBySetID(ctx, setID)
+// }
 
 // GetQuestionsOfExam returns all questions belonging to the exam's set.
 func (s *ExamService) GetQuestionsOfExam(ctx context.Context, examID string) ([]model.QuestionWithAnswer, error) {

@@ -17,7 +17,7 @@ type Exam struct {
 	DurationInMinutes int        `db:"duration" json:"duration"`
 	StartMode         string     `db:"start_mode" json:"start_mode"`
 	SessionStatus     string     `db:"session_status" json:"session_status"`
-	InviteCode        string     `db:"invite_code" json:"invite_code"`
+	InviteCode        *string    `db:"invite_code" json:"invite_code"`
 	ProctoringEnabled bool       `db:"proctoring_enabled" json:"proctoring_enabled"`
 	CameraRequired    bool       `db:"camera_required" json:"camera_required"`
 	MaxViolations     *int       `db:"max_violations" json:"max_violations"`
@@ -26,6 +26,19 @@ type Exam struct {
 	UpdatedAt         time.Time  `db:"updated_at" json:"updated_at"`
 	CreatedBy         users.User `db:"-" json:"created_by"`
 	Set               *Set       `db:"-" json:"set"`
+}
+
+type ExamDetailsForSingleUser struct {
+	Id                string    `json:"id"`
+	SetId             string    `json:"set_id"`
+	Visibility        string    `json:"visibility"`
+	Title             string    `json:"title"`
+	SetTitle          string    `json:"set_title"`
+	StartTime         time.Time `json:"start_time"`
+	Description       string    `json:"description"`
+	DurationInMinutes int       `json:"duration"`
+	SessionStatus     string    `json:"session_status"`
+	EndTime           time.Time `json:"end_time"`
 }
 
 type ExamCreate struct {

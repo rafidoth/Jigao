@@ -154,13 +154,7 @@ func (r *ExamRepository) GetExamByExamId(exam_id string) (model.Exam, error) {
 }
 
 func (r *ExamRepository) GetExamsListByUserId(user_id string) ([]model.Exam, error) {
-
-	tx, err := r.s.DB.Pool.Begin(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback(context.Background())
-	rows, err := tx.Query(
+	rows, err := r.s.DB.Pool.Query(
 		context.Background(),
 		`SELECT
 			id,
@@ -172,10 +166,18 @@ func (r *ExamRepository) GetExamsListByUserId(user_id string) ([]model.Exam, err
 			start_time,
 			(EXTRACT(EPOCH FROM duration)/60)::int AS duration,
 			(start_time + duration) AS end_time,
+			start_mode,
+			session_status,
+			invite_code,
+			proctoring_enabled,
+			camera_required,
+			max_violations,
 			created_at,
 			updated_at
 		 FROM exams
-		 WHERE user_id= $1`,
+		 WHERE user_id = $1
+		 ORDER BY created_at DESC
+		 LIMIT 10`,
 		user_id,
 	)
 	if err != nil {
@@ -186,22 +188,20 @@ func (r *ExamRepository) GetExamsListByUserId(user_id string) ([]model.Exam, err
 	if err != nil {
 		return nil, err
 	}
-	set_ids := make([]string, 0, len(examsSlice))
-	for _, exam := range examsSlice {
-		set_ids = append(set_ids, exam.SetId)
+
+	if len(examsSlice) == 0 {
+		return examsSlice, nil
 	}
 
-	rows, err = tx.Query(
+	setIds := make([]string, 0, len(examsSlice))
+	for _, exam := range examsSlice {
+		setIds = append(setIds, exam.SetId)
+	}
+
+	rows, err = r.s.DB.Pool.Query(
 		context.Background(),
-		`  SELECT
-			id,
-			user_id,
-			title,
-			created_at,
-			updated_at
-		  FROM sets
-		  WHERE id = ANY($1)`,
-		set_ids,
+		`SELECT id, visibility, title, created_at, updated_at, user_id FROM sets WHERE id = ANY($1)`,
+		setIds,
 	)
 	if err != nil {
 		return nil, err
@@ -209,28 +209,17 @@ func (r *ExamRepository) GetExamsListByUserId(user_id string) ([]model.Exam, err
 
 	setsMap := make(map[string]model.Set)
 	for rows.Next() {
-		var set model.Set
-		if err := rows.Scan(
-			&set.ID,
-			&set.UserId,
-			&set.Title,
-			&set.CreatedAt,
-			&set.UpdatedAt,
-		); err != nil {
+		var s model.Set
+		if err := rows.Scan(&s.ID, &s.Visibility, &s.Title, &s.CreatedAt, &s.UpdatedAt, &s.UserId); err != nil {
 			return nil, err
 		}
-		setsMap[set.ID] = set
+		setsMap[s.ID] = s
 	}
-	fmt.Println("setsMap:", setsMap)
 
 	for i := range examsSlice {
-		if set, ok := setsMap[examsSlice[i].SetId]; ok {
-			examsSlice[i].Set = &set
+		if s, ok := setsMap[examsSlice[i].SetId]; ok {
+			examsSlice[i].Set = &s
 		}
-	}
-
-	if err := tx.Commit(context.Background()); err != nil {
-		return nil, err
 	}
 
 	return examsSlice, nil
