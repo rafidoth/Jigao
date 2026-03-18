@@ -11,7 +11,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Handlers aggregates all domain-specific handlers.
 type Handlers struct {
 	User       *UserHandler
 	Set        *SetHandler
@@ -20,7 +19,6 @@ type Handlers struct {
 	Submission *SubmissionHandler
 }
 
-// NewHandlers creates a fully-wired Handlers instance.
 func NewHandlers(svc *service.Services, log zerolog.Logger) *Handlers {
 	return &Handlers{
 		User:       NewUserHandler(svc.User, log.With().Str("handler", "user").Logger()),
