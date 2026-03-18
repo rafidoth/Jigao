@@ -11,6 +11,7 @@ func registerExamRoutes(r chi.Router, h *handler.ExamHandler) {
 		r.Post("/", h.CreateExam)
 		r.Get("/q/{exam_id}", h.GetQuestionsOfExam)
 		r.Get("/{exam_id}", h.GetExamByID)
+		r.Put("/{exam_id}", h.UpdateExam)
 		r.Delete("/{exam_id}", h.RemoveExam)
 	})
 }
