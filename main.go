@@ -21,29 +21,22 @@ func main() {
 	loggerService := logger.NewLoggerService(cfg.Observability)
 	log := logger.NewLoggerWithService(cfg.Observability, loggerService)
 
-	// Create server (initializes database)
 	srv, err := server.New(cfg, &log, loggerService)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to create server")
 		os.Exit(1)
 	}
 
-	// Create repository layer
 	repos := repository.NewRepositories(srv)
 
-	// Create service layer
 	svc := service.NewServices(repos, log)
 
-	// Create handler layer
 	handlers := handler.NewHandlers(svc, log)
 
-	// Create router with all routes and middleware
 	mux := router.New(srv, handlers)
 
-	// Wire HTTP server
 	srv.SetupHTTPServer(mux)
 
-	// Start serving
 	if err := srv.Start(); err != nil {
 		log.Error().Err(err).Msg("server stopped")
 		os.Exit(1)
