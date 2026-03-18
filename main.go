@@ -32,10 +32,10 @@ func main() {
 	repos := repository.NewRepositories(srv)
 
 	// Create service layer
-	svc := service.NewServices(repos)
+	svc := service.NewServices(repos, log)
 
 	// Create handler layer
-	handlers := handler.NewHandlers(svc)
+	handlers := handler.NewHandlers(svc, log)
 
 	// Create router with all routes and middleware
 	mux := router.New(srv, handlers)
