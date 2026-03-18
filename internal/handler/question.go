@@ -7,14 +7,16 @@ import (
 	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/service"
 	"github.com/rafidoth/onlyexams/internal/utils"
+	"github.com/rs/zerolog"
 )
 
 type QuestionHandler struct {
 	svc *service.QuestionService
+	log zerolog.Logger
 }
 
-func NewQuestionHandler(svc *service.QuestionService) *QuestionHandler {
-	return &QuestionHandler{svc: svc}
+func NewQuestionHandler(svc *service.QuestionService, log zerolog.Logger) *QuestionHandler {
+	return &QuestionHandler{svc: svc, log: log}
 }
 
 // CreateQuestion handles POST /questions/?set_id= — creates a single question in a set.
@@ -33,13 +35,13 @@ func NewQuestionHandler(svc *service.QuestionService) *QuestionHandler {
 func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	_, err := extractUserID(r)
 	if err != nil {
-		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "create question: missing user-id")
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "create question: missing user-id")
 		return
 	}
 
 	setID := r.URL.Query().Get("set_id")
 	if setID == "" {
-		writeError(w, errs.NewBadRequestError("set_id is required", false, nil, nil, nil), "create question: missing set_id")
+		writeError(h.log, w, errs.NewBadRequestError("set_id is required", false, nil, nil, nil), "create question: missing set_id")
 		return
 	}
 
@@ -49,14 +51,14 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 		Answer   model.Answer   `json:"answer"`
 	}
 	if !utils.ExtractRequestBody(r, &req) {
-		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create question: decode body")
+		writeError(h.log, w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create question: decode body")
 		return
 	}
 
 	if err := h.svc.CreateSingleQuestion(
 		r.Context(), req.Question, req.Choices, req.Answer, setID,
 	); err != nil {
-		writeError(w, err, "create question failed")
+		writeError(h.log, w, err, "create question failed")
 		return
 	}
 
@@ -78,19 +80,19 @@ func (h *QuestionHandler) CreateQuestion(w http.ResponseWriter, r *http.Request)
 func (h *QuestionHandler) GetAllQuestions(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "get questions: missing user-id")
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "get questions: missing user-id")
 		return
 	}
 
 	setID := r.URL.Query().Get("set_id")
 	if setID == "" {
-		writeError(w, errs.NewBadRequestError("set_id is required", false, nil, nil, nil), "get questions: missing set_id")
+		writeError(h.log, w, errs.NewBadRequestError("set_id is required", false, nil, nil, nil), "get questions: missing set_id")
 		return
 	}
 
 	questions, err := h.svc.GetAllQuestionsInASet(r.Context(), uid, setID)
 	if err != nil {
-		writeError(w, err, "get all questions failed")
+		writeError(h.log, w, err, "get all questions failed")
 		return
 	}
 
@@ -99,5 +101,5 @@ func (h *QuestionHandler) GetAllQuestions(w http.ResponseWriter, r *http.Request
 		result[i] = model.NewQuestionResponse(qwa)
 	}
 
-	writeJSON(w, http.StatusOK, result)
+	writeJSON(h.log, w, http.StatusOK, result)
 }

@@ -7,16 +7,18 @@ import (
 
 	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/service"
+	"github.com/rs/zerolog"
 )
 
 // UserHandler handles user-related HTTP requests.
 type UserHandler struct {
 	svc *service.UserService
+	log zerolog.Logger
 }
 
 // NewUserHandler creates a new UserHandler.
-func NewUserHandler(svc *service.UserService) *UserHandler {
-	return &UserHandler{svc: svc}
+func NewUserHandler(svc *service.UserService, log zerolog.Logger) *UserHandler {
+	return &UserHandler{svc: svc, log: log}
 }
 
 // LoginUser handles POST /users/ — inserts a user if they don't already exist.
@@ -35,7 +37,7 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value("user-id").(string)
 	if !ok {
-		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "login: missing user-id")
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "login: missing user-id")
 		return
 	}
 
@@ -48,17 +50,17 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		writeError(w, errs.NewBadRequestError("Failed to read request body", false, nil, nil, nil), "login: read body")
+		writeError(h.log, w, errs.NewBadRequestError("Failed to read request body", false, nil, nil, nil), "login: read body")
 		return
 	}
 	var req reqBody
 	if err := json.Unmarshal(body, &req); err != nil {
-		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "login: unmarshal body")
+		writeError(h.log, w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "login: unmarshal body")
 		return
 	}
 
 	if err := h.svc.LoginUser(r.Context(), uid, req.Email, req.Name, req.ImageURL); err != nil {
-		writeError(w, err, "login user failed")
+		writeError(h.log, w, err, "login user failed")
 		return
 	}
 
@@ -81,15 +83,15 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) GetUserFromEmail(w http.ResponseWriter, r *http.Request) {
 	email := r.URL.Query().Get("email")
 	if email == "" {
-		writeError(w, errs.NewBadRequestError("email is required", false, nil, nil, nil), "get user: missing email")
+		writeError(h.log, w, errs.NewBadRequestError("email is required", false, nil, nil, nil), "get user: missing email")
 		return
 	}
 
 	user, err := h.svc.GetUserByEmail(r.Context(), email)
 	if err != nil {
-		writeError(w, err, "get user by email failed")
+		writeError(h.log, w, err, "get user by email failed")
 		return
 	}
 
-	writeJSON(w, http.StatusOK, user)
+	writeJSON(h.log, w, http.StatusOK, user)
 }

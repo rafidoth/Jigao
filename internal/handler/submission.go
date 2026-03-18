@@ -7,16 +7,18 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/service"
+	"github.com/rs/zerolog"
 )
 
 // SubmissionHandler handles submission-related HTTP requests.
 type SubmissionHandler struct {
 	svc *service.ExamService
+	log zerolog.Logger
 }
 
 // NewSubmissionHandler creates a new SubmissionHandler.
-func NewSubmissionHandler(svc *service.ExamService) *SubmissionHandler {
-	return &SubmissionHandler{svc: svc}
+func NewSubmissionHandler(svc *service.ExamService, log zerolog.Logger) *SubmissionHandler {
+	return &SubmissionHandler{svc: svc, log: log}
 }
 
 // GetSubmissionResult handles GET /submissions/{exam_id} — returns evaluation result.
@@ -34,19 +36,19 @@ func NewSubmissionHandler(svc *service.ExamService) *SubmissionHandler {
 func (h *SubmissionHandler) GetSubmissionResult(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
-		writeError(w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "get submission: missing exam_id")
+		writeError(h.log, w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "get submission: missing exam_id")
 		return
 	}
 
 	uid, err := extractUserID(r)
 	if err != nil {
-		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "get submission: missing user-id")
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "get submission: missing user-id")
 		return
 	}
 
 	result, err := h.svc.GetSubmissionResult(r.Context(), examID, uid)
 	if err != nil {
-		writeError(w, err, "get submission result failed")
+		writeError(h.log, w, err, "get submission result failed")
 		return
 	}
 
@@ -61,7 +63,7 @@ func (h *SubmissionHandler) GetSubmissionResult(w http.ResponseWriter, r *http.R
 		Data    respData `json:"data"`
 	}
 
-	writeJSON(w, http.StatusOK, resp{
+	writeJSON(h.log, w, http.StatusOK, resp{
 		Success: true,
 		Message: "Evaluation result fetched successfully",
 		Data: respData{

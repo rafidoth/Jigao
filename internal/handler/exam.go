@@ -10,16 +10,18 @@ import (
 	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/service"
+	"github.com/rs/zerolog"
 )
 
 // ExamHandler handles exam-related HTTP requests.
 type ExamHandler struct {
 	svc *service.ExamService
+	log zerolog.Logger
 }
 
 // NewExamHandler creates a new ExamHandler.
-func NewExamHandler(svc *service.ExamService) *ExamHandler {
-	return &ExamHandler{svc: svc}
+func NewExamHandler(svc *service.ExamService, log zerolog.Logger) *ExamHandler {
+	return &ExamHandler{svc: svc, log: log}
 }
 
 // @Summary      Create an exam
@@ -35,7 +37,7 @@ func NewExamHandler(svc *service.ExamService) *ExamHandler {
 func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "create exam: missing user-id")
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "create exam: missing user-id")
 		return
 	}
 
@@ -49,12 +51,12 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		writeError(w, errs.NewBadRequestError("Failed to read request body", false, nil, nil, nil), "create exam: read body")
+		writeError(h.log, w, errs.NewBadRequestError("Failed to read request body", false, nil, nil, nil), "create exam: read body")
 		return
 	}
 	var req reqBody
 	if err := json.Unmarshal(body, &req); err != nil {
-		writeError(w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create exam: unmarshal body")
+		writeError(h.log, w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create exam: unmarshal body")
 		return
 	}
 
@@ -62,7 +64,7 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 		r.Context(), uid, req.SetID, req.Title, req.Description,
 		req.StartTime, req.DurationInMinutes,
 	); err != nil {
-		writeError(w, err, "create exam failed")
+		writeError(h.log, w, err, "create exam failed")
 		return
 	}
 
@@ -82,18 +84,18 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 func (h *ExamHandler) GetExams(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		writeError(w, errs.NewUnauthorizedError("Unauthorized", false), "get exams: missing user-id")
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "get exams: missing user-id")
 		return
 	}
 
 	setID := r.URL.Query().Get("set_id")
 	examsList, err := h.svc.GetExams(r.Context(), uid, setID)
 	if err != nil {
-		writeError(w, err, "get exams failed")
+		writeError(h.log, w, err, "get exams failed")
 		return
 	}
 
-	writeJSON(w, http.StatusOK, examsList)
+	writeJSON(h.log, w, http.StatusOK, examsList)
 }
 
 // @Summary      Get an exam by ID
@@ -109,18 +111,18 @@ func (h *ExamHandler) GetExams(w http.ResponseWriter, r *http.Request) {
 func (h *ExamHandler) GetExamByID(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
-		writeError(w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "get exam: missing exam_id")
+		writeError(h.log, w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "get exam: missing exam_id")
 		errs.NewBadRequestError("Exam Id Required", false, nil, nil, nil)
 		return
 	}
 
 	exam, err := h.svc.GetExamByID(r.Context(), examID)
 	if err != nil {
-		writeError(w, err, "get exam by id failed")
+		writeError(h.log, w, err, "get exam by id failed")
 		return
 	}
 
-	writeJSON(w, http.StatusOK, exam)
+	writeJSON(h.log, w, http.StatusOK, exam)
 }
 
 // RemoveExam handles DELETE /exams/{exam_id} — deletes an exam.
@@ -137,12 +139,12 @@ func (h *ExamHandler) GetExamByID(w http.ResponseWriter, r *http.Request) {
 func (h *ExamHandler) RemoveExam(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
-		writeError(w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "remove exam: missing exam_id")
+		writeError(h.log, w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "remove exam: missing exam_id")
 		return
 	}
 
 	if err := h.svc.RemoveExam(r.Context(), examID); err != nil {
-		writeError(w, err, "remove exam failed")
+		writeError(h.log, w, err, "remove exam failed")
 		return
 	}
 
@@ -164,13 +166,13 @@ func (h *ExamHandler) RemoveExam(w http.ResponseWriter, r *http.Request) {
 func (h *ExamHandler) GetQuestionsOfExam(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
-		writeError(w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "get exam questions: missing exam_id")
+		writeError(h.log, w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "get exam questions: missing exam_id")
 		return
 	}
 
 	questions, err := h.svc.GetQuestionsOfExam(r.Context(), examID)
 	if err != nil {
-		writeError(w, err, "get questions of exam failed")
+		writeError(h.log, w, err, "get questions of exam failed")
 		return
 	}
 
@@ -179,5 +181,5 @@ func (h *ExamHandler) GetQuestionsOfExam(w http.ResponseWriter, r *http.Request)
 		result[i] = model.NewQuestionResponse(qwa)
 	}
 
-	writeJSON(w, http.StatusOK, result)
+	writeJSON(h.log, w, http.StatusOK, result)
 }
