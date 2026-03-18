@@ -22,8 +22,6 @@ func NewExamHandler(svc *service.ExamService) *ExamHandler {
 	return &ExamHandler{svc: svc}
 }
 
-// CreateExam handles POST /exams/ — validates and creates an exam.
-//
 // @Summary      Create an exam
 // @Description  Validates input and creates a new exam from a question set
 // @Tags         Exams
@@ -71,8 +69,6 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-// GetExams handles GET /exams/?set_id= — returns exams filtered by set_id or user.
-//
 // @Summary      List exams
 // @Description  Returns exams filtered by set_id (if provided) or all exams for the authenticated user
 // @Tags         Exams
@@ -100,8 +96,6 @@ func (h *ExamHandler) GetExams(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, examsList)
 }
 
-// GetExamByID handles GET /exams/{exam_id} — returns a single exam.
-//
 // @Summary      Get an exam by ID
 // @Description  Returns a single exam by its ID
 // @Tags         Exams
@@ -116,6 +110,7 @@ func (h *ExamHandler) GetExamByID(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
 		writeError(w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "get exam: missing exam_id")
+		errs.NewBadRequestError("Exam Id Required", false, nil, nil, nil)
 		return
 	}
 
