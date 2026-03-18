@@ -64,7 +64,7 @@ func NewLoggerWithService(cfg *config.ObservabilityConfig, loggerService *Logger
 		Level(logLevel).
 		With().
 		Timestamp().
-		Str("service", cfg.ServiceName).
+		Str("app", cfg.ServiceName).
 		Str("environment", cfg.Environment).
 		Logger()
 
