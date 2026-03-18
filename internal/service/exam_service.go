@@ -11,6 +11,7 @@ import (
 	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/repository"
 	"github.com/rafidoth/onlyexams/internal/users"
+	"github.com/rs/zerolog"
 )
 
 type ExamService struct {
@@ -18,6 +19,7 @@ type ExamService struct {
 	setRepo      *repository.SetRepository
 	questionRepo *repository.QuestionRepository
 	userRepo     *repository.UserRepository
+	log          zerolog.Logger
 }
 
 func NewExamService(
@@ -25,12 +27,14 @@ func NewExamService(
 	setRepo *repository.SetRepository,
 	questionRepo *repository.QuestionRepository,
 	userRepo *repository.UserRepository,
+	log zerolog.Logger,
 ) *ExamService {
 	return &ExamService{
 		examRepo:     examRepo,
 		setRepo:      setRepo,
 		questionRepo: questionRepo,
 		userRepo:     userRepo,
+		log:          log,
 	}
 }
 
