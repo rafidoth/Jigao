@@ -60,7 +60,7 @@ func (s *ExamService) CreateExam(
 	userID, setID, title, description string,
 	startTime time.Time,
 	durationMinutes int,
-	startMode, sessionStatus, inviteCode string,
+	startMode string,
 	proctoringEnabled, cameraRequired bool,
 ) error {
 	if err := ValidateCreateExam(setID, title, startTime, durationMinutes); err != nil {
@@ -75,13 +75,48 @@ func (s *ExamService) CreateExam(
 		startTime,
 		durationMinutes,
 		startMode,
-		sessionStatus,
-		inviteCode,
 		proctoringEnabled,
 		cameraRequired,
 	); err != nil {
 		return fmt.Errorf("create exam: %w", err)
 	}
+	return nil
+}
+
+func (s *ExamService) UpdateExam(ctx context.Context, update *model.ExamUpdate) error {
+	if update.ID == "" {
+		return errs.NewBadRequestError("exam_id is required", false, nil, nil, nil)
+	}
+	if update.UserID == "" {
+		return errs.NewUnauthorizedError("Unauthorized", false)
+	}
+
+	if update.Title != nil && *update.Title == "" {
+		return errs.NewBadRequestError("title cannot be empty", false, nil, nil, nil)
+	}
+	if update.DurationInMinutes != nil && *update.DurationInMinutes <= 0 {
+		return errs.NewBadRequestError("duration_in_minutes must be greater than 0", false, nil, nil, nil)
+	}
+	if update.StartTime != nil && update.StartTime.Before(time.Now()) {
+		return errs.NewBadRequestError("start_time must be in the future", false, nil, nil, nil)
+	}
+	if update.StartMode != nil && *update.StartMode != "lobby" && *update.StartMode != "timed" {
+		return errs.NewBadRequestError("start_mode must be one of: lobby, timed", false, nil, nil, nil)
+	}
+	if update.SessionStatus != nil && *update.SessionStatus != "waiting" && *update.SessionStatus != "live" && *update.SessionStatus != "finished" {
+		return errs.NewBadRequestError("session_status must be one of: waiting, live, finished", false, nil, nil, nil)
+	}
+
+	if err := s.examRepo.UpdateExam(update); err != nil {
+		if err.Error() == "exam not found" {
+			return errs.NewNotFoundError("Exam not found", false, nil)
+		}
+		if err.Error() == "no fields to update" {
+			return errs.NewBadRequestError("at least one field is required to update", false, nil, nil, nil)
+		}
+		return fmt.Errorf("update exam: %w", err)
+	}
+
 	return nil
 }
 
@@ -98,8 +133,8 @@ func (s *ExamService) GetExamByID(ctx context.Context, examID string) (model.Exa
 }
 
 // RemoveExam deletes an exam by ID.
-func (s *ExamService) RemoveExam(ctx context.Context, examID string) error {
-	if err := s.examRepo.RemoveExam(examID); err != nil {
+func (s *ExamService) RemoveExam(ctx context.Context, userID, examID string) error {
+	if err := s.examRepo.RemoveExam(userID, examID); err != nil {
 		// The repository returns "exam not found" when no rows were affected.
 		if err.Error() == "exam not found" {
 			return errs.NewNotFoundError("Exam not found", false, nil)
