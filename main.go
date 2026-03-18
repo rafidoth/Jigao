@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log/slog"
 	"os"
 
 	"github.com/rafidoth/onlyexams/internal/config"
@@ -16,7 +15,6 @@ import (
 func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		slog.Error("problem loading env vars", "error", err)
 		os.Exit(1)
 	}
 
