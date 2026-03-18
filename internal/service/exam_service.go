@@ -55,29 +55,12 @@ func ValidateCreateExam(setID, title string, startTime time.Time, durationMinute
 }
 
 // CreateExam validates and creates an exam on a set.
-func (s *ExamService) CreateExam(
-	ctx context.Context,
-	userID, setID, title, description string,
-	startTime time.Time,
-	durationMinutes int,
-	startMode string,
-	proctoringEnabled, cameraRequired bool,
-) error {
-	if err := ValidateCreateExam(setID, title, startTime, durationMinutes); err != nil {
-		return err // already an *errs.HTTPError
+func (s *ExamService) CreateExam(ctx context.Context, create *model.ExamCreate) error {
+	if err := ValidateCreateExam(create.SetID, create.Title, create.StartTime, create.DurationInMinutes); err != nil {
+		return err
 	}
 
-	if err := s.examRepo.CreateExamOnASet(
-		userID,
-		setID,
-		title,
-		description,
-		startTime,
-		durationMinutes,
-		startMode,
-		proctoringEnabled,
-		cameraRequired,
-	); err != nil {
+	if err := s.examRepo.CreateExamOnASet(create); err != nil {
 		return fmt.Errorf("create exam: %w", err)
 	}
 	return nil
