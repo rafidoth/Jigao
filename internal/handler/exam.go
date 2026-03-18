@@ -80,13 +80,42 @@ func (h *ExamHandler) GetExams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setID := r.URL.Query().Get("set_id")
-	examsList, err := h.svc.GetExams(r.Context(), uid, setID)
-	if err != nil {
-		writeError(h.log, w, err, "get exams failed")
-		return
+	var examsList []model.Exam
+	if setID != "" {
+		examsList, err = h.svc.GetExamsBySetID(r.Context(), setID)
+		if err != nil {
+			writeError(h.log, w, err, "get exams failed")
+			return
+		}
+	} else {
+		examsList, err = h.svc.GetExamsByUserID(r.Context(), uid)
+		if err != nil {
+			writeError(h.log, w, err, "get exams failed")
+			return
+		}
+
+		examsListSingleUser := []model.ExamDetailsForSingleUser{}
+		for _, xm := range examsList {
+			setTitle := ""
+			if xm.Set != nil {
+				setTitle = xm.Set.Title
+			}
+			examsListSingleUser = append(examsListSingleUser, model.ExamDetailsForSingleUser{
+				Id:                xm.Id,
+				SetId:             xm.SetId,
+				Visibility:        xm.Visibility,
+				Title:             xm.Title,
+				SetTitle:          setTitle,
+				StartTime:         xm.StartTime,
+				Description:       xm.Description,
+				DurationInMinutes: xm.DurationInMinutes,
+				SessionStatus:     xm.SessionStatus,
+				EndTime:           xm.EndTime,
+			})
+		}
+		writeJSON(h.log, w, http.StatusOK, examsListSingleUser)
 	}
 
-	writeJSON(h.log, w, http.StatusOK, examsList)
 }
 
 // @Summary      Get an exam by ID
