@@ -50,7 +50,11 @@ func (r *ExamRepository) IsExamExists(set_id string) error {
 }
 
 func (r *ExamRepository) CreateExamOnASet(
-	user_id, set_id, title, description string, start_time time.Time, duration_in_minutes int,
+	user_id, set_id, title, description string,
+	start_time time.Time,
+	duration_in_minutes int,
+	start_mode, session_status, invite_code string,
+	proctoring_enabled, camera_required bool,
 ) error {
 
 	tx, err := r.s.DB.Pool.Begin(context.Background())
@@ -62,9 +66,31 @@ func (r *ExamRepository) CreateExamOnASet(
 
 	_, err = tx.Exec(
 		context.Background(),
-		`INSERT INTO exams (user_id, set_id, title, description, start_time, duration)
-	 VALUES ($1, $2, $3, $4, $5, make_interval(mins := $6))`,
-		user_id, set_id, title, description, start_time, duration_in_minutes,
+		`INSERT INTO exams (
+			user_id,
+			set_id,
+			title,
+			description,
+			start_time,
+			duration,
+			start_mode,
+			session_status,
+			invite_code,
+			proctoring_enabled,
+			camera_required
+		)
+		VALUES ($1, $2, $3, $4, $5, make_interval(mins := $6), $7, $8, $9, $10, $11)`,
+		user_id,
+		set_id,
+		title,
+		description,
+		start_time,
+		duration_in_minutes,
+		start_mode,
+		session_status,
+		invite_code,
+		proctoring_enabled,
+		camera_required,
 	)
 	if err != nil {
 		return err

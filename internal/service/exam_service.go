@@ -60,12 +60,26 @@ func (s *ExamService) CreateExam(
 	userID, setID, title, description string,
 	startTime time.Time,
 	durationMinutes int,
+	startMode, sessionStatus, inviteCode string,
+	proctoringEnabled, cameraRequired bool,
 ) error {
 	if err := ValidateCreateExam(setID, title, startTime, durationMinutes); err != nil {
 		return err // already an *errs.HTTPError
 	}
 
-	if err := s.examRepo.CreateExamOnASet(userID, setID, title, description, startTime, durationMinutes); err != nil {
+	if err := s.examRepo.CreateExamOnASet(
+		userID,
+		setID,
+		title,
+		description,
+		startTime,
+		durationMinutes,
+		startMode,
+		sessionStatus,
+		inviteCode,
+		proctoringEnabled,
+		cameraRequired,
+	); err != nil {
 		return fmt.Errorf("create exam: %w", err)
 	}
 	return nil

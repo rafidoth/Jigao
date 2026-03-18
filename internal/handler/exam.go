@@ -28,7 +28,7 @@ func NewExamHandler(svc *service.ExamService, log zerolog.Logger) *ExamHandler {
 // @Description  Validates input and creates a new exam from a question set
 // @Tags         Exams
 // @Accept       json
-// @Param        body  body  object{set_id=string,title=string,description=string,start_time=string,duration_in_minutes=int}  true  "Exam creation payload (start_time in RFC3339 format)"
+// @Param        body  body  object{set_id=string,title=string,description=string,start_time=string,duration_in_minutes=int,start_mode=string,session_status=string,invite_code=string,proctoring_enabled=bool,camera_required=bool}  true  "Exam creation payload (start_time in RFC3339 format)"
 // @Success      201
 // @Failure      400  {object}  errs.HTTPError
 // @Failure      401  {object}  errs.HTTPError
@@ -47,6 +47,11 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 		Description       string    `json:"description"`
 		StartTime         time.Time `json:"start_time"`
 		DurationInMinutes int       `json:"duration_in_minutes"`
+		StartMode         string    `json:"start_mode"`
+		SessionStatus     string    `json:"session_status"`
+		InviteCode        string    `json:"invite_code"`
+		ProctoringEnabled bool      `json:"proctoring_enabled"`
+		CameraRequired    bool      `json:"camera_required"`
 	}
 
 	body, err := io.ReadAll(r.Body)
@@ -63,6 +68,8 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 	if err := h.svc.CreateExam(
 		r.Context(), uid, req.SetID, req.Title, req.Description,
 		req.StartTime, req.DurationInMinutes,
+		req.StartMode, req.SessionStatus, req.InviteCode,
+		req.ProctoringEnabled, req.CameraRequired,
 	); err != nil {
 		writeError(h.log, w, err, "create exam failed")
 		return
