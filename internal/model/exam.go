@@ -28,6 +28,32 @@ type Exam struct {
 	Set               *Set       `db:"-" json:"set"`
 }
 
+type ExamCreate struct {
+	UserID            string    `json:"user_id"`
+	SetID             string    `json:"set_id"`
+	Title             string    `json:"title"`
+	Description       string    `json:"description"`
+	StartTime         time.Time `json:"start_time"`
+	DurationInMinutes int       `json:"duration_in_minutes"`
+	StartMode         string    `json:"start_mode"`
+	ProctoringEnabled bool      `json:"proctoring_enabled"`
+	CameraRequired    bool      `json:"camera_required"`
+}
+
+type ExamUpdate struct {
+	ID                string     `json:"id"`
+	UserID            string     `json:"user_id"`
+	Title             *string    `json:"title,omitempty"`
+	Description       *string    `json:"description,omitempty"`
+	StartTime         *time.Time `json:"start_time,omitempty"`
+	DurationInMinutes *int       `json:"duration_in_minutes,omitempty"`
+	StartMode         *string    `json:"start_mode,omitempty"`
+	SessionStatus     *string    `json:"session_status,omitempty"`
+	ProctoringEnabled *bool      `json:"proctoring_enabled,omitempty"`
+	CameraRequired    *bool      `json:"camera_required,omitempty"`
+	MaxViolations     *int       `json:"max_violations,omitempty"`
+}
+
 type EvaluatedAnswerType struct {
 	UserAnswer    string `json:"answer"`
 	IsCorrect     bool   `json:"is_correct"`
