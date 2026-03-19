@@ -24,6 +24,7 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar.tsx";
 import Toggler from "@/components/Toggler.tsx";
+import type { SetLike } from "@/components/add_people_access_popover/types";
 
 interface User {
   id: string | number;
@@ -52,7 +53,10 @@ function ExistingSetHeader({
   gridLayout,
   toggleGridLayout,
 }: {
-  set: any;
+  set: SetLike & {
+    title: string;
+    visibility: "public" | "private" | "restricted";
+  };
   itemsLength: number;
   showAnswer: boolean;
   toggleShowAnswer: () => void;
@@ -83,7 +87,7 @@ function ExistingSetHeader({
                 <h1 className="text-base sm:text-lg md:text-xl font-semibold tracking-tight leading-tight break-words text-foreground ">
                   {set.title}
                 </h1>
-                <CreateNewQuestionPopover set_id={set.id}>
+                <CreateNewQuestionPopover set_id={String(set.id)}>
                   <Button
                     variant="secondary"
                     size="icon"
@@ -155,7 +159,7 @@ function ExistingSetHeader({
             </div>
           </div>
           <div className="flex flex-col items-center gap-2 flex-wrap">
-            <ExamsDialog set_id={set.id}>
+            <ExamsDialog set_id={String(set.id)}>
               <Button variant="default">Manage Exams</Button>
             </ExamsDialog>
             <Badge variant="outline" className="hidden sm:inline-flex">

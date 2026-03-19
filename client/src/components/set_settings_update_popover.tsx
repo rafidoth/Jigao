@@ -14,16 +14,24 @@ import {
   Eye as EyeOpenIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { SetLike } from "./add_people_access_popover/types";
+
+type Visibility = "public" | "private" | "restricted";
+
+interface SetSettingsSet extends SetLike {
+  title: string;
+  visibility: Visibility;
+}
 
 interface SetSettingsUpdatePopoverProps {
-  set: any; // TODO: type with Set interface
+  set: SetSettingsSet;
   children: React.ReactNode;
 }
 
 interface UpdateSetSettingsVariables {
-  set_id: string;
+  set_id: string | number;
   title: string;
-  visibility: string;
+  visibility: Visibility;
 }
 
 async function updateSetSettings(variables: UpdateSetSettingsVariables) {
@@ -39,7 +47,7 @@ function SetSettingsUpdatePopover({
 }: SetSettingsUpdatePopoverProps) {
   const [title, setTitle] = useState<string>(set.title);
   const visibilityList = ["public", "private", "restricted"] as const;
-  const [currentVisibility, setCurrentVisibility] = useState<string>(
+  const [currentVisibility, setCurrentVisibility] = useState<Visibility>(
     set.visibility,
   );
   const [error, setError] = useState<string>("");
@@ -72,7 +80,7 @@ function SetSettingsUpdatePopover({
           <VisibilityList
             currentVisibility={currentVisibility}
             setCurrentVisibility={setCurrentVisibility}
-            visibilityList={visibilityList as unknown as string[]}
+            visibilityList={visibilityList}
           />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -100,9 +108,9 @@ function VisibilityList({
   setCurrentVisibility,
   visibilityList,
 }: {
-  currentVisibility: string;
-  setCurrentVisibility: (value: string) => void;
-  visibilityList: string[];
+  currentVisibility: Visibility;
+  setCurrentVisibility: (value: Visibility) => void;
+  visibilityList: readonly Visibility[];
 }) {
   return (
     <div className="w-full">
@@ -128,7 +136,7 @@ function VisibilityList({
   );
 }
 
-function getVisibilityIcon(visibility: string) {
+function getVisibilityIcon(visibility: Visibility) {
   switch (visibility) {
     case "public":
       return <GlobeIcon className="h-6 w-6" />;

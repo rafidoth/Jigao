@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/clerk-react";
 
-function Preview({}) {
+function Preview() {
   const user = useUser();
   return (
     <div>

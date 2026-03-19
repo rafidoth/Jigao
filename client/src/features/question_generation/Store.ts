@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { questionTypes } from "@/features/question_generation/QuestionTypeSelect";
+import { questionTypes } from "@/features/question_generation/constants";
 import type { TSelectData } from "@/components/ui/select_21stdev";
 import type { TTag } from "@/components/ui/multiple-select";
 

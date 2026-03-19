@@ -12,6 +12,8 @@ function Exams() {
     setSearch(q);
   }, []);
 
+  const errorMessage = error instanceof Error ? error.message : undefined;
+
   return (
     <div className="h-full w-full flex flex-col px-3 lg:px-9 py-3 font-bold">
       <div className="mb-4">
@@ -34,7 +36,7 @@ function Exams() {
               )}
             isLoading={isLoading}
             isError={isError}
-            errorMessage={(error as any)?.message}
+            errorMessage={errorMessage}
           />
         </ScrollArea>
       </div>
