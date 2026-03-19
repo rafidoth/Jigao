@@ -37,7 +37,7 @@ func (r *ExamRepository) IsExamExists(set_id string) error {
 	return nil
 }
 
-func (r *ExamRepository) GetExamsBySetId(set_id string) ([]model.Exam, error) {
+func (r *ExamRepository) GetExamsListBySetId(set_id string) ([]model.Exam, error) {
 	var results []model.Exam
 
 	tx, err := r.s.DB.Pool.Begin(context.Background())

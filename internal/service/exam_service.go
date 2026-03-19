@@ -129,7 +129,7 @@ func (s *ExamService) RemoveExam(ctx context.Context, userID, examID string) err
 
 // GetExamsBySetID returns exams for a set, enriched with the CreatedBy user.
 func (s *ExamService) GetExamsBySetID(ctx context.Context, setID string) ([]model.Exam, error) {
-	examsList, err := s.examRepo.GetExamsBySetId(setID)
+	examsList, err := s.examRepo.GetExamsListBySetId(setID)
 	if err != nil {
 		return nil, fmt.Errorf("get exams by set: %w", err)
 	}
