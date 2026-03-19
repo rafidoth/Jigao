@@ -10,7 +10,7 @@ const ExistingSetAiChat = () => {
   const [bubbleReady, setBubbleReady] = useState(false); // for initial bubble fade
 
   const currentUserDetails = useAuthStore((state) => state.currentUserDetails);
-  const chatScreenRef = useRef(null);
+  const chatScreenRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (closed) {

@@ -34,10 +34,20 @@ export function ComboBox({
   className,
 }: ComboBoxProps) {
   const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState("");
+
+  const filteredItems = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((item) => item.label.toLowerCase().includes(q));
+  }, [items, query]);
+
   const handleSelect = (v: ComboBoxItem) => {
     if (onChange) onChange(v);
     setOpen(false);
+    setQuery("");
   };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -57,9 +67,19 @@ export function ComboBox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start">
+        <div className="p-2 border-b">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={searchPlaceholder}
+          />
+        </div>
         <ScrollArea className="max-h-64">
           <ul className="py-1">
-            {items.map((item) => (
+            {filteredItems.length === 0 && (
+              <li className="px-3 py-2 text-sm text-muted-foreground">{emptyMessage}</li>
+            )}
+            {filteredItems.map((item) => (
               <li key={item.value}>
                 <button
                   type="button"

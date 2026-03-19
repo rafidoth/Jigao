@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
+import type { Variants } from "framer-motion";
 import { ChevronDownIcon, X } from "lucide-react";
 
 export type TSelectData = {
@@ -33,7 +34,7 @@ const Select = ({ title, data, defaultValue, onChange }: SelectProps) => {
     } else {
       setSelected(data?.[0]);
     }
-  }, [defaultValue]);
+  }, [defaultValue, data]);
 
   const onSelect = (value: string) => {
     const item = data?.find((i) => i.value === value);
@@ -48,7 +49,7 @@ const Select = ({ title, data, defaultValue, onChange }: SelectProps) => {
         type: "spring",
         stiffness: 300,
         damping: 25,
-        ease: "0.65, 0, 0.35, 1",
+        ease: [0.65, 0, 0.35, 1],
       }}
     >
       <motion.div className="flex items-center justify-center font-display">
@@ -78,9 +79,10 @@ const Select = ({ title, data, defaultValue, onChange }: SelectProps) => {
             >
               <Head title={title} setOpen={setOpen} />
               <div className="w-full overflow-y-auto">
-                {data?.map((item) => (
+                {data?.map((item, index) => (
                   <SelectItem
-                    order={item?.value}
+                    order={index}
+                    value={item.value}
                     noDescription={false}
                     key={item.id}
                     item={item}
@@ -138,36 +140,38 @@ const Head = ({
 type SelectItemProps = {
   item?: TSelectData;
   noDescription?: boolean;
-  order?: string;
-  onChange?: (index: string) => void;
+  order?: number;
+  value?: string;
+  onChange?: (value: string) => void;
 };
 
-const animation = {
+const animation: Variants = {
   hidden: {
     opacity: 0,
     y: 10,
   },
-  visible: {
+  visible: (custom: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: (custom: number) => ({
+    transition: {
       delay: custom * 0.1,
       duration: 0.5,
-    }),
-  },
-  exit: {
+    },
+  }),
+  exit: (custom: number = 0) => ({
     opacity: 0,
     y: 10,
-    transition: (custom: number) => ({
+    transition: {
       delay: custom * 0.1,
-    }),
-  },
+    },
+  }),
 };
 
 const SelectItem = ({
   item,
   noDescription = true,
   order,
+  value,
   onChange,
 }: SelectItemProps) => {
   return (
@@ -180,8 +184,8 @@ const SelectItem = ({
       animate="visible"
       exit="exit"
       key={"product-" + item?.id + "-order-" + order}
-      custom={order}
-      onClick={() => onChange?.(order as string)}
+      custom={order ?? 0}
+      onClick={() => value && onChange?.(value)}
     >
       <div className="flex items-center gap-3">
         <motion.div

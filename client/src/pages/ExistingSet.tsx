@@ -12,7 +12,6 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import useAuthStore from "@/store/authStore.ts";
 
 function QuestionsList({
   items,
@@ -178,15 +177,16 @@ function ExistingSet() {
   const toggleGridLayout = useExistingSetStore(
     (state) => state.toggleGridLayout,
   );
-  const currentUserDetails = useAuthStore((state) => state.currentUserDetails);
-
   if (isSetLoading || isQuestionsLoading) {
     return <LoadingExistingSet />;
   }
 
   if (isSetError || isQuestionsError) {
+    const setMessage = setError instanceof Error ? setError.message : "";
+    const questionMessage =
+      questionsError instanceof Error ? questionsError.message : "";
     const message =
-      (setError as any)?.message || (questionsError as any)?.message || "";
+      setMessage || questionMessage || "";
     return <ErrorExistingSet message={message} />;
   }
 
