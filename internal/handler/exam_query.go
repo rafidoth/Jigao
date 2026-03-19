@@ -91,8 +91,6 @@ func (h *ExamHandler) GetExamByID(w http.ResponseWriter, r *http.Request) {
 	writeJSON(h.log, w, http.StatusOK, exam)
 }
 
-// GetQuestionsOfExam handles GET /exams/q/{exam_id} — returns all questions for an exam.
-//
 // @Summary      Get questions of an exam
 // @Description  Returns all questions with choices and answers for the specified exam
 // @Tags         Exams
