@@ -3,55 +3,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, X } from "lucide-react";
-import axios from "axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import { Input } from "./ui/input";
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "./ui/card";
-
-interface User {
-  id: string | number;
-  name: string;
-  email: string;
-  image_url?: string | null;
-}
-
-interface SetLike {
-  id: string | number;
-}
-
-const getUserFromEmail = async (email: string): Promise<User> => {
-  const res = await axios.get(
-    `/api/v1/users/user?email=${encodeURIComponent(email)}`,
-  );
-  return res.data;
-};
-
-const addUserToAccessList = async ({
-  setId,
-  userId,
-}: {
-  setId: string | number;
-  userId: string | number;
-}) => {
-  await axios.post(`/api/v1/sets/access`, {
-    user_id: userId,
-    set_id: setId,
-  });
-};
-
-const getInitials = (name?: string | null) => {
-  if (!name) return "";
-  const parts = name.trim().split(/\s+/);
-  return parts
-    .slice(0, 2)
-    .map((p) => p[0] ?? "")
-    .join("")
-    .toUpperCase();
-};
+import { addUserToAccessList } from "./add_people_access_popover/api";
+import type { SetLike, User } from "./add_people_access_popover/types";
+import { useEmailUserLookup } from "./add_people_access_popover/use-email-user-lookup";
+import {
+  AccessListUserCard,
+  FoundUserCard,
+} from "./add_people_access_popover/user-cards";
 
 function AddPeopleAccessPopover({
   set,
@@ -70,53 +31,27 @@ function AddPeopleAccessPopover({
     },
   });
 
-  const [emailInput, setEmailInput] = useState("");
-  const [userChecking, setUserChecking] = useState(false);
-  const [foundUser, setFoundUser] = useState<User | "not_found" | null>(null);
-
-  const isValidEmailFormat = (email: string) =>
-    /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email);
-
-  // Preserve original semantics: invalid if already present in access list
-  const isValidEmail = (email: string) => {
-    for (const user of users) {
-      if (user.email === email) return false;
-    }
-    return isValidEmailFormat(email);
-  };
+  const {
+    emailInput,
+    setEmailInput,
+    userChecking,
+    foundUser,
+    isValidEmail,
+    reset,
+  } = useEmailUserLookup(users);
 
   const handleAddAccess = async () => {
     if (!isValidEmail(emailInput)) return;
     if (!foundUser || foundUser === "not_found") return;
+
     await mutateAsync({ setId: set.id, userId: foundUser.id });
-    setEmailInput("");
-    setFoundUser(null);
+    reset();
   };
 
   const handleRemoveAccess = async (userId: string | number) => {
     await mutateAsync({ setId: set.id, userId });
     queryClient.invalidateQueries({ queryKey: ["usersWithAccess", set.id] });
   };
-
-  useEffect(() => {
-    const value = emailInput.trim();
-    if (!value) return;
-
-    const handle = setTimeout(async () => {
-      if (isValidEmail(value)) {
-        setUserChecking(true);
-        try {
-          const data = await getUserFromEmail(value);
-          setFoundUser(data);
-        } catch (e) {
-          console.error(e);
-          setFoundUser("not_found");
-        }
-        setUserChecking(false);
-      }
-    }, 600);
-    return () => clearTimeout(handle);
-  }, [emailInput]);
 
   return (
     <Popover>
@@ -139,50 +74,24 @@ function AddPeopleAccessPopover({
               onChange={(e) => setEmailInput(e.target.value)}
             />
           </div>
-          {userChecking && (
-            <div className="text-muted-foreground text-sm">Checking...</div>
-          )}
+
+          {userChecking && <div className="text-muted-foreground text-sm">Checking...</div>}
+
           {isPending && (
             <div className="text-muted-foreground text-sm">
-              Adding {typeof foundUser === "object" ? foundUser?.name : "User"}{" "}
-              to access list...
+              Adding {typeof foundUser === "object" ? foundUser?.name : "User"} to
+              access list...
             </div>
           )}
-          {foundUser && foundUser !== "not_found" && (
-            <Card className="rounded-lg border border-border ">
-              <CardContent>
-                <div className="flex gap-x-3 items-center">
-                  <Avatar className="w-12 h-12 ring-1 ring-border">
-                    <AvatarImage src={foundUser?.image_url || undefined} />
-                    <AvatarFallback>
-                      {getInitials(foundUser?.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <h2 className="text-sm font-semibold leading-none">
-                      {foundUser?.name}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {foundUser?.email}
-                    </p>
-                  </div>
 
-                  <Button
-                    variant={"outline"}
-                    onClick={handleAddAccess}
-                    className="ml-auto"
-                  >
-                    Allow
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          {foundUser && foundUser !== "not_found" && (
+            <FoundUserCard user={foundUser} onAllow={handleAddAccess} />
           )}
-          <div>
-            {foundUser === "not_found" && (
-              <span className="text-red-700 text-sm">User not found</span>
-            )}
-          </div>
+
+          {foundUser === "not_found" && (
+            <span className="text-red-700 text-sm">User not found</span>
+          )}
+
           {!isLoading && (
             <div className="flex flex-col gap-y-2">
               <span className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -190,37 +99,11 @@ function AddPeopleAccessPopover({
               </span>
               <div className="flex flex-col gap-y-2">
                 {users.map((user) => (
-                  <Card
+                  <AccessListUserCard
                     key={user.id}
-                    className="group rounded-lg border border-border"
-                  >
-                    <CardContent>
-                      <div className="flex gap-x-3 items-center">
-                        <Avatar className="w-12 h-12 ring-1 ring-border">
-                          <AvatarImage src={user?.image_url || undefined} />
-                          <AvatarFallback>
-                            {getInitials(user?.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex justify-between items-center w-full">
-                          <div className="flex flex-col">
-                            <h2 className="text-sm font-semibold leading-none">
-                              {user?.name}
-                            </h2>
-                            <p className="text-sm text-muted-foreground">
-                              {user?.email}
-                            </p>
-                          </div>
-                          <span
-                            className="rounded-full opacity-70 group-hover:opacity-100 transition-opacity hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleRemoveAccess(user.id)}
-                          >
-                            <X />
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    user={user}
+                    onRemove={handleRemoveAccess}
+                  />
                 ))}
                 {users.length === 0 && (
                   <div className="text-muted-foreground">No users found</div>
