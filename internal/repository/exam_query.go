@@ -37,50 +37,6 @@ func (r *ExamRepository) IsExamExists(set_id string) error {
 	return nil
 }
 
-func (r *ExamRepository) GetExamsListBySetId(set_id string) ([]model.Exam, error) {
-	var results []model.Exam
-
-	tx, err := r.s.DB.Pool.Begin(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback(context.Background())
-
-	rows, err := tx.Query(
-		context.Background(),
-		`SELECT
-			id,
-			user_id,
-			set_id,
-			title,
-			visibility,
-			COALESCE(description, '') AS description,
-			start_time,
-			(EXTRACT(EPOCH FROM duration)/60)::int AS duration,
-			(start_time + duration) AS end_time,
-			created_at,
-			updated_at
-		 FROM exams
-		 WHERE set_id = $1`,
-		set_id,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Exam])
-	if err != nil {
-		return nil, err
-	}
-	results = examsSlice
-
-	if err := tx.Commit(context.Background()); err != nil {
-		return nil, err
-	}
-
-	return results, nil
-}
-
 func (r *ExamRepository) GetExamSetId(exam_id string) (string, error) {
 	tx, err := r.s.DB.Pool.Begin(context.Background())
 	if err != nil {
@@ -220,6 +176,45 @@ func (r *ExamRepository) GetExamsListByUserId(user_id string) ([]model.Exam, err
 		if s, ok := setsMap[examsSlice[i].SetId]; ok {
 			examsSlice[i].Set = &s
 		}
+	}
+
+	return examsSlice, nil
+}
+
+func (r *ExamRepository) GetExamsListBySetId(set_id string) ([]model.Exam, error) {
+	rows, err := r.s.DB.Pool.Query(
+		context.Background(),
+		`SELECT
+			id,
+			user_id,
+			set_id,
+			title,
+			visibility,
+			COALESCE(description, '') AS description,
+			start_time,
+			(EXTRACT(EPOCH FROM duration)/60)::int AS duration,
+			(start_time + duration) AS end_time,
+			start_mode,
+			session_status,
+			invite_code,
+			proctoring_enabled,
+			camera_required,
+			max_violations,
+			created_at,
+			updated_at
+		 FROM exams
+		 WHERE set_id = $1
+		 ORDER BY created_at DESC
+		 LIMIT 10`,
+		set_id,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Exam])
+	if err != nil {
+		return nil, err
 	}
 
 	return examsSlice, nil
