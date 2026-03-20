@@ -5,6 +5,7 @@ import ThinSidebar from "./components/thin_sidebar";
 import FullScreenSidebar from "./components/fullscreen_sidebar";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { AuthBridge } from "./AuthTokenInit";
 
 function AppLayout() {
     const show = useSidebarStore((state) => state.show);
@@ -15,6 +16,7 @@ function AppLayout() {
 
     return (
         <div className="flex h-screen w-screen overflow-hidden">
+            <AuthBridge />
             {show ? (
                 <div className="hidden md:block w-[15%] h-full border-r">
                     <Sidebar />
