@@ -146,13 +146,7 @@ func (r *ExamRepository) UpdateExam(update *model.ExamUpdate) error {
 }
 
 func (r *ExamRepository) RemoveExam(userID, examID string) error {
-	tx, err := r.s.DB.Pool.Begin(context.Background())
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(context.Background())
-
-	ct, err := tx.Exec(
+	ct, err := r.s.DB.Pool.Exec(
 		context.Background(),
 		"DELETE FROM exams WHERE id = $1 AND user_id = $2",
 		examID,
@@ -163,9 +157,6 @@ func (r *ExamRepository) RemoveExam(userID, examID string) error {
 	}
 	if ct.RowsAffected() == 0 {
 		return fmt.Errorf("exam not found")
-	}
-	if err := tx.Commit(context.Background()); err != nil {
-		return err
 	}
 	return nil
 }
