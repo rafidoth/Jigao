@@ -110,7 +110,10 @@ export default function CreateNewQuestionPopover({
     return (
         <Popover>
             <PopoverTrigger asChild>{children}</PopoverTrigger>
-            <PopoverContent align="start" className="w-fit p-4 space-y-4 overflow-scroll">
+            <PopoverContent
+                align="start"
+                className="w-[620px] max-w-[95vw] p-4 space-y-4 overflow-y-auto"
+            >
                 <div className="space-y-4">
                     <h3 className="text-base font-semibold">Create New Question</h3>
                     <QuestionTypeSelector />
