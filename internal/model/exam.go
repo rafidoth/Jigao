@@ -28,6 +28,22 @@ type Exam struct {
 	Set               *Set       `db:"-" json:"set"`
 }
 
+type ExamDetailsForSingleSet struct {
+	Id                   string    `json:"id"`
+	SetId                string    `json:"set_id"`
+	Visibility           string    `json:"visibility"`
+	Title                string    `json:"title"`
+	SetTitle             string    `json:"set_title"`
+	StartTime            time.Time `json:"start_time"`
+	Description          string    `json:"description"`
+	DurationInMinutes    int       `json:"duration"`
+	SessionStatus        string    `json:"session_status"`
+	EndTime              time.Time `json:"end_time"`
+	StartMode            string    `db:"start_mode" json:"start_mode"`
+	OwnerName            string    `json:"owner_name"`
+	OwnerProfileImageUrl string    `json:"owner_profile_image_url"`
+}
+
 type ExamDetailsForSingleUser struct {
 	Id                string    `json:"id"`
 	SetId             string    `json:"set_id"`

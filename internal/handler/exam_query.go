@@ -33,6 +33,35 @@ func (h *ExamHandler) GetExams(w http.ResponseWriter, r *http.Request) {
 			writeError(h.log, w, err, "get exams failed")
 			return
 		}
+		examsListForSingleSet := []model.ExamDetailsForSingleSet{}
+		for _, xm := range examsList {
+			setTitle := ""
+			ownerName := ""
+			ownerProfileImageUrl := ""
+			if xm.Set != nil {
+				setTitle = xm.Set.Title
+			}
+			ownerName = xm.CreatedBy.Name
+			ownerProfileImageUrl = xm.CreatedBy.ImageURL
+			examsListForSingleSet = append(examsListForSingleSet, model.ExamDetailsForSingleSet{
+				Id:                   xm.Id,
+				SetId:                xm.SetId,
+				Visibility:           xm.Visibility,
+				Title:                xm.Title,
+				SetTitle:             setTitle,
+				StartTime:            xm.StartTime,
+				Description:          xm.Description,
+				DurationInMinutes:    xm.DurationInMinutes,
+				SessionStatus:        xm.SessionStatus,
+				EndTime:              xm.EndTime,
+				StartMode:            xm.StartMode,
+				OwnerName:            ownerName,
+				OwnerProfileImageUrl: ownerProfileImageUrl,
+			})
+		}
+		writeJSON(h.log, w, http.StatusOK, examsListForSingleSet)
+		return
+
 	} else {
 		examsList, err = h.svc.GetExamsByUserID(r.Context(), uid)
 		if err != nil {
