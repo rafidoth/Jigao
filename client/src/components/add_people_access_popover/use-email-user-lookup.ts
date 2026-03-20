@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getUserFromEmail } from "./api";
+import { getUserFromEmail } from "@/api/query";
 import type { User } from "./types";
 import { isValidEmailForAccessList } from "./utils";
 

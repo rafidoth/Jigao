@@ -6,7 +6,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Input } from "./ui/input";
-import { addUserToAccessList } from "./add_people_access_popover/api";
+import { addUserToAccessList } from "@/api/mutation";
 import type { SetLike, User } from "./add_people_access_popover/types";
 import { useEmailUserLookup } from "./add_people_access_popover/use-email-user-lookup";
 import {

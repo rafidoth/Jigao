@@ -1,4 +1,5 @@
-import { createNewSetPost, getRecentSets } from "@/api/api";
+import { createNewSetPost } from "@/api/mutation";
+import { getRecentSets } from "@/api/query";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMutation, useQuery } from "@tanstack/react-query";

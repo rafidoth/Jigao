@@ -6,23 +6,18 @@ import ExistingSet from "./pages/ExistingSet.tsx";
 import useThemeStore from "./store/themeStore";
 import ExamPage from "./pages/ExamPage.tsx";
 import axios from "axios";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useClerk, useSession, useUser } from "@clerk/clerk-react";
-import { useMutation } from "@tanstack/react-query";
-import { userOnLogin } from "./api/api.ts";
 import useAuthStore from "./store/authStore.ts";
-import LoadingScreen from "./components/LoadingScreen.tsx";
 import Exams from "./pages/Exams.tsx";
 import QuestionBank from "./pages/Exams.tsx";
 import Submission from "./pages/Submission.tsx";
-import { ai_api } from "./utils/axios_utils.ts";
 
 function App() {
     const theme = useThemeStore((state) => state.theme);
     const clerkObj = useClerk();
-    const { user, isLoaded } = useUser();
+    const { user } = useUser();
     const { session } = useSession();
-    const lastSessionIdRef = useRef<string | null>(null);
 
     const setClerkFns = useAuthStore((state) => state.setClerkFns);
     const setCurrentUserDetails = useAuthStore(
@@ -30,12 +25,12 @@ function App() {
     );
     const setSessionDetails = useAuthStore((state) => state.setSessionDetails);
 
-    const { mutateAsync, isPending } = useMutation({
-        mutationFn: userOnLogin,
-        onSuccess: (data) => {
-            console.log(data);
-        },
-    });
+    // const { mutateAsync, isPending } = useMutation({
+    //     mutationFn: userOnLogin,
+    //     onSuccess: (data) => {
+    //         console.log(data);
+    //     },
+    // });
     // axios.defaults.baseURL =
     //   "https://io2s4e7tf4.execute-api.ap-south-1.amazonaws.com";
     axios.defaults.baseURL = "http://localhost:5555";
@@ -55,30 +50,29 @@ function App() {
         }
     }, [theme]);
 
-    useEffect(() => {
-        if (isLoaded && user && session) {
-            const fn = async () => {
-                const template = "jigao-jwt-1";
-                const token = await session?.getToken({ template });
-                axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-                ai_api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-                if (session.id !== lastSessionIdRef.current) {
-                    lastSessionIdRef.current = session.id;
-                    await mutateAsync({
-                        id: user.id,
-                        name: user.fullName,
-                        email: user.primaryEmailAddress?.emailAddress || null,
-                        image_url: user.hasImage ? user.imageUrl : null,
-                    });
-                }
-            };
-            fn();
-        }
-    }, [session, isLoaded, user, mutateAsync]);
+    // useEffect(() => {
+    //     if (isLoaded && user && session) {
+    //         const fn = async () => {
+    //             // const template = "jigao-jwt-1";
+    //             // const token = await session?.getToken({ template });
+    //             // axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    //             if (session.id !== lastSessionIdRef.current) {
+    //                 lastSessionIdRef.current = session.id;
+    //                 await mutateAsync({
+    //                     id: user.id,
+    //                     name: user.fullName,
+    //                     email: user.primaryEmailAddress?.emailAddress || null,
+    //                     image_url: user.hasImage ? user.imageUrl : null,
+    //                 });
+    //             }
+    //         };
+    //         fn();
+    //     }
+    // }, [session, isLoaded, user, mutateAsync]);
 
-    if (isPending) {
-        return <LoadingScreen />;
-    }
+    // if (isPending) {
+    //     return <LoadingScreen />;
+    // }
 
     return (
         <BrowserRouter>

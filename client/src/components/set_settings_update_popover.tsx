@@ -1,5 +1,4 @@
 import { useState } from "react";
-import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Popover,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SetLike } from "./add_people_access_popover/types";
+import { updateSetSettings } from "@/api/mutation";
 
 type Visibility = "public" | "private" | "restricted";
 
@@ -26,19 +26,6 @@ interface SetSettingsSet extends SetLike {
 interface SetSettingsUpdatePopoverProps {
   set: SetSettingsSet;
   children: React.ReactNode;
-}
-
-interface UpdateSetSettingsVariables {
-  set_id: string | number;
-  title: string;
-  visibility: Visibility;
-}
-
-async function updateSetSettings(variables: UpdateSetSettingsVariables) {
-  const { set_id, title, visibility } = variables;
-  const body = { title, visibility };
-  const res = await axios.put(`/api/v1/sets/${set_id}`, body);
-  return res.data;
 }
 
 function SetSettingsUpdatePopover({

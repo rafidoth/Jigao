@@ -11,7 +11,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { createExamApiPost } from "./exams_dialog/api";
+import { createExamApiPost } from "@/api/mutation";
 import { ExamsList } from "./exams_dialog/exams-list";
 import {
   DescriptionField,

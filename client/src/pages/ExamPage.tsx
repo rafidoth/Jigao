@@ -5,7 +5,7 @@ import useWebSocket from "react-use-websocket";
 import { useQuery } from "@tanstack/react-query";
 import RunningExam from "./ExamPageComponents/RunningExamPage";
 import ExamPageWaitingUI from "./ExamPageComponents/WaitingExamPage";
-import { getQuestionsByExamId } from "@/api/api";
+import { getQuestionsByExamId } from "@/api/query";
 import {
   Card,
   CardHeader,

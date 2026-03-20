@@ -2,7 +2,7 @@ import ExistingSetHeader from "@/components/existing_set/ExistingSetHeader.tsx";
 import { useParams } from "react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { getSet, getQuestions } from "@/api/api.ts";
+import { getSet, getQuestions } from "@/api/query";
 import { Info as InfoIcon } from "lucide-react";
 import useExistingSetStore from "../store/existingSetStore.ts";
 import QuestionCard from "../components/question_cards/question_card.tsx";

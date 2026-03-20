@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AreYouSure } from "@/components/AreYouSure";
-import { deleteExamApi, fetchExamsApi } from "./api";
+import { deleteExamApi } from "@/api/mutation";
+import { fetchExamsApi } from "@/api/query";
 import {
   determineExamType,
   formatDateFriendly,

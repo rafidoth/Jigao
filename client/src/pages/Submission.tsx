@@ -1,9 +1,12 @@
 import { useParams } from "react-router";
-import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { getExamById, getQuestionsByExamId } from "@/api/api";
+import {
+  getExamById,
+  getQuestionsByExamId,
+  getSubmissionByExamId,
+} from "@/api/query";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, LoaderIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -31,10 +34,7 @@ function useSubmission(examId: string | undefined) {
   return useQuery<SubmissionResponse>({
     queryKey: ["submission", examId],
     enabled: !!examId,
-    queryFn: async () => {
-      const res = await axios.get(`/api/v1/submissions/${examId}`);
-      return res.data as SubmissionResponse;
-    },
+    queryFn: async () => (await getSubmissionByExamId(examId)) as SubmissionResponse,
     staleTime: 60_000,
     retry: 1,
   });

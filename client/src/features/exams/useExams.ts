@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getExams } from "./api";
+import { getExams } from "@/api/query";
 import type { Exam } from "./types";
 
 export function useExams() {

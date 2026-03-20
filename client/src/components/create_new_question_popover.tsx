@@ -1,5 +1,4 @@
 import { useState } from "react";
-import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     Popover,
@@ -8,7 +7,6 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { Difficulty, QuestionKind } from "@/types/questions";
 import {
     DifficultySelector,
     QuestionTypeInputs,
@@ -16,29 +14,12 @@ import {
 } from "./create_new_question_popover/components";
 import { useCreateNewQuestionStore } from "./create_new_question_popover/store";
 import {
-    buildCreateQuestionPayload,
     getChoicesBasedOnQuestionType,
     getCorrectAnswerIndexBasedOnQuestionType,
     getCorrectAnswerTextBasedOnQuestionType,
     validateInputs,
 } from "./create_new_question_popover/utils";
-
-interface CreateQuestionVariables {
-    set_id: string;
-    difficulty: Difficulty;
-    questionType: QuestionKind;
-    questionText: string;
-    choices: string[];
-    correctAnswerIndex: number;
-    correctAnswerText: string;
-    explanation: string;
-}
-
-async function createNewQuestionApiPost(variables: CreateQuestionVariables) {
-    const body = buildCreateQuestionPayload(variables);
-    const res = await axios.post(`/api/v1/questions?set_id=${variables.set_id}`, body);
-    return res.data;
-}
+import { createNewQuestionApiPost } from "@/api/mutation";
 
 export default function CreateNewQuestionPopover({
     children,

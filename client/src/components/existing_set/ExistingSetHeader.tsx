@@ -17,7 +17,7 @@ import SetSettingsUpdatePopover from "../set_settings_update_popover.tsx";
 import { Badge } from "@/components/ui/badge";
 import AddPeopleAccessPopover from "@/components/add_people_access_popover.tsx";
 import { Button } from "../ui/button.tsx";
-import { getUsersWithAccess } from "@/api/api.ts";
+import { getUsersWithAccess } from "@/api/query";
 import {
   Avatar,
   AvatarFallback,
