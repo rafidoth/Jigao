@@ -25,16 +25,16 @@ export function LoadingSetList() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[40%] text-xs md:text-sm">
+                <TableHead className="w-[40%] text-xs md:text-xs">
                   <Skeleton className="h-4 w-20" />
                 </TableHead>
-                <TableHead className="w-[20%] text-xs md:text-sm">
+                <TableHead className="w-[20%] text-xs md:text-xs">
                   <Skeleton className="h-4 w-24" />
                 </TableHead>
-                <TableHead className="w-[20%] text-xs md:text-sm">
+                <TableHead className="w-[20%] text-xs md:text-xs">
                   <Skeleton className="h-4 w-20" />
                 </TableHead>
-                <TableHead className="w-[20%] text-xs md:text-sm">
+                <TableHead className="w-[20%] text-xs md:text-xs">
                   <Skeleton className="h-4 w-24" />
                 </TableHead>
               </TableRow>

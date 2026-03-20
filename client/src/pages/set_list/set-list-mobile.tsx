@@ -26,7 +26,7 @@ export function SetListMobile({ items, onOpenSet }: SetListMobileProps) {
         >
           <div className="flex flex-col gap-1">
             <div className="text-base font-medium text-foreground capitalize">{set.title}</div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <VisibilityIcon visibility={set.visibility} />
               <span className="capitalize">{set.visibility}</span>
               <span className="mx-1">•</span>

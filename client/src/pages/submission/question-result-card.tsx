@@ -35,7 +35,7 @@ function MultipleChoiceResult({
                   : "bg-muted border-border text-muted-foreground"
             }`}
           >
-            <span className="text-sm">{choice.text}</span>
+            <span className="text-xs">{choice.text}</span>
             {isCorrectAnswer && (
               <span className="ml-2 text-xs font-semibold text-green-300">Correct</span>
             )}
@@ -82,7 +82,7 @@ function TrueFalseResult({
                   : "bg-muted border-border text-muted-foreground"
             }`}
           >
-            <span className="text-sm">{choiceText}</span>
+            <span className="text-xs">{choiceText}</span>
             {isCorrectAnswer && (
               <span className="ml-2 text-xs font-semibold text-green-300">Correct</span>
             )}
@@ -110,13 +110,13 @@ function ShortQuestionResult({
       {userAns && (
         <div className="p-2 rounded-md border bg-muted border-border">
           <span className="text-xs font-semibold text-muted-foreground">Your answer:</span>
-          <p className="text-sm">{String(userAns)}</p>
+          <p className="text-xs">{String(userAns)}</p>
         </div>
       )}
       {question.answer?.model_answer && (
         <div className="p-2 rounded-md border bg-green-950/30 border-green-700/50 text-green-200">
           <span className="text-xs font-semibold">Model answer:</span>
-          <p className="text-sm">{question.answer.model_answer}</p>
+          <p className="text-xs">{question.answer.model_answer}</p>
         </div>
       )}
     </div>
@@ -145,13 +145,13 @@ function FillInTheBlanksResult({
           }`}
         >
           <span className="text-xs font-semibold">Your answer:</span>
-          <p className="text-sm">{String(userAns)}</p>
+          <p className="text-xs">{String(userAns)}</p>
         </div>
       )}
       {!!question.answer?.accepted_answers?.length && (
         <div className="p-2 rounded-md border bg-green-950/30 border-green-700/50 text-green-200">
           <span className="text-xs font-semibold">Accepted answers:</span>
-          <p className="text-sm">{question.answer.accepted_answers.join(", ")}</p>
+          <p className="text-xs">{question.answer.accepted_answers.join(", ")}</p>
         </div>
       )}
     </div>
@@ -179,7 +179,7 @@ export function QuestionResultCard({
           {question.difficulty}
         </span>
         <span
-          className={`text-sm font-semibold ${
+          className={`text-xs font-semibold ${
             isCorrect ? "text-green-400" : "text-red-400"
           }`}
         >
@@ -201,7 +201,7 @@ export function QuestionResultCard({
       {question.answer?.explanation && (
         <div className="mt-4 p-3 bg-secondary/10 rounded-md">
           <span className="font-semibold">Explanation:</span>
-          <p className="text-sm mt-1">{question.answer.explanation}</p>
+          <p className="text-xs mt-1">{question.answer.explanation}</p>
         </div>
       )}
     </div>

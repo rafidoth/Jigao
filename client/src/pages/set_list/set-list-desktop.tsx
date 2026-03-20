@@ -22,17 +22,17 @@ export function SetListDesktop({ items, onOpenSet }: SetListDesktopProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[40%] text-xs md:text-sm">Title</TableHead>
-            <TableHead className="w-[20%] text-xs md:text-sm">Created By</TableHead>
-            <TableHead className="w-[20%] text-xs md:text-sm">Visibility</TableHead>
-            <TableHead className="w-[20%] text-xs md:text-sm">Last Modified</TableHead>
+            <TableHead className="w-[40%] text-xs md:text-xs">Title</TableHead>
+            <TableHead className="w-[20%] text-xs md:text-xs">Created By</TableHead>
+            <TableHead className="w-[20%] text-xs md:text-xs">Visibility</TableHead>
+            <TableHead className="w-[20%] text-xs md:text-xs">Last Modified</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.map(({ set, owner }) => (
             <TableRow
               key={set.id}
-              className="cursor-pointer text-sm hover:bg-primary hover:font-medium hover:text-primary-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              className="cursor-pointer text-xs hover:bg-primary hover:font-medium hover:text-primary-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
               onClick={() => onOpenSet(set.id)}
               tabIndex={0}
               onKeyDown={(e) => {
@@ -50,7 +50,7 @@ export function SetListDesktop({ items, onOpenSet }: SetListDesktopProps) {
                     {owner.name?.[0]} {owner.name?.[1]}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-semibold">{owner.name}</span>
+                <span className="text-xs font-semibold">{owner.name}</span>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">

@@ -26,7 +26,7 @@ function RunningExamHeader({
       )}
     >
       <div className="flex flex-col">
-        <div className="text-xl">{title || "Exam"}</div>
+        <div className="text-sm">{title || "Exam"}</div>
         <Badge
           variant="outline"
           className="font-semibold select-none bg-blue-500/20 text-blue-500"

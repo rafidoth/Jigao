@@ -77,7 +77,7 @@ export function ComboBox({
         <ScrollArea className="max-h-64">
           <ul className="py-1">
             {filteredItems.length === 0 && (
-              <li className="px-3 py-2 text-sm text-muted-foreground">{emptyMessage}</li>
+              <li className="px-3 py-2 text-xs text-muted-foreground">{emptyMessage}</li>
             )}
             {filteredItems.map((item) => (
               <li key={item.value}>

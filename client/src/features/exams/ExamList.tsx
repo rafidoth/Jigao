@@ -29,7 +29,7 @@ export default function ExamList({
 
   if (isError) {
     return (
-      <div className="p-4 text-sm text-red-500">
+      <div className="p-4 text-xs text-red-500">
         Failed to load exams{errorMessage ? `: ${errorMessage}` : "."}
       </div>
     );
@@ -37,7 +37,7 @@ export default function ExamList({
 
   if (!exams || exams.length === 0) {
     return (
-      <div className="p-4 text-sm text-muted-foreground">No exams found.</div>
+      <div className="p-4 text-xs text-muted-foreground">No exams found.</div>
     );
   }
 

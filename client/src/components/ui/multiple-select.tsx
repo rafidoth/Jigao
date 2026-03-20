@@ -51,7 +51,7 @@ export const MultipleSelect = ({
 
   return (
     <AnimatePresence mode={"popLayout"}>
-      <div className={"flex md:w-[450px] flex-col gap-2 text-sm items-center"}>
+      <div className={"flex md:w-[450px] flex-col gap-2 text-xs items-center"}>
         <strong>{title}</strong>
         <motion.div
           layout
@@ -78,7 +78,7 @@ export const MultipleSelect = ({
           </motion.div>
         </motion.div>
         {selected?.length === 0 && (
-          <div className="p-2 text-sm text-muted-foreground">
+          <div className="p-2 text-xs text-muted-foreground">
             No question types selected
           </div>
         )}

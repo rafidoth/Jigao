@@ -50,22 +50,22 @@ export default function ShortAnswerCard({
           </p>
         </div>
         <Textarea
-          className="text-sm"
+          className="text-xs"
           placeholder="Write your answer..."
           value={selected}
           onChange={(e) => selectAnswer(q.question_id, e.target.value)}
         />
         {showAnswer && (
           <div className="flex flex-col gap-2">
-            <p className="font-semibold text-sm">Model Answer</p>
-            <Card className="p-3 text-sm text-muted-foreground">
+            <p className="font-semibold text-xs">Model Answer</p>
+            <Card className="p-3 text-xs text-muted-foreground">
               {modelAnswer || "No answer provided."}
             </Card>
           </div>
         )}
         {showAnswer && q.answer?.explanation ? (
           <div className="space-y-2">
-            <p className="font-semibold text-sm">Explanation</p>
+            <p className="font-semibold text-xs">Explanation</p>
             <Card className="p-3 bg-blue-500/10 text-white">
               {q.answer.explanation}
             </Card>

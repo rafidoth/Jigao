@@ -60,7 +60,7 @@ export default function FillInTheBlanksCard({
           value={selected}
           onChange={(e) => selectAnswer(q.question_id, e.target.value)}
           className={cn(
-            "text-sm",
+            "text-xs",
             isCorrect
               ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-500/10"
               : isEmpty
@@ -70,7 +70,7 @@ export default function FillInTheBlanksCard({
         />
         {showAnswer && acceptedAnswers.length > 0 && (
           <div className="space-y-2">
-            <p className="font-semibold text-sm">Accepted Answers</p>
+            <p className="font-semibold text-xs">Accepted Answers</p>
             <div className="flex flex-col gap-2">
               {acceptedAnswers.map((ans, idx) => (
                 <div
@@ -88,7 +88,7 @@ export default function FillInTheBlanksCard({
         )}
         {showAnswer && q.answer?.explanation ? (
           <div className="space-y-2">
-            <p className="font-semibold text-sm">Explanation</p>
+            <p className="font-semibold text-xs">Explanation</p>
             <Card className="p-3 bg-blue-500/10 text-white">
               {q.answer.explanation}
             </Card>

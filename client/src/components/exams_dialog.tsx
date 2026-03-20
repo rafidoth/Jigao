@@ -94,8 +94,8 @@ export default function ExamsDialog({
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent side="right" className="w-[92vw] sm:max-w-xl md:max-w-2xl p-3">
         <SheetHeader className="pb-2">
-          <SheetTitle className="text-xl">Exams</SheetTitle>
-          <SheetDescription className="text-sm">
+          <SheetTitle className="text-sm">Exams</SheetTitle>
+          <SheetDescription className="text-xs">
             Create new exam and review scheduled exams for this set.
           </SheetDescription>
         </SheetHeader>
@@ -111,7 +111,7 @@ export default function ExamsDialog({
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-base font-semibold">Create Exam</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Configure details and schedule a start time.
                     </p>
                   </div>
@@ -148,7 +148,7 @@ export default function ExamsDialog({
           </div>
           <div>
             <h3 className="text-base font-semibold mb-1">Scheduled Exams</h3>
-            <p className="text-sm text-muted-foreground mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               Review upcoming and past exams.
             </p>
             <ExamsList set_id={set_id} />

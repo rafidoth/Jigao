@@ -135,7 +135,7 @@ function FullScreenSidebar() {
                 >
                   <div className="flex items-center gap-3" style={{ minHeight: 52 }}>
                     {item.icon}
-                    <span className={active ? "font-bold text-sm" : "text-sm"}>{item.label}</span>
+                    <span className={active ? "font-bold text-xs" : "text-xs"}>{item.label}</span>
                   </div>
                   <div
                     style={{

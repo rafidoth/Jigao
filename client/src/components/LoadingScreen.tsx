@@ -46,7 +46,7 @@ function LoadingScreen({
       </div>
 
       {/* Rotating message */}
-      <div className="min-h-6 text-sm font-medium text-muted-foreground transition-opacity duration-500 animate-fade-in">
+      <div className="min-h-6 text-xs font-medium text-muted-foreground transition-opacity duration-500 animate-fade-in">
         {messages[index]}
       </div>
 

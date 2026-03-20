@@ -23,7 +23,7 @@ import {
 } from "./utils";
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <span className="block text-sm font-medium mb-1">{children}</span>;
+  return <span className="block text-xs font-medium mb-1">{children}</span>;
 }
 
 export function TitleField() {
@@ -215,11 +215,11 @@ export function ProctoringField() {
     <div className="flex flex-col gap-3">
       <Label>Proctoring</Label>
       <label className="flex items-center justify-between rounded-md border px-3 py-2">
-        <span className="text-sm">Enable proctoring</span>
+        <span className="text-xs">Enable proctoring</span>
         <Switch checked={proctoringEnabled} onCheckedChange={setProctoringEnabled} />
       </label>
       <label className="flex items-center justify-between rounded-md border px-3 py-2">
-        <span className="text-sm">Camera required</span>
+        <span className="text-xs">Camera required</span>
         <Switch
           checked={cameraRequired}
           onCheckedChange={setCameraRequired}

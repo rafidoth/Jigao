@@ -198,7 +198,7 @@ const SelectItem = ({
         <motion.div layout className="flex w-56 flex-col">
           <motion.strong
             layoutId={`label-${item?.id}`}
-            className="text-sm font-semibold text-foreground"
+            className="text-xs font-semibold text-foreground"
           >
             {item?.label}
           </motion.strong>

@@ -44,11 +44,11 @@ function SetList() {
   return (
     <div className="flex flex-col gap-4 px-3 lg:px-9 py-3">
       <div className="hidden md:flex flex-col gap-2 mb-10 align">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold my-2">My Sets</h2>
+        <h2 className="text-sm sm:text-2xl md:text-3xl font-bold my-2">My Sets</h2>
         <Button
           onClick={handleCreateNewSet}
           disabled={isPending}
-          className="w-16 sm:w-20 md:w-[100px] cursor-pointer text-sm"
+          className="w-16 sm:w-20 md:w-[100px] cursor-pointer text-xs"
           variant="secondary"
         >
           <Plus /> New

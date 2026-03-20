@@ -51,20 +51,20 @@ function ExamsListItem({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-4">
             <div
-              className={`text-sm font-bold ${getExamTypeBadgeColor(exam.visibility)} w-fit px-2 rounded-md mb-1`}
+              className={`text-xs font-bold ${getExamTypeBadgeColor(exam.visibility)} w-fit px-2 rounded-md mb-1`}
             >
               {start ? formatDateFriendly(start, duration) : "No start time"}
             </div>
 
             <div
-              className={`text-sm font-semibold ${getExamTypeBadgeColor(exam.visibility)} w-fit px-2 rounded-md mb-1`}
+              className={`text-xs font-semibold ${getExamTypeBadgeColor(exam.visibility)} w-fit px-2 rounded-md mb-1`}
             >
               {xmType}
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="font-semibold text-lg font-bold">{exam.title}</span>
-            <Badge variant={isPast ? "secondary" : "default"} className="text-sm">
+            <Badge variant={isPast ? "secondary" : "default"} className="text-xs">
               {isPast ? (isOngoing ? "On Going" : "Past") : "Upcoming"}
             </Badge>
           </div>
@@ -78,7 +78,7 @@ function ExamsListItem({
             </Avatar>
             <div className="flex flex-col">
               <span className="text-muted-foreground">created by</span>
-              <span className="text-sm">{ownerName}</span>
+              <span className="text-xs">{ownerName}</span>
             </div>
           </div>
           {exam.description && (
@@ -129,8 +129,8 @@ export function ExamsList({ set_id }: ExamsListProps) {
     },
   });
 
-  if (isLoading) return <p className="text-sm">Loading exams…</p>;
-  if (isError) return <p className="text-sm text-destructive">Failed to load exams.</p>;
+  if (isLoading) return <p className="text-xs">Loading exams…</p>;
+  if (isError) return <p className="text-xs text-destructive">Failed to load exams.</p>;
 
   const exams: ExamItem[] = Array.isArray(data) ? data : [];
   if (exams.length === 0) {
@@ -139,7 +139,7 @@ export function ExamsList({ set_id }: ExamsListProps) {
         <Button className="w-[100px]" variant="ghost" onClick={() => refetch()}>
           <RotateCcw />
         </Button>
-        <p className="text-xl text-muted-foreground">No exams found for this set.</p>
+        <p className="text-sm text-muted-foreground">No exams found for this set.</p>
       </div>
     );
   }

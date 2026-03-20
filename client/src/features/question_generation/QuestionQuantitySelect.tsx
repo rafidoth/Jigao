@@ -30,7 +30,7 @@ function QuestionQuantitySelect() {
         <button
           type="button"
           onClick={dec}
-          className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-input bg-transparent text-sm shadow-xs hover:bg-accent hover:text-accent-foreground"
+          className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-input bg-transparent text-xs shadow-xs hover:bg-accent hover:text-accent-foreground"
           aria-label="Decrease quantity"
         >
           <Minus className="size-4" />
@@ -39,7 +39,7 @@ function QuestionQuantitySelect() {
         <button
           type="button"
           onClick={inc}
-          className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-input bg-transparent text-sm shadow-xs hover:bg-accent hover:text-accent-foreground"
+          className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-input bg-transparent text-xs shadow-xs hover:bg-accent hover:text-accent-foreground"
           aria-label="Increase quantity"
         >
           <Plus className="size-4" />

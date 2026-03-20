@@ -74,16 +74,16 @@ function SetSettingsUpdatePopover({
       <PopoverContent className="w-[600px] p-4 space-y-4">
         <div className="space-y-2">
           <h3 className="text-base font-semibold">Set Settings</h3>
-          <label className="text-sm font-medium">Title</label>
+          <label className="text-xs font-medium">Title</label>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-          <label className="text-sm font-medium pt-2">Visibility</label>
+          <label className="text-xs font-medium pt-2">Visibility</label>
           <VisibilityList
             currentVisibility={currentVisibility}
             setCurrentVisibility={setCurrentVisibility}
             visibilityList={visibilityList}
           />
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-xs text-red-600">{error}</p>}
         <div className="flex justify-end pt-2">
           <Button
             disabled={
@@ -121,7 +121,7 @@ function VisibilityList({
             key={v}
             onClick={() => setCurrentVisibility(v)}
             className={cn(
-              "flex flex-col items-center gap-2 w-1/3 rounded-md border p-3 text-sm transition",
+              "flex flex-col items-center gap-2 w-1/3 rounded-md border p-3 text-xs transition",
               currentVisibility === v
                 ? "border-primary bg-primary/10"
                 : "border-muted bg-muted/30 hover:bg-muted",

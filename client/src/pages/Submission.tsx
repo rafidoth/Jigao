@@ -138,7 +138,7 @@ function Submission() {
       </Button>
 
       <div className="flex flex-col font-bold justify-center items-center py-4 gap-2">
-        <div className="text-xl">{examData?.title}</div>
+        <div className="text-sm">{examData?.title}</div>
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-center gap-2 bg-primary/10 rounded-xl px-4 py-2">
             <span>Score</span>

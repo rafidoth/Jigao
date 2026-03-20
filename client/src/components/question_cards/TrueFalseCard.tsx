@@ -85,14 +85,14 @@ export default function TrueFalseCard({
                     {String.fromCharCode(65 + idx)}
                   </Badge>
                 )}
-                <span className="flex-1 text-sm">{c.text}</span>
+                <span className="flex-1 text-xs">{c.text}</span>
               </button>
             );
           })}
         </div>
         {showAnswer && q.answer?.explanation ? (
           <div className="space-y-2">
-            <p className="font-semibold text-sm">Explanation</p>
+            <p className="font-semibold text-xs">Explanation</p>
             <Card className="p-3 bg-blue-500/10 text-white">
               {q.answer.explanation}
             </Card>

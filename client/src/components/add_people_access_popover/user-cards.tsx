@@ -21,8 +21,8 @@ export function FoundUserCard({
             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <h2 className="text-sm font-semibold leading-none">{user.name}</h2>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <h2 className="text-xs font-semibold leading-none">{user.name}</h2>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
 
           <Button variant="outline" onClick={onAllow} className="ml-auto">
@@ -51,8 +51,8 @@ export function AccessListUserCard({
           </Avatar>
           <div className="flex justify-between items-center w-full">
             <div className="flex flex-col">
-              <h2 className="text-sm font-semibold leading-none">{user.name}</h2>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <h2 className="text-xs font-semibold leading-none">{user.name}</h2>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
             <button
               type="button"

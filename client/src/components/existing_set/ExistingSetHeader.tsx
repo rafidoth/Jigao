@@ -84,7 +84,7 @@ function ExistingSetHeader({
                 >
                   <ArrowLeft />
                 </Button>
-                <h1 className="text-base sm:text-lg md:text-xl font-semibold tracking-tight leading-tight break-words text-foreground ">
+                <h1 className="text-base sm:text-lg md:text-sm font-semibold tracking-tight leading-tight break-words text-foreground ">
                   {set.title}
                 </h1>
                 <CreateNewQuestionPopover set_id={String(set.id)}>
@@ -108,7 +108,7 @@ function ExistingSetHeader({
                   </Button>
                 </SetSettingsUpdatePopover>
               </div>
-              <div className="flex items-center gap-2 mt-1 text-muted-foreground text-xs sm:text-sm">
+              <div className="flex items-center gap-2 mt-1 text-muted-foreground text-xs sm:text-xs">
                 <span className="inline-flex items-center gap-1">
                   {getVisibilityIcon(set.visibility)}
                 </span>

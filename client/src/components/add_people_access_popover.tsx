@@ -75,10 +75,10 @@ function AddPeopleAccessPopover({
             />
           </div>
 
-          {userChecking && <div className="text-muted-foreground text-sm">Checking...</div>}
+          {userChecking && <div className="text-muted-foreground text-xs">Checking...</div>}
 
           {isPending && (
-            <div className="text-muted-foreground text-sm">
+            <div className="text-muted-foreground text-xs">
               Adding {typeof foundUser === "object" ? foundUser?.name : "User"} to
               access list...
             </div>
@@ -89,7 +89,7 @@ function AddPeopleAccessPopover({
           )}
 
           {foundUser === "not_found" && (
-            <span className="text-red-700 text-sm">User not found</span>
+            <span className="text-red-700 text-xs">User not found</span>
           )}
 
           {!isLoading && (
