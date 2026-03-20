@@ -2,6 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -173,6 +181,51 @@ export function DurationField() {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+export function StartModeField() {
+  const startMode = useCreateExamStore((s) => s.startMode);
+  const setStartMode = useCreateExamStore((s) => s.setStartMode);
+
+  return (
+    <div className="flex flex-col">
+      <Label>Start Mode</Label>
+      <Select value={startMode} onValueChange={(v) => setStartMode(v as "lobby" | "timed")}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select a start mode" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="lobby">Lobby</SelectItem>
+          <SelectItem value="timed">Timed</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+export function ProctoringField() {
+  const proctoringEnabled = useCreateExamStore((s) => s.proctoringEnabled);
+  const setProctoringEnabled = useCreateExamStore((s) => s.setProctoringEnabled);
+  const cameraRequired = useCreateExamStore((s) => s.cameraRequired);
+  const setCameraRequired = useCreateExamStore((s) => s.setCameraRequired);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <Label>Proctoring</Label>
+      <label className="flex items-center justify-between rounded-md border px-3 py-2">
+        <span className="text-sm">Enable proctoring</span>
+        <Switch checked={proctoringEnabled} onCheckedChange={setProctoringEnabled} />
+      </label>
+      <label className="flex items-center justify-between rounded-md border px-3 py-2">
+        <span className="text-sm">Camera required</span>
+        <Switch
+          checked={cameraRequired}
+          onCheckedChange={setCameraRequired}
+          disabled={!proctoringEnabled}
+        />
+      </label>
     </div>
   );
 }

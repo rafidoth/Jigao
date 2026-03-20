@@ -9,7 +9,12 @@ export interface ExamItem {
   title: string;
   description?: string;
   start_time?: string;
-  duration_in_minutes?: number;
+  duration?: number;
   visibility: string;
-  created_by: ExamUser;
+  session_status?: string;
+  end_time?: string;
+  start_mode?: string;
+  owner_name?: string;
+  owner_profile_image_url?: string;
+  created_by?: ExamUser;
 }

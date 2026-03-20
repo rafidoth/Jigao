@@ -30,16 +30,15 @@ function ExamsListItem({
 }) {
   const startTime = exam.start_time;
   const start = startTime ? new Date(startTime) : null;
-  const isPast = start ? start < new Date() : false;
-  const duration = exam.duration_in_minutes;
+  const duration = exam.duration;
+  const now = new Date();
+  const end = start && duration ? new Date(start.getTime() + duration * 60000) : null;
+  const isOngoing = !!start && !!end && start <= now && end > now;
+  const isPast = end ? end <= now : !!start && start < now;
   const xmType = determineExamType(exam.visibility);
-  const isOngoing =
-    !!start &&
-    !isPast &&
-    start <= new Date() &&
-    !!duration &&
-    new Date(start.getTime() + duration * 60000) > new Date();
-  const createdBy = exam.created_by;
+  const ownerName = exam.owner_name ?? exam.created_by?.name ?? "Unknown";
+  const ownerProfileImageUrl =
+    exam.owner_profile_image_url ?? exam.created_by?.image_url ?? "";
 
   return (
     <Card
@@ -71,14 +70,15 @@ function ExamsListItem({
           </div>
           <div className="flex items-center gap-x-2 my-2">
             <Avatar className="w-12 h-12">
-              <AvatarImage src={createdBy.image_url} />
+              <AvatarImage src={ownerProfileImageUrl} />
               <AvatarFallback>
-                {createdBy.name?.charAt(0)} {createdBy.name?.charAt(1)}
+                {ownerName.charAt(0)}
+                {ownerName.charAt(1)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
               <span className="text-muted-foreground">created by</span>
-              <span className="text-sm">{createdBy.name}</span>
+              <span className="text-sm">{ownerName}</span>
             </div>
           </div>
           {exam.description && (

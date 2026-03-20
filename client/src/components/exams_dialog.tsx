@@ -16,6 +16,8 @@ import { ExamsList } from "./exams_dialog/exams-list";
 import {
   DescriptionField,
   DurationField,
+  ProctoringField,
+  StartModeField,
   StartTimeField,
   TitleField,
 } from "./exams_dialog/form-fields";
@@ -34,6 +36,9 @@ export default function ExamsDialog({
   const description = useCreateExamStore((s) => s.description);
   const startTimeLocal = useCreateExamStore((s) => s.startTimeLocal);
   const durationInMinutes = useCreateExamStore((s) => s.durationInMinutes);
+  const startMode = useCreateExamStore((s) => s.startMode);
+  const proctoringEnabled = useCreateExamStore((s) => s.proctoringEnabled);
+  const cameraRequired = useCreateExamStore((s) => s.cameraRequired);
   const reset = useCreateExamStore((s) => s.reset);
 
   const [error, setError] = useState("");
@@ -74,6 +79,9 @@ export default function ExamsDialog({
         description,
         start_time_iso: toISOFromLocal(startTimeLocal),
         duration_in_minutes: durationInMinutes,
+        start_mode: startMode,
+        proctoring_enabled: proctoringEnabled,
+        camera_required: cameraRequired,
       });
     } catch (err) {
       console.error(err);
@@ -117,6 +125,8 @@ export default function ExamsDialog({
                   </div>
                   <StartTimeField />
                   <DurationField />
+                  <StartModeField />
+                  <ProctoringField />
                 </div>
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   {error && (

@@ -6,17 +6,31 @@ interface CreateExamVariables {
   description: string;
   start_time_iso: string;
   duration_in_minutes: number;
+  start_mode: "lobby" | "timed";
+  proctoring_enabled: boolean;
+  camera_required: boolean;
 }
 
 export async function createExamApiPost(variables: CreateExamVariables) {
-  const { set_id, title, description, start_time_iso, duration_in_minutes } =
-    variables;
+  const {
+    set_id,
+    title,
+    description,
+    start_time_iso,
+    duration_in_minutes,
+    start_mode,
+    proctoring_enabled,
+    camera_required,
+  } = variables;
   const body = {
     set_id,
     title,
     description,
     start_time: start_time_iso,
     duration_in_minutes,
+    start_mode,
+    proctoring_enabled,
+    camera_required,
   };
   const res = await axios.post("http://localhost:9999/api/v1/exams", body);
   return res.data;
