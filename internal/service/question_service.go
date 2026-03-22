@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/model"
@@ -311,23 +312,49 @@ func (s *QuestionService) CreateSingleQuestion(
 		Str("question_type", question.QuestionType).
 		Msg("create question request")
 
+	if strings.TrimSpace(question.Question) == "" {
+		return errs.NewBadRequestError("question text is required", false, nil, nil, nil)
+	}
+
 	switch question.QuestionType {
 	case "multiple_choice_questions":
+		if answer.CorrectAnswer.MCQ_CorrectChoicePosition <= 0 {
+			return errs.NewBadRequestError("answer.correct_answer.mcq_correct_choice_position is required", false, nil, nil, nil)
+		}
 		if err := s.questionRepo.CreateMultipleChoiceQuestion(question, choices, answer, setID); err != nil {
 			s.log.Error().Err(err).Str("set_id", setID).Str("question_type", question.QuestionType).Msg("failed to create question")
 			return fmt.Errorf("create MCQ question: %w", err)
 		}
 	case "fill_in_the_blanks":
+		if len(answer.CorrectAnswer.FIB_AcceptedAnswers) == 0 {
+			return errs.NewBadRequestError("answer.correct_answer.fib_accepted_answers must contain at least one value", false, nil, nil, nil)
+		}
+		hasNonEmpty := false
+		for _, v := range answer.CorrectAnswer.FIB_AcceptedAnswers {
+			if strings.TrimSpace(v) != "" {
+				hasNonEmpty = true
+				break
+			}
+		}
+		if !hasNonEmpty {
+			return errs.NewBadRequestError("answer.correct_answer.fib_accepted_answers cannot be empty", false, nil, nil, nil)
+		}
 		if err := s.questionRepo.CreateFillInTheBlanks(question, answer, setID); err != nil {
 			s.log.Error().Err(err).Str("set_id", setID).Str("question_type", question.QuestionType).Msg("failed to create question")
 			return fmt.Errorf("create FIB question: %w", err)
 		}
 	case "true_false":
+		if answer.CorrectAnswer.TF_CorrectChoice == nil {
+			return errs.NewBadRequestError("answer.correct_answer.tf_correct_choice is required", false, nil, nil, nil)
+		}
 		if err := s.questionRepo.CreateTrueFalse(question, answer, setID); err != nil {
 			s.log.Error().Err(err).Str("set_id", setID).Str("question_type", question.QuestionType).Msg("failed to create question")
 			return fmt.Errorf("create true/false question: %w", err)
 		}
 	case "short_question":
+		if strings.TrimSpace(answer.CorrectAnswer.SQ_ModelAnswer) == "" {
+			return errs.NewBadRequestError("answer.correct_answer.sq_model_answer is required", false, nil, nil, nil)
+		}
 		if err := s.questionRepo.CreateShortQuestion(question, answer, setID); err != nil {
 			s.log.Error().Err(err).Str("set_id", setID).Str("question_type", question.QuestionType).Msg("failed to create question")
 			return fmt.Errorf("create short question: %w", err)
