@@ -9,7 +9,7 @@ export function getChoicesBasedOnQuestionType(
     case "multiple_choice_questions":
       return state.mcq.choices;
     case "true_false":
-      return state.trueFalse.choices;
+      return ["True", "False"];
     case "short_question":
       return [];
     case "fill_in_the_blanks":
@@ -27,7 +27,7 @@ export function getCorrectAnswerIndexBasedOnQuestionType(
     case "multiple_choice_questions":
       return state.mcq.correctAnswer;
     case "true_false":
-      return state.trueFalse.correctAnswer;
+      return state.trueFalse.correctAnswer ? 0 : 1;
     default:
       return 0;
   }
@@ -41,7 +41,7 @@ export function getCorrectAnswerTextBasedOnQuestionType(
     case "multiple_choice_questions":
       return state.mcq.choices[state.mcq.correctAnswer];
     case "true_false":
-      return state.trueFalse.choices[state.trueFalse.correctAnswer];
+      return state.trueFalse.correctAnswer ? "True" : "False";
     case "short_question":
       return state.shortAnswer.estimatedCorrectAnswer;
     case "fill_in_the_blanks":

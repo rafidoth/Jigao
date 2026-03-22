@@ -116,7 +116,10 @@ function MCQInputs() {
 }
 
 function TrueFalseInputs() {
-    const choices = useCreateNewQuestionStore((s) => s.trueFalse.choices);
+    const choices = [
+        { label: "True", value: true },
+        { label: "False", value: false },
+    ];
     const correctAnswer = useCreateNewQuestionStore((s) => s.trueFalse.correctAnswer);
     const setTrueFalseCorrectAnswer = useCreateNewQuestionStore(
         (s) => s.setTrueFalseCorrectAnswer,
@@ -130,18 +133,18 @@ function TrueFalseInputs() {
                 onChange={(e) => setQuestionText(e.target.value)}
             />
             <div className="grid gap-3 md:grid-cols-2">
-                {choices.map((choice, index) => {
-                    const active = correctAnswer === index;
+                {choices.map((choice) => {
+                    const active = correctAnswer === choice.value;
                     return (
-                        <div key={index} className="flex items-center gap-2">
+                        <div key={choice.label} className="flex items-center gap-2">
                             <Button
                                 type="button"
                                 size="sm"
                                 variant={active ? "default" : "outline"}
-                                onClick={() => setTrueFalseCorrectAnswer(index)}
+                                onClick={() => setTrueFalseCorrectAnswer(choice.value)}
                                 className="w-full"
                             >
-                                {choice}
+                                {choice.label}
                             </Button>
                         </div>
                     );
