@@ -11,6 +11,7 @@ import useAuthStore from "./store/authStore.ts";
 import Exams from "./pages/Exams.tsx";
 import QuestionBank from "./pages/Exams.tsx";
 import Submission from "./pages/Submission.tsx";
+import SelfTest from "./pages/SelfTest.tsx";
 
 function App() {
     const theme = useThemeStore((state) => state.theme);
@@ -79,6 +80,7 @@ function App() {
                     <Route path="exams/" element={<Exams />} />
                     <Route path="question-bank/" element={<QuestionBank />} />
                     <Route path="submissions/:exam_id" element={<Submission />} />
+                    <Route path="selftest/new" element={<SelfTest />} />
                 </Route>
                 <Route path="exam/:exam_id" element={<ExamPage />} />
             </Routes>

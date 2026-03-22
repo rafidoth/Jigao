@@ -59,3 +59,10 @@ export type Question =
   | FillInTheBlanksQuestion;
 
 export type QuestionMap = Record<string, Question>;
+
+export interface SelfTestAnswer {
+  mcq_selected_position?: number;
+  tf_selected?: boolean;
+  fib_answer?: string;
+  sq_answer?: string;
+}

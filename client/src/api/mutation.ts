@@ -1,4 +1,5 @@
 import type { Difficulty, QuestionKind } from "@/types/questions";
+import type { SelfTestAnswer } from "@/types/questions";
 import { buildCreateQuestionPayload } from "@/components/create_new_question_popover/utils";
 
 import { api } from "./client";
@@ -108,4 +109,16 @@ export const addUserToAccessList = async ({
         user_id: userId,
         set_id: setId,
     });
+};
+
+interface SubmitSelfTestVariables {
+    set_id: string;
+    duration_in_minutes: number;
+    time_taken_seconds: number;
+    answers: Record<string, SelfTestAnswer>;
+}
+
+export const submitSelfTestApiPost = async (variables: SubmitSelfTestVariables) => {
+    const res = await api.post("/api/v1/self-tests/submissions", variables);
+    return res.data;
 };
