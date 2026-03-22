@@ -175,6 +175,37 @@ CREATE TABLE IF NOT EXISTS exam_answer_drafts (
     PRIMARY KEY (exam_id, user_id)
 );
 
+
+
+CREATE TABLE IF NOT EXISTS self_tests (
+id UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
+
+-- ownership + source set
+user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+set_id UUID NOT NULL REFERENCES sets(id) ON DELETE CASCADE,
+
+-- timer config and actual usage
+duration_in_minutes INTEGER NOT NULL CHECK (duration_in_minutes > 0),
+time_taken_seconds INTEGER NOT NULL CHECK (time_taken_seconds >= 0),
+
+-- user-selected answers snapshot
+-- shape example:
+-- {
+--   "<question_uuid>": { "selectedChoiceIds": ["<choice_uuid>"] },
+--   "<question_uuid>": { "selectedChoiceIds": ["<choice_uuid>", "<choice_uuid>"] }
+-- }
+answers JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+-- result snapshot
+correct_count INTEGER NOT NULL CHECK (correct_count >= 0),
+question_count INTEGER NOT NULL CHECK (question_count > 0),
+CHECK (correct_count <= question_count),
+
+-- submission time
+created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+
 CREATE TRIGGER exam_answer_drafts_updated_at_trigger
 BEFORE UPDATE ON exam_answer_drafts
 FOR EACH ROW
