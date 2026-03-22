@@ -34,6 +34,25 @@ import {
 import { useCreateExamStore } from "./exams_dialog/store";
 import { nowLocalForInput, toISOFromLocal, validateExamInputs } from "./exams_dialog/utils";
 
+function selfTestTimerKey(setId: string) {
+    return `self-test:${setId}:timer`;
+}
+
+function selfTestAnswersKey(setId: string) {
+    return `self-test:${setId}:answers`;
+}
+
+function hasResumableSelfTest(setId: string) {
+    const raw = localStorage.getItem(selfTestTimerKey(setId));
+    if (!raw) return false;
+    try {
+        const parsed = JSON.parse(raw) as { endTime?: number };
+        return typeof parsed.endTime === "number" && parsed.endTime > Date.now();
+    } catch {
+        return false;
+    }
+}
+
 export default function ExamsDialog({
     children,
     set_id,
@@ -44,6 +63,7 @@ export default function ExamsDialog({
     const [open, setOpen] = useState(false);
     const [selfTestPopoverOpen, setSelfTestPopoverOpen] = useState(false);
     const [selfTestDuration, setSelfTestDuration] = useState("30");
+    const [hasResumable, setHasResumable] = useState(false);
     const title = useCreateExamStore((s) => s.title);
     const description = useCreateExamStore((s) => s.description);
     const startTimeLocal = useCreateExamStore((s) => s.startTimeLocal);
@@ -63,6 +83,11 @@ export default function ExamsDialog({
             useCreateExamStore.getState().setStartTimeLocal(nowLocalForInput(10));
         }
     }, [open, startTimeLocal]);
+
+    useEffect(() => {
+        if (!open) return;
+        setHasResumable(hasResumableSelfTest(set_id));
+    }, [open, selfTestPopoverOpen, set_id]);
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: createExamApiPost,
@@ -105,10 +130,22 @@ export default function ExamsDialog({
     };
 
     const handleStartSelfTest = () => {
+        localStorage.removeItem(selfTestTimerKey(set_id));
+        localStorage.removeItem(selfTestAnswersKey(set_id));
+        localStorage.removeItem("self-test-timer");
+        localStorage.removeItem("self-test-answers");
+
         const params = new URLSearchParams({
             setId: set_id,
             durationInMinutes: selfTestDuration,
         });
+        setSelfTestPopoverOpen(false);
+        setOpen(false);
+        navigate(`/selftest/new?${params.toString()}`);
+    };
+
+    const handleResumeSelfTest = () => {
+        const params = new URLSearchParams({ setId: set_id });
         setSelfTestPopoverOpen(false);
         setOpen(false);
         navigate(`/selftest/new?${params.toString()}`);
@@ -181,6 +218,9 @@ export default function ExamsDialog({
                                 <PopoverTrigger asChild>
                                     <Button className="font-display cursor-pointer font-bold" variant="outline">
                                         Take a Self Test
+                                        {hasResumable && (
+                                            <span className="ml-2 inline-block h-2 w-2 rounded-full bg-blue-500" />
+                                        )}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-72" align="start">
@@ -191,6 +231,20 @@ export default function ExamsDialog({
                                                 Select duration and start immediately.
                                             </p>
                                         </div>
+                                        {hasResumable && (
+                                            <div className="rounded-md border border-blue-500/30 bg-blue-500/10 p-2">
+                                                <p className="text-xs text-blue-600 mb-2">
+                                                    You have an unfinished self test.
+                                                </p>
+                                                <Button
+                                                    className="w-full"
+                                                    variant="secondary"
+                                                    onClick={handleResumeSelfTest}
+                                                >
+                                                    Resume Test
+                                                </Button>
+                                            </div>
+                                        )}
                                         <div className="flex flex-col gap-2">
                                             <label className="text-xs font-medium">Duration</label>
                                             <Select value={selfTestDuration} onValueChange={setSelfTestDuration}>
@@ -208,7 +262,9 @@ export default function ExamsDialog({
                                             </Select>
                                         </div>
                                         <div className="flex justify-end">
-                                            <Button onClick={handleStartSelfTest}>Start</Button>
+                                            <Button onClick={handleStartSelfTest}>
+                                                {hasResumable ? "Start New Test" : "Start"}
+                                            </Button>
                                         </div>
                                     </div>
                                 </PopoverContent>
