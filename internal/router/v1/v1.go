@@ -12,4 +12,5 @@ func RegisterV1Routes(r chi.Router, h *handler.Handlers) {
 	registerQuestionRoutes(r, h.Question)
 	registerExamRoutes(r, h.Exam)
 	registerSubmissionRoutes(r, h.Submission)
+	registerSelfTestRoutes(r, h.SelfTest)
 }

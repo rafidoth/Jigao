@@ -7,6 +7,7 @@ type Repositories struct {
 	Set      *SetRepository
 	Question *QuestionRepository
 	Exam     *ExamRepository
+	SelfTest *SelfTestRepository
 }
 
 func NewRepositories(s *server.Server) *Repositories {
@@ -15,5 +16,6 @@ func NewRepositories(s *server.Server) *Repositories {
 		Set:      NewSetRepository(s),
 		Question: NewQuestionRepository(s),
 		Exam:     NewExamRepository(s),
+		SelfTest: NewSelfTestRepository(s),
 	}
 }

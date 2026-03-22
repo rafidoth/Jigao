@@ -17,6 +17,7 @@ type Handlers struct {
 	Question   *QuestionHandler
 	Exam       *ExamHandler
 	Submission *SubmissionHandler
+	SelfTest   *SelfTestHandler
 }
 
 func NewHandlers(svc *service.Services, log zerolog.Logger) *Handlers {
@@ -26,6 +27,7 @@ func NewHandlers(svc *service.Services, log zerolog.Logger) *Handlers {
 		Question:   NewQuestionHandler(svc.Question, log.With().Str("handler", "question").Logger()),
 		Exam:       NewExamHandler(svc.Exam, log.With().Str("handler", "exam").Logger()),
 		Submission: NewSubmissionHandler(svc.Exam, log.With().Str("handler", "submission").Logger()),
+		SelfTest:   NewSelfTestHandler(svc.SelfTest, log.With().Str("handler", "self_test").Logger()),
 	}
 }
 
