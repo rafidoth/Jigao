@@ -141,7 +141,7 @@ export function buildCreateQuestionPayload(variables: CreateQuestionVariables) {
       position: idx + 1,
     })),
     answer: {
-      ...correctAnswerPayload,
+      correct_answer: correctAnswerPayload,
       explanation,
     },
   };
