@@ -5,7 +5,6 @@ import SetList from "./pages/SetList.tsx";
 import ExistingSet from "./pages/ExistingSet.tsx";
 import useThemeStore from "./store/themeStore";
 import ExamPage from "./pages/ExamPage.tsx";
-import axios from "axios";
 import { useEffect } from "react";
 import { useClerk, useSession, useUser } from "@clerk/clerk-react";
 import useAuthStore from "./store/authStore.ts";
@@ -31,10 +30,6 @@ function App() {
     //         console.log(data);
     //     },
     // });
-    // axios.defaults.baseURL =
-    //   "https://io2s4e7tf4.execute-api.ap-south-1.amazonaws.com";
-    axios.defaults.baseURL = "http://localhost:5555";
-
     useEffect(() => {
         setClerkFns(clerkObj);
         setCurrentUserDetails(user);

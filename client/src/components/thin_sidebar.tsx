@@ -4,9 +4,11 @@ import {
     Archive as ArchiveIcon,
     Backpack as BackpackIcon,
     LogOut,
+    UserPlus,
 } from "lucide-react";
 import { NavLink, useLocation, matchPath } from "react-router";
 import useAuthStore from "@/store/authStore";
+import { userOnLogin } from "@/api/api";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
@@ -103,6 +105,21 @@ const LogoutButton = () => {
     const clerkFns = useAuthStore((state) => state.clerkFns);
     const currentUserDetails = useAuthStore((state) => state.currentUserDetails);
 
+    const handleRegisterUser = async () => {
+        if (!currentUserDetails) return;
+
+        try {
+            await userOnLogin({
+                id: currentUserDetails.id,
+                name: currentUserDetails.fullName,
+                email: currentUserDetails.primaryEmailAddress?.emailAddress ?? null,
+                image_url: currentUserDetails.hasImage ? currentUserDetails.imageUrl : null,
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     return (
         <Popover>
             <PopoverTrigger asChild>
@@ -116,6 +133,14 @@ const LogoutButton = () => {
             <PopoverContent className="w-fit p-2" align="center" side="top">
                 <Button
                     variant="ghost"
+                    onClick={handleRegisterUser}
+                    disabled={!currentUserDetails}
+                    className="w-full justify-start"
+                >
+                    <UserPlus className="mr-2 h-4 w-4" /> Register User
+                </Button>
+                <Button
+                    variant="ghost"
                     onClick={async () => {
                         try {
                             await clerkFns?.signOut();
@@ -123,6 +148,7 @@ const LogoutButton = () => {
                             console.error(error);
                         }
                     }}
+                    className="w-full justify-start"
                 >
                     <LogOut className="mr-2 h-4 w-4" /> Logout
                 </Button>
