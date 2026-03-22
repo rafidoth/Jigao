@@ -11,6 +11,8 @@ export interface CreateExamStoreState {
   setStartTimeLocal: (v: string) => void;
   durationInMinutes: number;
   setDurationInMinutes: (m: number) => void;
+  visibility: "public" | "private" | "restricted";
+  setVisibility: (v: "public" | "private" | "restricted") => void;
   startMode: "lobby" | "timed";
   setStartMode: (m: "lobby" | "timed") => void;
   proctoringEnabled: boolean;
@@ -29,6 +31,8 @@ const createExamStore: StateCreator<CreateExamStoreState> = (set, _get, store) =
   setStartTimeLocal: (v) => set({ startTimeLocal: v }),
   durationInMinutes: 60,
   setDurationInMinutes: (m) => set({ durationInMinutes: m }),
+  visibility: "private",
+  setVisibility: (v) => set({ visibility: v }),
   startMode: "lobby",
   setStartMode: (m) => set({ startMode: m }),
   proctoringEnabled: false,

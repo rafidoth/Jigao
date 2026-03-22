@@ -38,9 +38,15 @@ func NewExamService(
 	}
 }
 
-func ValidateCreateExam(setID, title string, startTime time.Time, durationMinutes int) error {
+func ValidateCreateExam(setID, visibility, title string, startTime time.Time, durationMinutes int) error {
 	if setID == "" {
 		return errs.NewBadRequestError("set_id is required", false, nil, nil, nil)
+	}
+	if visibility == "" {
+		return errs.NewBadRequestError("visibility is required", false, nil, nil, nil)
+	}
+	if visibility != "public" && visibility != "private" && visibility != "restricted" {
+		return errs.NewBadRequestError("visibility must be one of: public, private, restricted", false, nil, nil, nil)
 	}
 	if title == "" {
 		return errs.NewBadRequestError("title is required", false, nil, nil, nil)
@@ -56,7 +62,7 @@ func ValidateCreateExam(setID, title string, startTime time.Time, durationMinute
 
 // CreateExam validates and creates an exam on a set.
 func (s *ExamService) CreateExam(ctx context.Context, create *model.ExamCreate) error {
-	if err := ValidateCreateExam(create.SetID, create.Title, create.StartTime, create.DurationInMinutes); err != nil {
+	if err := ValidateCreateExam(create.SetID, create.Visibility, create.Title, create.StartTime, create.DurationInMinutes); err != nil {
 		return err
 	}
 

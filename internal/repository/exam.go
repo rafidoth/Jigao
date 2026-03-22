@@ -31,6 +31,7 @@ func (r *ExamRepository) CreateExamOnASet(create *model.ExamCreate) error {
 		`INSERT INTO exams (
 			user_id,
 			set_id,
+			visibility,
 			title,
 			description,
 			start_time,
@@ -39,9 +40,10 @@ func (r *ExamRepository) CreateExamOnASet(create *model.ExamCreate) error {
 			proctoring_enabled,
 			camera_required
 		)
-		VALUES ($1, $2, $3, $4, $5, make_interval(mins := $6), $7, $8, $9)`,
+		VALUES ($1, $2, $3, $4, $5, $6, make_interval(mins := $7), $8, $9, $10)`,
 		create.UserID,
 		create.SetID,
+		create.Visibility,
 		create.Title,
 		create.Description,
 		create.StartTime,

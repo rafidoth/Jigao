@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rafidoth/onlyexams/internal/errs"
@@ -27,7 +28,7 @@ func NewExamHandler(svc *service.ExamService, log zerolog.Logger) *ExamHandler {
 // @Description  Creates a new exam from a question set
 // @Tags         Exams
 // @Accept       json
-// @Param        body  body  object{set_id=string,title=string,description=string,start_time=string,duration_in_minutes=int,start_mode=string,proctoring_enabled=bool,camera_required=bool}  true  "Exam creation payload (start_time in RFC3339 format)"
+// @Param        body  body  object{set_id=string,visibility=string,title=string,description=string,start_time=string,duration_in_minutes=int,start_mode=string,proctoring_enabled=bool,camera_required=bool}  true  "Exam creation payload (start_time in RFC3339 format)"
 // @Success      201
 // @Failure      400  {object}  errs.HTTPError
 // @Failure      401  {object}  errs.HTTPError
@@ -46,10 +47,38 @@ func (h *ExamHandler) CreateExam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var create model.ExamCreate
-	if err := json.Unmarshal(body, &create); err != nil {
+	type createExamReq struct {
+		SetID             string    `json:"set_id"`
+		Visibility        *string   `json:"visibility"`
+		Title             string    `json:"title"`
+		Description       string    `json:"description"`
+		StartTime         time.Time `json:"start_time"`
+		DurationInMinutes int       `json:"duration_in_minutes"`
+		StartMode         string    `json:"start_mode"`
+		ProctoringEnabled bool      `json:"proctoring_enabled"`
+		CameraRequired    bool      `json:"camera_required"`
+	}
+
+	var req createExamReq
+	if err := json.Unmarshal(body, &req); err != nil {
 		writeError(h.log, w, errs.NewBadRequestError("Invalid request body", false, nil, nil, nil), "create exam: unmarshal body")
 		return
+	}
+	if req.Visibility == nil {
+		writeError(h.log, w, errs.NewBadRequestError("visibility is required", false, nil, nil, nil), "create exam: missing visibility")
+		return
+	}
+
+	create := model.ExamCreate{
+		SetID:             req.SetID,
+		Visibility:        *req.Visibility,
+		Title:             req.Title,
+		Description:       req.Description,
+		StartTime:         req.StartTime,
+		DurationInMinutes: req.DurationInMinutes,
+		StartMode:         req.StartMode,
+		ProctoringEnabled: req.ProctoringEnabled,
+		CameraRequired:    req.CameraRequired,
 	}
 
 	create.UserID = uid

@@ -20,6 +20,7 @@ import {
   StartModeField,
   StartTimeField,
   TitleField,
+  VisibilityField,
 } from "./exams_dialog/form-fields";
 import { useCreateExamStore } from "./exams_dialog/store";
 import { nowLocalForInput, toISOFromLocal, validateExamInputs } from "./exams_dialog/utils";
@@ -36,6 +37,7 @@ export default function ExamsDialog({
   const description = useCreateExamStore((s) => s.description);
   const startTimeLocal = useCreateExamStore((s) => s.startTimeLocal);
   const durationInMinutes = useCreateExamStore((s) => s.durationInMinutes);
+  const visibility = useCreateExamStore((s) => s.visibility);
   const startMode = useCreateExamStore((s) => s.startMode);
   const proctoringEnabled = useCreateExamStore((s) => s.proctoringEnabled);
   const cameraRequired = useCreateExamStore((s) => s.cameraRequired);
@@ -79,6 +81,7 @@ export default function ExamsDialog({
         description,
         start_time_iso: toISOFromLocal(startTimeLocal),
         duration_in_minutes: durationInMinutes,
+        visibility,
         start_mode: startMode,
         proctoring_enabled: proctoringEnabled,
         camera_required: cameraRequired,
@@ -125,6 +128,7 @@ export default function ExamsDialog({
                   </div>
                   <StartTimeField />
                   <DurationField />
+                  <VisibilityField />
                   <StartModeField />
                   <ProctoringField />
                 </div>

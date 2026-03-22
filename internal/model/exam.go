@@ -60,6 +60,7 @@ type ExamDetailsForSingleUser struct {
 type ExamCreate struct {
 	UserID            string    `json:"user_id"`
 	SetID             string    `json:"set_id"`
+	Visibility        string    `json:"visibility"`
 	Title             string    `json:"title"`
 	Description       string    `json:"description"`
 	StartTime         time.Time `json:"start_time"`

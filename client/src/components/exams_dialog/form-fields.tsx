@@ -205,6 +205,30 @@ export function StartModeField() {
   );
 }
 
+export function VisibilityField() {
+  const visibility = useCreateExamStore((s) => s.visibility);
+  const setVisibility = useCreateExamStore((s) => s.setVisibility);
+
+  return (
+    <div className="flex flex-col">
+      <Label>Visibility</Label>
+      <Select
+        value={visibility}
+        onValueChange={(v) => setVisibility(v as "public" | "private" | "restricted")}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select exam visibility" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="private">Private</SelectItem>
+          <SelectItem value="public">Public</SelectItem>
+          <SelectItem value="restricted">Restricted</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 export function ProctoringField() {
   const proctoringEnabled = useCreateExamStore((s) => s.proctoringEnabled);
   const setProctoringEnabled = useCreateExamStore((s) => s.setProctoringEnabled);

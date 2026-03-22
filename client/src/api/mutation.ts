@@ -59,6 +59,7 @@ interface CreateExamVariables {
     description: string;
     start_time_iso: string;
     duration_in_minutes: number;
+    visibility: Visibility;
     start_mode: "lobby" | "timed";
     proctoring_enabled: boolean;
     camera_required: boolean;
@@ -71,6 +72,7 @@ export const createExamApiPost = async (variables: CreateExamVariables) => {
         description,
         start_time_iso,
         duration_in_minutes,
+        visibility,
         start_mode,
         proctoring_enabled,
         camera_required,
@@ -81,6 +83,7 @@ export const createExamApiPost = async (variables: CreateExamVariables) => {
         description,
         start_time: start_time_iso,
         duration_in_minutes,
+        visibility,
         start_mode,
         proctoring_enabled,
         camera_required,
