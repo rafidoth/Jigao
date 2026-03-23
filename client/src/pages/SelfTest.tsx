@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { submitSelfTestApiPost } from "@/api/mutation";
 import { getSet, getQuestions } from "@/api/query";
-import { SelfTestQuestionCard } from "@/components/self_test/question-cards";
+import QuestionCard from "@/components/question-cards/QuestionCard";
 import useSelfTestAnswersStore from "@/store/selfTestAnswersStore";
 import useSelfTestTimerStore from "@/store/selfTestTimerStore";
 import { Info } from "lucide-react";
@@ -184,7 +184,8 @@ function SelfTestActive({
                 <div className="flex flex-col items-center gap-3 max-w-3xl mx-auto w-full px-4">
                     {questions.map((q, idx) => (
                         <div key={q.question_id} className="w-full">
-                            <SelfTestQuestionCard
+                            <QuestionCard
+                                mode="self-test"
                                 question={q}
                                 position={idx + 1}
                                 selected={answers[q.question_id] || {}}

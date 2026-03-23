@@ -12,7 +12,7 @@ import { ArrowLeft, LoaderIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import type { Question } from "@/types/questions";
-import { QuestionResultCard } from "./submission/question-result-card";
+import QuestionCard from "@/components/question-cards/QuestionCard";
 
 type AnswerEntry = {
   answer: string | number | boolean | null;
@@ -69,10 +69,12 @@ function CorrectedQuestionsList({
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {questions.map((q) => (
-        <QuestionResultCard
+      {questions.map((q, idx) => (
+        <QuestionCard
+          mode="result"
           key={q.question_id}
           question={q}
+          position={idx + 1}
           answer={userSubmission[q.question_id]}
         />
       ))}

@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router";
 import type { Question } from "@/types/questions";
-import { ExamQuestionCard } from "./running_exam/question-cards";
+import QuestionCard from "@/components/question-cards/QuestionCard";
 import { useRunningExamAnswers } from "./running_exam/use-running-exam-answers";
 
 interface RunningExamHeaderProps {
@@ -98,7 +98,8 @@ function RunningExam({
       <div className="flex-1 overflow-y-auto pr-2">
         <div className="flex flex-col gap-3 pb-6">
           {questions.map((q, idx) => (
-            <ExamQuestionCard
+            <QuestionCard
+              mode="exam"
               key={q.question_id}
               question={q}
               position={idx + 1}
