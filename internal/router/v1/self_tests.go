@@ -8,5 +8,6 @@ import (
 func registerSelfTestRoutes(r chi.Router, h *handler.SelfTestHandler) {
 	r.Route("/self-tests", func(r chi.Router) {
 		r.Post("/submissions", h.SubmitSelfTest)
+		r.Get("/result/{id}", h.GetSelfTestResult)
 	})
 }

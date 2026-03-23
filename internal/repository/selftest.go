@@ -77,3 +77,59 @@ func (r *SelfTestRepository) CreateSelfTestSubmission(ctx context.Context, recor
 
 	return id, createdAt, nil
 }
+
+// GetSelfTestByID fetches a self-test record by its ID.
+// Returns nil if not found or if the user doesn't own the self-test.
+func (r *SelfTestRepository) GetSelfTestByID(ctx context.Context, selfTestID, userID string) (*model.SelfTest, error) {
+	const query = `
+		SELECT
+			id,
+			user_id,
+			set_id,
+			duration_in_minutes,
+			time_taken_seconds,
+			answers,
+			correct_count,
+			question_count,
+			created_at
+		FROM self_tests
+		WHERE id = $1 AND user_id = $2
+	`
+
+	var selfTest model.SelfTest
+	var answersJSON []byte
+
+	err := r.s.DB.Pool.QueryRow(ctx, query, selfTestID, userID).Scan(
+		&selfTest.ID,
+		&selfTest.UserID,
+		&selfTest.SetID,
+		&selfTest.DurationInMinutes,
+		&selfTest.TimeTakenSeconds,
+		&answersJSON,
+		&selfTest.CorrectCount,
+		&selfTest.QuestionCount,
+		&selfTest.CreatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get self test by id: %w", err)
+	}
+
+	if err := json.Unmarshal(answersJSON, &selfTest.Answers); err != nil {
+		return nil, fmt.Errorf("unmarshal self test answers: %w", err)
+	}
+
+	return &selfTest, nil
+}
+
+// GetSetTitle fetches the title of a set by its ID.
+func (r *SelfTestRepository) GetSetTitle(ctx context.Context, setID string) (string, error) {
+	const query = `SELECT title FROM sets WHERE id = $1`
+
+	var title string
+	err := r.s.DB.Pool.QueryRow(ctx, query, setID).Scan(&title)
+	if err != nil {
+		return "", fmt.Errorf("get set title: %w", err)
+	}
+
+	return title, nil
+}
