@@ -66,3 +66,36 @@ export interface SelfTestAnswer {
   fib_answer?: string;
   sq_answer?: string;
 }
+
+// Self-test result types
+export interface UserAnswerResponse {
+  selected_bool?: boolean;
+  selected_choice_position?: number;
+  selected_choice_id?: string;
+  text_answer?: string;
+}
+
+export interface SelfTestQuestionResult {
+  question_id: string;
+  answer_id: string;
+  text: string;
+  type: QuestionKind;
+  difficulty: Difficulty;
+  choices?: ChoiceResponse[];
+  answer: AnswerResponse;
+  user_answer: UserAnswerResponse | null;
+  is_correct: boolean | null; // null for short_question (not graded)
+}
+
+export interface SelfTestResultData {
+  self_test_id: string;
+  set_id: string;
+  set_title: string;
+  duration_in_minutes: number;
+  time_taken_seconds: number;
+  correct_count: number;
+  question_count: number;
+  gradable_count: number;
+  created_at: string;
+  questions: SelfTestQuestionResult[];
+}

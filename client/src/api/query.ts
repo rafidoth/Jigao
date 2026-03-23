@@ -54,3 +54,8 @@ export const getSubmissionByExamId = async (examId: string | undefined) => {
     const res = await api.get(`/api/v1/submissions/${examId}`);
     return res.data;
 };
+
+export const getSelfTestResult = async (selfTestId: string) => {
+    const res = await api.get(`/api/v1/self-tests/result/${selfTestId}`);
+    return res.data;
+};
