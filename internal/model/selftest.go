@@ -86,3 +86,10 @@ type UserAnswerResponse struct {
 	// For fill_in_the_blanks and short_question
 	TextAnswer string `json:"text_answer,omitempty"`
 }
+
+// SelfTestListItem is a minimal representation for listing self-tests
+type SelfTestListItem struct {
+	SelfTestID string    `json:"self_test_id"`
+	SetID      string    `json:"set_id"`
+	CreatedAt  time.Time `json:"created_at"`
+}

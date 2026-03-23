@@ -417,3 +417,24 @@ func (s *SelfTestService) GetSelfTestResult(ctx context.Context, userID, selfTes
 		Questions:         questionResults,
 	}, nil
 }
+
+// GetRecentSelfTests fetches the most recent self-tests for a user.
+func (s *SelfTestService) GetRecentSelfTests(ctx context.Context, userID string, limit int) ([]model.SelfTestListItem, error) {
+	if limit <= 0 {
+		limit = 5
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	items, err := s.selfTestRepo.GetRecentSelfTests(ctx, userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("get recent self tests: %w", err)
+	}
+
+	if items == nil {
+		items = []model.SelfTestListItem{}
+	}
+
+	return items, nil
+}

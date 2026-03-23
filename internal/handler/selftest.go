@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rafidoth/onlyexams/internal/errs"
@@ -103,5 +104,46 @@ func (h *SelfTestHandler) GetSelfTestResult(w http.ResponseWriter, r *http.Reque
 	writeJSON(h.log, w, http.StatusOK, resp{
 		Success: true,
 		Data:    result,
+	})
+}
+
+// @Summary      Get recent self tests
+// @Description  Fetches the most recent self tests for the authenticated user
+// @Tags         SelfTests
+// @Produce      json
+// @Param        limit  query  int  false  "Number of results to return (default 5, max 100)"
+// @Success      200  {object}  object{success=bool,data=[]model.SelfTestListItem}
+// @Failure      401  {object}  errs.HTTPError
+// @Failure      500  {object}  errs.HTTPError
+// @Router       /api/v1/self-tests/recent [get]
+func (h *SelfTestHandler) GetRecentSelfTests(w http.ResponseWriter, r *http.Request) {
+	uid, err := extractUserID(r)
+	if err != nil {
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "get recent self tests: missing user-id")
+		return
+	}
+
+	// Parse limit query param (default 5)
+	limit := 5
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if parsed, err := strconv.Atoi(limitStr); err == nil && parsed > 0 {
+			limit = parsed
+		}
+	}
+
+	items, err := h.svc.GetRecentSelfTests(r.Context(), uid, limit)
+	if err != nil {
+		writeError(h.log, w, err, "get recent self tests failed")
+		return
+	}
+
+	type resp struct {
+		Success bool                     `json:"success"`
+		Data    []model.SelfTestListItem `json:"data"`
+	}
+
+	writeJSON(h.log, w, http.StatusOK, resp{
+		Success: true,
+		Data:    items,
 	})
 }

@@ -133,3 +133,35 @@ func (r *SelfTestRepository) GetSetTitle(ctx context.Context, setID string) (str
 
 	return title, nil
 }
+
+// GetRecentSelfTests fetches the most recent self-tests for a user.
+func (r *SelfTestRepository) GetRecentSelfTests(ctx context.Context, userID string, limit int) ([]model.SelfTestListItem, error) {
+	const query = `
+		SELECT id, set_id, created_at
+		FROM self_tests
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2
+	`
+
+	rows, err := r.s.DB.Pool.Query(ctx, query, userID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("get recent self tests: %w", err)
+	}
+	defer rows.Close()
+
+	var items []model.SelfTestListItem
+	for rows.Next() {
+		var item model.SelfTestListItem
+		if err := rows.Scan(&item.SelfTestID, &item.SetID, &item.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan self test list item: %w", err)
+		}
+		items = append(items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate self tests: %w", err)
+	}
+
+	return items, nil
+}
