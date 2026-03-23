@@ -147,3 +147,52 @@ func (h *SelfTestHandler) GetRecentSelfTests(w http.ResponseWriter, r *http.Requ
 		Data:    items,
 	})
 }
+
+// @Summary      Get self tests by set ID
+// @Description  Fetches the most recent self tests for a specific set
+// @Tags         SelfTests
+// @Produce      json
+// @Param        set_id  query  string  true  "Set ID to filter by"
+// @Param        limit   query  int     false "Number of results to return (default 5, max 100)"
+// @Success      200  {object}  object{success=bool,data=[]model.SelfTestListItem}
+// @Failure      400  {object}  errs.HTTPError
+// @Failure      401  {object}  errs.HTTPError
+// @Failure      500  {object}  errs.HTTPError
+// @Router       /api/v1/self-tests [get]
+func (h *SelfTestHandler) GetSelfTestsBySetID(w http.ResponseWriter, r *http.Request) {
+	uid, err := extractUserID(r)
+	if err != nil {
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "get self tests by set: missing user-id")
+		return
+	}
+
+	setID := r.URL.Query().Get("set_id")
+	if setID == "" {
+		writeError(h.log, w, errs.NewBadRequestError("set_id query parameter is required", false, nil, nil, nil), "get self tests by set: missing set_id")
+		return
+	}
+
+	// Parse limit query param (default 5)
+	limit := 5
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if parsed, err := strconv.Atoi(limitStr); err == nil && parsed > 0 {
+			limit = parsed
+		}
+	}
+
+	items, err := h.svc.GetSelfTestsBySetID(r.Context(), uid, setID, limit)
+	if err != nil {
+		writeError(h.log, w, err, "get self tests by set failed")
+		return
+	}
+
+	type resp struct {
+		Success bool                     `json:"success"`
+		Data    []model.SelfTestListItem `json:"data"`
+	}
+
+	writeJSON(h.log, w, http.StatusOK, resp{
+		Success: true,
+		Data:    items,
+	})
+}

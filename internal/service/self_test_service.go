@@ -438,3 +438,31 @@ func (s *SelfTestService) GetRecentSelfTests(ctx context.Context, userID string,
 
 	return items, nil
 }
+
+// GetSelfTestsBySetID fetches the most recent self-tests for a user filtered by set ID.
+func (s *SelfTestService) GetSelfTestsBySetID(ctx context.Context, userID, setID string, limit int) ([]model.SelfTestListItem, error) {
+	if strings.TrimSpace(setID) == "" {
+		return nil, errs.NewBadRequestError("set_id is required", false, nil, nil, nil)
+	}
+	if len(setID) != 36 {
+		return nil, errs.NewBadRequestError("set_id must be a valid UUID", false, nil, nil, nil)
+	}
+
+	if limit <= 0 {
+		limit = 5
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	items, err := s.selfTestRepo.GetSelfTestsBySetID(ctx, userID, setID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("get self tests by set id: %w", err)
+	}
+
+	if items == nil {
+		items = []model.SelfTestListItem{}
+	}
+
+	return items, nil
+}
