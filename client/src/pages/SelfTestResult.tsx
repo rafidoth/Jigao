@@ -574,7 +574,7 @@ function SelfTestResult() {
                 <div className="flex justify-center pb-8">
                     <Button
                         variant="outline"
-                        onClick={() => navigate(`/set/${data.set_id}`)}
+                        onClick={() => navigate(`/sets/${data.set_id}`)}
                     >
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to Set
