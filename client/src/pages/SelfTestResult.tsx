@@ -486,7 +486,7 @@ function SelfTestResult() {
                         variant="outline"
                         size="icon"
                         className="rounded-full"
-                        onClick={() => navigate(`/set/${data.set_id}`)}
+                        onClick={() => navigate(`/sets/${data.set_id}`)}
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
