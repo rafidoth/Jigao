@@ -150,8 +150,8 @@ function SelfTestActive({
     const isTimeWarning = remainingSeconds <= 60 && remainingSeconds > 0;
 
     return (
-        <div className="min-h-screen flex flex-col">
-            <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="h-screen flex flex-col overflow-hidden">
+            <div className="flex-none border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="flex justify-between items-center px-4 py-3 max-w-3xl mx-auto w-full">
                     <div className="flex flex-col">
                         <span className="text-sm font-medium">{set.title}</span>
@@ -180,25 +180,24 @@ function SelfTestActive({
                 </div>
             </div>
 
-            <div className="flex-1 py-6">
-                <div className="flex flex-col items-center gap-3 max-w-3xl mx-auto w-full px-4">
-                    {questions.map((q, idx) => (
-                        <div key={q.question_id} className="w-full">
+            <div className="flex-1 overflow-y-auto">
+                <div className="max-w-3xl mx-auto w-full px-4 py-6">
+                    <div className="flex flex-col gap-3 pb-8">
+                        {questions.map((q, idx) => (
                             <QuestionCard
+                                key={q.question_id}
                                 mode="self-test"
                                 question={q}
                                 position={idx + 1}
                                 selected={answers[q.question_id] || {}}
                                 selectAnswer={selectAnswer}
                             />
+                        ))}
+
+                        <div className="flex justify-center py-4">
+                            <Badge className="bg-blue-600/20 text-blue-500">End of Questions</Badge>
                         </div>
-                    ))}
 
-                    <div className="flex justify-center py-4">
-                        <Badge className="bg-blue-600/20 text-blue-500">End of Questions</Badge>
-                    </div>
-
-                    <div className="w-full pt-4 pb-8">
                         <Button variant="destructive" className="w-full" onClick={handleSubmit} disabled={isSubmitting}>
                             {isSubmitting ? "Submitting..." : "Submit Test"}
                         </Button>
