@@ -227,3 +227,104 @@ func (h *Hub) RoomCount() int {
 	defer h.mu.RUnlock()
 	return len(h.rooms)
 }
+
+// =============================================================================
+// Statistics
+// =============================================================================
+
+// HubStats contains statistics about the hub's current state
+type HubStats struct {
+	TotalRooms        int         `json:"total_rooms"`
+	TotalClients      int         `json:"total_clients"`
+	TotalControllers  int         `json:"total_controllers"`
+	TotalParticipants int         `json:"total_participants"`
+	RoomStats         []RoomStats `json:"rooms,omitempty"`
+}
+
+// RoomStats contains statistics about a single room
+type RoomStats struct {
+	ExamID       string `json:"exam_id"`
+	ExamTitle    string `json:"exam_title"`
+	State        string `json:"state"`
+	Controllers  int    `json:"controllers"`
+	Participants int    `json:"participants"`
+}
+
+// GetStats returns current statistics about the hub and its rooms
+func (h *Hub) GetStats(includeRooms bool) HubStats {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	stats := HubStats{
+		TotalRooms: len(h.rooms),
+	}
+
+	if includeRooms {
+		stats.RoomStats = make([]RoomStats, 0, len(h.rooms))
+	}
+
+	for examID, room := range h.rooms {
+		room.mu.RLock()
+		controllerCount := len(room.controllers)
+		participantCount := len(room.participants)
+		state := room.state
+		title := room.exam.Title
+		room.mu.RUnlock()
+
+		stats.TotalControllers += controllerCount
+		stats.TotalParticipants += participantCount
+
+		if includeRooms {
+			stats.RoomStats = append(stats.RoomStats, RoomStats{
+				ExamID:       examID,
+				ExamTitle:    title,
+				State:        state,
+				Controllers:  controllerCount,
+				Participants: participantCount,
+			})
+		}
+	}
+
+	stats.TotalClients = stats.TotalControllers + stats.TotalParticipants
+
+	return stats
+}
+
+// =============================================================================
+// Lifecycle
+// =============================================================================
+
+// Shutdown gracefully shuts down the hub and all rooms
+func (h *Hub) Shutdown() {
+	h.log.Info().Msg("shutting down hub")
+
+	// Signal done to stop the Run loop
+	close(h.done)
+	h.cancel()
+
+	// Shutdown all rooms
+	h.mu.Lock()
+	rooms := make([]*Room, 0, len(h.rooms))
+	for _, room := range h.rooms {
+		rooms = append(rooms, room)
+	}
+	h.rooms = make(map[string]*Room)
+	h.mu.Unlock()
+
+	// Shutdown rooms outside the lock
+	for _, room := range rooms {
+		room.Shutdown()
+	}
+
+	h.log.Info().Int("rooms_closed", len(rooms)).Msg("hub shutdown complete")
+}
+
+// IsDone returns true if the hub has been shut down
+func (h *Hub) IsDone() bool {
+	select {
+	case <-h.done:
+		return true
+	default:
+		return false
+	}
+}
