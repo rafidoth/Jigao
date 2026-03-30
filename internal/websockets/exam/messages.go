@@ -1,5 +1,7 @@
 package exam
 
+import "encoding/json"
+
 // =============================================================================
 // Message Type Constants
 // =============================================================================
@@ -52,3 +54,19 @@ const (
 	RoomStateLive     = "live"
 	RoomStateFinished = "finished"
 )
+
+// =============================================================================
+// Message Envelope
+// =============================================================================
+
+// Message is the envelope for all WebSocket messages
+type Message struct {
+	Type    string      `json:"type"`
+	Payload interface{} `json:"payload,omitempty"`
+}
+
+// RawMessage is used for parsing incoming messages before type detection
+type RawMessage struct {
+	Type    string          `json:"type"`
+	Payload json.RawMessage `json:"payload,omitempty"`
+}
