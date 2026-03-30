@@ -155,11 +155,159 @@ func (r *Room) stopTimers() {
 }
 
 // Placeholder methods - will be implemented in next commits
-func (r *Room) handleRegister(c *Client)                {}
-func (r *Room) handleUnregister(c *Client)              {}
 func (r *Room) HandleMessage(c *Client, raw RawMessage) {}
 func (r *Room) StartExam()                              {}
 func (r *Room) EndExam()                                {}
+
+// =============================================================================
+// Client Registration
+// =============================================================================
+
+func (r *Room) handleRegister(c *Client) {
+	r.mu.Lock()
+
+	// Add to appropriate map based on role
+	if c.IsController() {
+		r.controllers[c.UserID] = c
+		r.log.Info().Str("user_id", c.UserID).Msg("controller registered")
+	} else {
+		r.participants[c.UserID] = c
+		r.log.Info().Str("user_id", c.UserID).Msg("participant registered")
+
+		// Notify controllers about new participant
+		r.mu.Unlock()
+		r.notifyParticipantJoined(c)
+		r.mu.Lock()
+	}
+
+	r.mu.Unlock()
+
+	// Send initial state to the newly connected client
+	r.sendInitialState(c)
+
+	// If client is controller, also send full room state
+	if c.IsController() {
+		r.sendRoomState(c)
+	}
+}
+
+func (r *Room) handleUnregister(c *Client) {
+	r.mu.Lock()
+
+	var removed bool
+	if c.IsController() {
+		if _, exists := r.controllers[c.UserID]; exists {
+			delete(r.controllers, c.UserID)
+			removed = true
+			r.log.Info().Str("user_id", c.UserID).Msg("controller unregistered")
+		}
+	} else {
+		if _, exists := r.participants[c.UserID]; exists {
+			delete(r.participants, c.UserID)
+			removed = true
+			r.log.Info().Str("user_id", c.UserID).Msg("participant unregistered")
+		}
+	}
+
+	r.mu.Unlock()
+
+	if removed && c.IsParticipant() {
+		r.notifyParticipantLeft(c)
+	}
+}
+
+func (r *Room) sendInitialState(c *Client) {
+	r.mu.RLock()
+	state := r.state
+	r.mu.RUnlock()
+
+	var timeStr string
+	switch state {
+	case RoomStateWaiting:
+		timeStr = r.exam.StartTime.Format(time.RFC3339)
+	case RoomStateLive:
+		timeStr = r.endsAt.Format(time.RFC3339)
+	case RoomStateFinished:
+		timeStr = r.endsAt.Format(time.RFC3339)
+	}
+
+	// Map internal state to frontend expected format
+	frontendStatus := state
+	if state == RoomStateLive {
+		frontendStatus = "running"
+	} else if state == RoomStateFinished {
+		frontendStatus = "ended"
+	}
+
+	c.SendMessage(NewOnJoinRoomMessage(frontendStatus, timeStr, r.exam.Title, c.Role))
+}
+
+func (r *Room) sendRoomState(c *Client) {
+	if !c.IsController() {
+		return
+	}
+
+	snapshot := r.GetRoomStateSnapshot()
+	c.SendMessage(NewRoomStateMessage(
+		snapshot.ExamStatus,
+		snapshot.StartTime,
+		snapshot.EndTime,
+		snapshot.Participants,
+	))
+}
+
+// GetRoomStateSnapshot returns current state for room-state message
+func (r *Room) GetRoomStateSnapshot() RoomStatePayload {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	participants := make([]ParticipantSnapshot, 0, len(r.participants))
+
+	for userID, client := range r.participants {
+		participants = append(participants, ParticipantSnapshot{
+			UserID:         userID,
+			Name:           client.UserName,
+			ImageURL:       client.UserImageURL,
+			Status:         "taking_exam", // TODO: Get from service
+			CameraActive:   client.GetCameraActive(),
+			ViolationCount: 0, // TODO: Get from service
+			IsOnline:       !client.IsClosed(),
+		})
+	}
+
+	return RoomStatePayload{
+		ExamStatus:   r.state,
+		StartTime:    r.exam.StartTime.Format(time.RFC3339),
+		EndTime:      r.endsAt.Format(time.RFC3339),
+		Participants: participants,
+	}
+}
+
+func (r *Room) notifyParticipantJoined(c *Client) {
+	r.BroadcastToControllers(NewParticipantJoinedMessage(
+		c.UserID,
+		c.UserName,
+		c.UserImageURL,
+	))
+}
+
+func (r *Room) notifyParticipantLeft(c *Client) {
+	r.BroadcastToControllers(NewParticipantLeftMessage(
+		c.UserID,
+		c.UserName,
+		c.UserImageURL,
+	))
+}
+
+// BroadcastToControllers sends a message to all connected controllers
+func (r *Room) BroadcastToControllers(msg Message) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, c := range r.controllers {
+		c.SendMessage(msg)
+	}
+}
 
 // Register queues a client for registration
 func (r *Room) Register(c *Client) {
