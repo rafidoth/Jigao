@@ -147,5 +147,83 @@ func (h *Hub) GetRoom(examID string) *Room {
 	return h.rooms[examID]
 }
 
-// cleanupEmptyRooms placeholder - will be implemented in next commit
-func (h *Hub) cleanupEmptyRooms() {}
+// RemoveRoom removes a room from the hub (typically when exam is finished)
+func (h *Hub) RemoveRoom(examID string) {
+	h.mu.Lock()
+	room, exists := h.rooms[examID]
+	if exists {
+		delete(h.rooms, examID)
+	}
+	h.mu.Unlock()
+
+	if exists && room != nil {
+		room.Shutdown()
+		h.log.Info().
+			Str("exam_id", examID).
+			Int("remaining_rooms", len(h.rooms)).
+			Msg("room removed")
+	}
+}
+
+// cleanupEmptyRooms removes rooms with no connected clients and finished exams
+func (h *Hub) cleanupEmptyRooms() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	var toRemove []string
+
+	for examID, room := range h.rooms {
+		// Remove if room is empty and exam is finished
+		if room.IsEmpty() && room.GetState() == RoomStateFinished {
+			toRemove = append(toRemove, examID)
+		}
+	}
+
+	for _, examID := range toRemove {
+		room := h.rooms[examID]
+		delete(h.rooms, examID)
+		room.Shutdown()
+
+		h.log.Info().
+			Str("exam_id", examID).
+			Msg("empty room cleaned up")
+	}
+
+	if len(toRemove) > 0 {
+		h.log.Info().
+			Int("cleaned", len(toRemove)).
+			Int("remaining", len(h.rooms)).
+			Msg("cleanup completed")
+	}
+}
+
+// =============================================================================
+// Client Management
+// =============================================================================
+
+// RegisterClient registers a client with the appropriate room
+// Returns the room the client was registered to, or nil if registration failed
+func (h *Hub) RegisterClient(client *Client, exam *model.Exam) *Room {
+	room := h.GetOrCreateRoom(exam)
+	if room == nil {
+		h.log.Error().Str("exam_id", exam.Id).Msg("failed to get/create room")
+		return nil
+	}
+
+	room.Register(client)
+	return room
+}
+
+// UnregisterClient unregisters a client from their room
+func (h *Hub) UnregisterClient(client *Client) {
+	if client.room != nil {
+		client.room.Unregister(client)
+	}
+}
+
+// RoomCount returns the number of active rooms
+func (h *Hub) RoomCount() int {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return len(h.rooms)
+}
