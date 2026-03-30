@@ -207,14 +207,28 @@ func (r *Room) HandleMessage(c *Client, raw RawMessage) {
 		}
 		r.handleCameraSnapshot(c, payload)
 
-	// Controller actions - will be implemented in next commit
-	case MsgTypeStartExam, MsgTypeEndExam, MsgTypeWarnParticipant, MsgTypeKickParticipant:
-		if !c.IsController() {
-			c.SendError("unauthorized: controller action", "UNAUTHORIZED")
+	// Controller actions
+	case MsgTypeStartExam:
+		r.handleStartExam(c)
+
+	case MsgTypeEndExam:
+		r.handleEndExam(c)
+
+	case MsgTypeWarnParticipant:
+		var payload WarnParticipantPayload
+		if err := json.Unmarshal(raw.Payload, &payload); err != nil {
+			c.SendError("invalid warn_participant payload", "INVALID_PAYLOAD")
 			return
 		}
-		// TODO: Implement controller handlers in commit 12
-		c.SendError("controller actions not yet implemented", "NOT_IMPLEMENTED")
+		r.handleWarnParticipant(c, payload)
+
+	case MsgTypeKickParticipant:
+		var payload KickParticipantPayload
+		if err := json.Unmarshal(raw.Payload, &payload); err != nil {
+			c.SendError("invalid kick_participant payload", "INVALID_PAYLOAD")
+			return
+		}
+		r.handleKickParticipant(c, payload)
 
 	default:
 		c.SendError("unknown message type: "+raw.Type, "UNKNOWN_TYPE")
@@ -384,6 +398,162 @@ func (r *Room) handleCameraSnapshot(c *Client, payload CameraSnapshotPayload) {
 			"user_id":      c.UserID,
 			"name":         c.UserName,
 			"image_base64": payload.ImageBase64,
+		},
+	})
+}
+
+// =============================================================================
+// Controller Message Handlers
+// =============================================================================
+
+// handleStartExam processes manual exam start from controller (lobby mode)
+func (r *Room) handleStartExam(c *Client) {
+	// Only controllers can start exam
+	if !c.IsController() {
+		c.SendError("unauthorized: only controllers can start exam", "UNAUTHORIZED")
+		return
+	}
+
+	// Check exam is in waiting state
+	r.mu.RLock()
+	state := r.state
+	r.mu.RUnlock()
+
+	if state != RoomStateWaiting {
+		c.SendError("exam is not in waiting state", "INVALID_STATE")
+		return
+	}
+
+	// Check start mode allows manual start
+	if r.exam.StartMode != "lobby" {
+		c.SendError("exam is in timed mode, cannot manually start", "INVALID_START_MODE")
+		return
+	}
+
+	r.log.Info().
+		Str("controller_id", c.UserID).
+		Msg("exam manually started by controller")
+
+	// Trigger exam start
+	r.StartExam()
+}
+
+// handleEndExam processes manual exam end from controller
+func (r *Room) handleEndExam(c *Client) {
+	// Only controllers can end exam
+	if !c.IsController() {
+		c.SendError("unauthorized: only controllers can end exam", "UNAUTHORIZED")
+		return
+	}
+
+	// Check exam is live
+	r.mu.RLock()
+	state := r.state
+	r.mu.RUnlock()
+
+	if state != RoomStateLive {
+		c.SendError("exam is not currently running", "INVALID_STATE")
+		return
+	}
+
+	r.log.Info().
+		Str("controller_id", c.UserID).
+		Msg("exam manually ended by controller")
+
+	// Trigger exam end
+	r.EndExam()
+}
+
+// handleWarnParticipant sends a warning to a specific participant
+func (r *Room) handleWarnParticipant(c *Client, payload WarnParticipantPayload) {
+	// Only controllers can warn participants
+	if !c.IsController() {
+		c.SendError("unauthorized: only controllers can warn participants", "UNAUTHORIZED")
+		return
+	}
+
+	// Validate payload
+	if payload.UserID == "" {
+		c.SendError("user_id is required", "INVALID_PAYLOAD")
+		return
+	}
+	if payload.Message == "" {
+		c.SendError("message is required", "INVALID_PAYLOAD")
+		return
+	}
+
+	// Find the participant
+	r.mu.RLock()
+	participant, exists := r.participants[payload.UserID]
+	r.mu.RUnlock()
+
+	if !exists {
+		c.SendError("participant not found", "PARTICIPANT_NOT_FOUND")
+		return
+	}
+
+	r.log.Info().
+		Str("controller_id", c.UserID).
+		Str("participant_id", payload.UserID).
+		Str("message", payload.Message).
+		Msg("warning sent to participant")
+
+	// NOTE: In production, record warning in database
+	// Example: r.examService.RecordWarning(r.examID, payload.UserID, payload.Message, c.UserID)
+
+	// Send warning to the participant
+	participant.SendMessage(NewWarningMessage(payload.Message, c.UserName))
+}
+
+// handleKickParticipant removes a participant from the exam
+func (r *Room) handleKickParticipant(c *Client, payload KickParticipantPayload) {
+	// Only controllers can kick participants
+	if !c.IsController() {
+		c.SendError("unauthorized: only controllers can kick participants", "UNAUTHORIZED")
+		return
+	}
+
+	// Validate payload
+	if payload.UserID == "" {
+		c.SendError("user_id is required", "INVALID_PAYLOAD")
+		return
+	}
+
+	// Find the participant
+	r.mu.Lock()
+	participant, exists := r.participants[payload.UserID]
+	if exists {
+		delete(r.participants, payload.UserID)
+	}
+	r.mu.Unlock()
+
+	if !exists {
+		c.SendError("participant not found", "PARTICIPANT_NOT_FOUND")
+		return
+	}
+
+	r.log.Warn().
+		Str("controller_id", c.UserID).
+		Str("participant_id", payload.UserID).
+		Str("reason", payload.Reason).
+		Msg("participant kicked from exam")
+
+	// NOTE: In production, record kick in database and mark submission as disqualified
+	// Example: r.examService.KickParticipant(r.examID, payload.UserID, payload.Reason, c.UserID)
+
+	// Send kicked message to participant, then close their connection
+	participant.SendMessage(NewKickedMessage(payload.Reason))
+	participant.Close()
+
+	// Notify other controllers
+	r.BroadcastToControllers(Message{
+		Type: "participant_kicked",
+		Payload: map[string]interface{}{
+			"user_id":     payload.UserID,
+			"name":        participant.UserName,
+			"reason":      payload.Reason,
+			"kicked_by":   c.UserID,
+			"kicked_by_n": c.UserName,
 		},
 	})
 }
