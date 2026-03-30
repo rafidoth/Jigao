@@ -179,8 +179,102 @@ func (c *Client) WritePump() {
 	}
 }
 
-// Close is a placeholder - full implementation in next commit
-func (c *Client) Close() {}
+// =============================================================================
+// Message Sending
+// =============================================================================
 
-// SendError is a placeholder - full implementation in next commit
-func (c *Client) SendError(message, code string) {}
+// SendMessage queues a message for sending to this client
+func (c *Client) SendMessage(msg Message) error {
+	c.mu.RLock()
+	if c.closed {
+		c.mu.RUnlock()
+		return nil // Silently ignore sends to closed clients
+	}
+	c.mu.RUnlock()
+
+	data, err := json.Marshal(msg)
+	if err != nil {
+		c.log.Error().Err(err).Interface("msg", msg).Msg("failed to marshal message")
+		return err
+	}
+
+	// Non-blocking send with timeout
+	select {
+	case c.send <- data:
+		return nil
+	default:
+		// Channel full, client is too slow
+		c.log.Warn().Msg("send channel full, closing slow client")
+		c.Close()
+		return nil
+	}
+}
+
+// SendError sends an error message to this client
+func (c *Client) SendError(message, code string) {
+	if err := c.SendMessage(NewErrorMessage(message, code)); err != nil {
+		c.log.Error().Err(err).Msg("failed to send error message")
+	}
+}
+
+// =============================================================================
+// State Management
+// =============================================================================
+
+// SetCameraActive updates the camera active state
+func (c *Client) SetCameraActive(active bool) {
+	c.mu.Lock()
+	c.CameraActive = active
+	c.mu.Unlock()
+}
+
+// GetCameraActive returns the current camera state
+func (c *Client) GetCameraActive() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.CameraActive
+}
+
+// IsController returns true if client has controller role
+func (c *Client) IsController() bool {
+	return c.Role == RoleController
+}
+
+// IsParticipant returns true if client has participant role
+func (c *Client) IsParticipant() bool {
+	return c.Role == RoleParticipant
+}
+
+// =============================================================================
+// Lifecycle
+// =============================================================================
+
+// Close cleanly shuts down the client connection
+func (c *Client) Close() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.closed {
+		return
+	}
+
+	c.closed = true
+	c.IsOnline = false
+
+	// Close the send channel to signal WritePump to exit
+	close(c.send)
+
+	// Close the WebSocket connection
+	if err := c.conn.Close(); err != nil {
+		c.log.Debug().Err(err).Msg("error closing websocket connection")
+	}
+
+	c.log.Debug().Msg("client closed")
+}
+
+// IsClosed returns true if client has been closed
+func (c *Client) IsClosed() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.closed
+}
