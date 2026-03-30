@@ -130,6 +130,55 @@ func (c *Client) ReadPump() {
 	}
 }
 
+// =============================================================================
+// Write Pump
+// =============================================================================
+
+// WritePump pumps messages from the send channel to the WebSocket connection.
+// This runs in a dedicated goroutine for each client.
+// A ticker is started to send ping messages to keep the connection alive.
+func (c *Client) WritePump() {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		c.Close()
+	}()
+
+	for {
+		select {
+		case message, ok := <-c.send:
+			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				c.log.Error().Err(err).Msg("failed to set write deadline")
+				return
+			}
+
+			if !ok {
+				// Channel closed, send close message
+				if err := c.conn.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
+					c.log.Debug().Err(err).Msg("failed to write close message")
+				}
+				return
+			}
+
+			if err := c.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				c.log.Warn().Err(err).Msg("failed to write message")
+				return
+			}
+
+		case <-ticker.C:
+			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				c.log.Error().Err(err).Msg("failed to set write deadline for ping")
+				return
+			}
+
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				c.log.Debug().Err(err).Msg("failed to write ping")
+				return
+			}
+		}
+	}
+}
+
 // Close is a placeholder - full implementation in next commit
 func (c *Client) Close() {}
 
