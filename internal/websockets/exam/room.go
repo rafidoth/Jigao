@@ -10,10 +10,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// =============================================================================
-// Room
-// =============================================================================
-
 // Room represents a single exam session with connected clients
 type Room struct {
 	hub    *Hub
@@ -78,12 +74,6 @@ func NewRoom(hub *Hub, exam *model.Exam, log zerolog.Logger) *Room {
 	return r
 }
 
-// =============================================================================
-// Main Run Loop
-// =============================================================================
-
-// Run starts the room's main event loop
-// This should be called as a goroutine
 func (r *Room) Run() {
 	r.log.Info().Str("state", r.state).Msg("room started")
 
@@ -111,10 +101,6 @@ func (r *Room) Run() {
 		}
 	}
 }
-
-// =============================================================================
-// Timer Management
-// =============================================================================
 
 func (r *Room) setupTimers() {
 	now := time.Now()
@@ -154,10 +140,6 @@ func (r *Room) stopTimers() {
 		r.endTimer = nil
 	}
 }
-
-// =============================================================================
-// Exam Lifecycle
-// =============================================================================
 
 // StartExam transitions the exam from waiting to live state
 func (r *Room) StartExam() {
@@ -270,10 +252,6 @@ func (r *Room) Shutdown() {
 	r.cancel()
 }
 
-// =============================================================================
-// Room Utility Methods
-// =============================================================================
-
 // GetState returns the current room state
 func (r *Room) GetState() string {
 	r.mu.RLock()
@@ -323,10 +301,6 @@ func (r *Room) IsDone() bool {
 		return false
 	}
 }
-
-// =============================================================================
-// Message Routing
-// =============================================================================
 
 // HandleMessage routes incoming messages to appropriate handlers based on type
 func (r *Room) HandleMessage(c *Client, raw RawMessage) {
@@ -399,10 +373,6 @@ func (r *Room) HandleMessage(c *Client, raw RawMessage) {
 		c.SendError("unknown message type: "+raw.Type, "UNKNOWN_TYPE")
 	}
 }
-
-// =============================================================================
-// Participant Message Handlers
-// =============================================================================
 
 // handleAnswerUpdate processes answer save from participant
 func (r *Room) handleAnswerUpdate(c *Client, payload AnswerUpdatePayload) {
@@ -567,10 +537,6 @@ func (r *Room) handleCameraSnapshot(c *Client, payload CameraSnapshotPayload) {
 	})
 }
 
-// =============================================================================
-// Controller Message Handlers
-// =============================================================================
-
 // handleStartExam processes manual exam start from controller (lobby mode)
 func (r *Room) handleStartExam(c *Client) {
 	// Only controllers can start exam
@@ -722,10 +688,6 @@ func (r *Room) handleKickParticipant(c *Client, payload KickParticipantPayload) 
 		},
 	})
 }
-
-// =============================================================================
-// Client Registration
-// =============================================================================
 
 func (r *Room) handleRegister(c *Client) {
 	r.mu.Lock()

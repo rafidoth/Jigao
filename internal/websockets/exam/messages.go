@@ -2,11 +2,7 @@ package exam
 
 import "encoding/json"
 
-// =============================================================================
-// Message Type Constants
-// =============================================================================
-
-// Outbound message types (server → client)
+// server → client
 const (
 	MsgTypeOnJoinRoom        = "on-join-room"
 	MsgTypeExamStartsNow     = "exam-starts-now"
@@ -23,7 +19,7 @@ const (
 	MsgTypeError             = "error"
 )
 
-// Inbound message types (client → server)
+// client → server
 const (
 	MsgTypeAnswerUpdate    = "answer_update"
 	MsgTypeSubmitExam      = "submit_exam"
@@ -36,28 +32,16 @@ const (
 	MsgTypeKickParticipant = "kick_participant"
 )
 
-// =============================================================================
-// Client Role Constants
-// =============================================================================
-
 const (
 	RoleController  = "controller"
 	RoleParticipant = "participant"
 )
-
-// =============================================================================
-// Room State Constants
-// =============================================================================
 
 const (
 	RoomStateWaiting  = "waiting"
 	RoomStateLive     = "live"
 	RoomStateFinished = "finished"
 )
-
-// =============================================================================
-// Message Envelope
-// =============================================================================
 
 // Message is the envelope for all WebSocket messages
 type Message struct {
@@ -70,10 +54,6 @@ type RawMessage struct {
 	Type    string          `json:"type"`
 	Payload json.RawMessage `json:"payload,omitempty"`
 }
-
-// =============================================================================
-// Outbound Payloads (Server → Client)
-// =============================================================================
 
 // OnJoinRoomPayload is sent when a client first connects
 type OnJoinRoomPayload struct {
