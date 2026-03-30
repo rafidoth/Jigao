@@ -155,9 +155,174 @@ func (r *Room) stopTimers() {
 	}
 }
 
-// Placeholder methods - will be implemented in next commits
-func (r *Room) StartExam() {}
-func (r *Room) EndExam()   {}
+// =============================================================================
+// Exam Lifecycle
+// =============================================================================
+
+// StartExam transitions the exam from waiting to live state
+func (r *Room) StartExam() {
+	r.mu.Lock()
+	if r.state != RoomStateWaiting {
+		r.mu.Unlock()
+		r.log.Debug().Str("state", r.state).Msg("cannot start exam, not in waiting state")
+		return
+	}
+
+	r.state = RoomStateLive
+	r.startedAt = time.Now()
+	r.endsAt = r.startedAt.Add(time.Duration(r.exam.DurationInMinutes) * time.Minute)
+	r.mu.Unlock()
+
+	// Cancel start timer if exists
+	if r.startTimer != nil {
+		r.startTimer.Stop()
+		r.startTimer = nil
+	}
+
+	// Setup end timer
+	r.endTimer = time.AfterFunc(time.Until(r.endsAt), r.EndExam)
+
+	r.log.Info().
+		Time("started_at", r.startedAt).
+		Time("ends_at", r.endsAt).
+		Int("duration_minutes", r.exam.DurationInMinutes).
+		Msg("exam started")
+
+	// NOTE: In production, update exam status in database
+	// Example: r.examService.StartExam(r.examID)
+
+	// Broadcast to all connected clients
+	r.BroadcastToAll(NewExamStartsMessage(r.endsAt.Format(time.RFC3339)))
+}
+
+// EndExam transitions the exam from live to finished state
+func (r *Room) EndExam() {
+	r.mu.Lock()
+	if r.state == RoomStateFinished {
+		r.mu.Unlock()
+		r.log.Debug().Msg("exam already finished")
+		return
+	}
+
+	r.state = RoomStateFinished
+	r.mu.Unlock()
+
+	// Cancel end timer if exists (manual end)
+	if r.endTimer != nil {
+		r.endTimer.Stop()
+		r.endTimer = nil
+	}
+
+	r.log.Info().Time("ended_at", time.Now()).Msg("exam ended")
+
+	// NOTE: In production, update exam status and finalize submissions
+	// Example: r.examService.EndExam(r.examID)
+
+	// Broadcast to all connected clients
+	r.BroadcastToAll(NewExamEndsMessage(r.endsAt.Format(time.RFC3339)))
+}
+
+// BroadcastToAll sends a message to all connected clients (controllers and participants)
+func (r *Room) BroadcastToAll(msg Message) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, c := range r.controllers {
+		c.SendMessage(msg)
+	}
+	for _, c := range r.participants {
+		c.SendMessage(msg)
+	}
+}
+
+// BroadcastToParticipants sends a message to all connected participants
+func (r *Room) BroadcastToParticipants(msg Message) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, c := range r.participants {
+		c.SendMessage(msg)
+	}
+}
+
+// Shutdown gracefully shuts down the room
+func (r *Room) Shutdown() {
+	r.log.Info().Msg("shutting down room")
+
+	// Stop timers
+	r.stopTimers()
+
+	// Notify all clients
+	r.BroadcastToAll(NewServerShutdownMessage())
+
+	// Close all client connections
+	r.mu.Lock()
+	for _, c := range r.controllers {
+		c.Close()
+	}
+	for _, c := range r.participants {
+		c.Close()
+	}
+	r.mu.Unlock()
+
+	// Signal done
+	close(r.done)
+	r.cancel()
+}
+
+// =============================================================================
+// Room Utility Methods
+// =============================================================================
+
+// GetState returns the current room state
+func (r *Room) GetState() string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.state
+}
+
+// GetExamID returns the exam ID for this room
+func (r *Room) GetExamID() string {
+	return r.examID
+}
+
+// IsEmpty returns true if no clients are connected
+func (r *Room) IsEmpty() bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return len(r.controllers) == 0 && len(r.participants) == 0
+}
+
+// ClientCount returns the total number of connected clients
+func (r *Room) ClientCount() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return len(r.controllers) + len(r.participants)
+}
+
+// GetClient retrieves a client by userID from either controllers or participants
+func (r *Room) GetClient(userID string) (*Client, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	if c, exists := r.controllers[userID]; exists {
+		return c, true
+	}
+	if c, exists := r.participants[userID]; exists {
+		return c, true
+	}
+	return nil, false
+}
+
+// IsDone returns true if the room has been shut down
+func (r *Room) IsDone() bool {
+	select {
+	case <-r.done:
+		return true
+	default:
+		return false
+	}
+}
 
 // =============================================================================
 // Message Routing
