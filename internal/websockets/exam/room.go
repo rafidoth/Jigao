@@ -2,6 +2,7 @@ package exam
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 	"time"
 
@@ -155,9 +156,237 @@ func (r *Room) stopTimers() {
 }
 
 // Placeholder methods - will be implemented in next commits
-func (r *Room) HandleMessage(c *Client, raw RawMessage) {}
-func (r *Room) StartExam()                              {}
-func (r *Room) EndExam()                                {}
+func (r *Room) StartExam() {}
+func (r *Room) EndExam()   {}
+
+// =============================================================================
+// Message Routing
+// =============================================================================
+
+// HandleMessage routes incoming messages to appropriate handlers based on type
+func (r *Room) HandleMessage(c *Client, raw RawMessage) {
+	switch raw.Type {
+	// Participant actions
+	case MsgTypeAnswerUpdate:
+		var payload AnswerUpdatePayload
+		if err := json.Unmarshal(raw.Payload, &payload); err != nil {
+			c.SendError("invalid answer_update payload", "INVALID_PAYLOAD")
+			return
+		}
+		r.handleAnswerUpdate(c, payload)
+
+	case MsgTypeSubmitExam:
+		var payload SubmitExamPayload
+		if err := json.Unmarshal(raw.Payload, &payload); err != nil {
+			c.SendError("invalid submit_exam payload", "INVALID_PAYLOAD")
+			return
+		}
+		r.handleSubmitExam(c, payload)
+
+	case MsgTypeViolationReport:
+		var payload ViolationReportPayload
+		if err := json.Unmarshal(raw.Payload, &payload); err != nil {
+			c.SendError("invalid violation_report payload", "INVALID_PAYLOAD")
+			return
+		}
+		r.handleViolationReport(c, payload)
+
+	case MsgTypeCameraStatus:
+		var payload CameraStatusPayload
+		if err := json.Unmarshal(raw.Payload, &payload); err != nil {
+			c.SendError("invalid camera_status payload", "INVALID_PAYLOAD")
+			return
+		}
+		r.handleCameraStatus(c, payload)
+
+	case MsgTypeCameraSnapshot:
+		var payload CameraSnapshotPayload
+		if err := json.Unmarshal(raw.Payload, &payload); err != nil {
+			c.SendError("invalid camera_snapshot payload", "INVALID_PAYLOAD")
+			return
+		}
+		r.handleCameraSnapshot(c, payload)
+
+	// Controller actions - will be implemented in next commit
+	case MsgTypeStartExam, MsgTypeEndExam, MsgTypeWarnParticipant, MsgTypeKickParticipant:
+		if !c.IsController() {
+			c.SendError("unauthorized: controller action", "UNAUTHORIZED")
+			return
+		}
+		// TODO: Implement controller handlers in commit 12
+		c.SendError("controller actions not yet implemented", "NOT_IMPLEMENTED")
+
+	default:
+		c.SendError("unknown message type: "+raw.Type, "UNKNOWN_TYPE")
+	}
+}
+
+// =============================================================================
+// Participant Message Handlers
+// =============================================================================
+
+// handleAnswerUpdate processes answer save from participant
+func (r *Room) handleAnswerUpdate(c *Client, payload AnswerUpdatePayload) {
+	// Only participants can submit answers
+	if !c.IsParticipant() {
+		c.SendError("only participants can submit answers", "UNAUTHORIZED")
+		return
+	}
+
+	// Check exam is live
+	r.mu.RLock()
+	state := r.state
+	r.mu.RUnlock()
+
+	if state != RoomStateLive {
+		c.SendError("exam is not currently running", "EXAM_NOT_LIVE")
+		return
+	}
+
+	// Validate payload
+	if payload.QuestionID == "" {
+		c.SendError("question_id is required", "INVALID_PAYLOAD")
+		return
+	}
+
+	r.log.Debug().
+		Str("user_id", c.UserID).
+		Str("question_id", payload.QuestionID).
+		Msg("answer update received")
+
+	// NOTE: In production, save to database/Redis here via service layer
+	// Example: r.examService.SaveAnswer(r.examID, c.UserID, payload.QuestionID, payload.Answer)
+
+	// Send ACK back to participant
+	c.SendMessage(NewAnswerSavedMessage(payload.QuestionID))
+}
+
+// handleSubmitExam processes final exam submission from participant
+func (r *Room) handleSubmitExam(c *Client, payload SubmitExamPayload) {
+	// Only participants can submit exams
+	if !c.IsParticipant() {
+		c.SendError("only participants can submit exams", "UNAUTHORIZED")
+		return
+	}
+
+	// Check exam is live
+	r.mu.RLock()
+	state := r.state
+	r.mu.RUnlock()
+
+	if state != RoomStateLive {
+		c.SendError("exam is not currently running", "EXAM_NOT_LIVE")
+		return
+	}
+
+	r.log.Info().
+		Str("user_id", c.UserID).
+		Int("answer_count", len(payload.Answers)).
+		Msg("exam submitted")
+
+	// NOTE: In production, process submission via service layer
+	// Example: r.examService.SubmitExam(r.examID, c.UserID, payload.Answers)
+
+	// Notify controllers about submission
+	r.BroadcastToControllers(Message{
+		Type: "participant_submitted",
+		Payload: map[string]interface{}{
+			"user_id": c.UserID,
+			"name":    c.UserName,
+		},
+	})
+}
+
+// handleViolationReport processes violation detected by browser
+func (r *Room) handleViolationReport(c *Client, payload ViolationReportPayload) {
+	// Silently ignore if not a participant (don't leak info)
+	if !c.IsParticipant() {
+		return
+	}
+
+	// Check exam is live
+	r.mu.RLock()
+	state := r.state
+	r.mu.RUnlock()
+
+	if state != RoomStateLive {
+		return // Ignore violations when exam not running
+	}
+
+	r.log.Warn().
+		Str("user_id", c.UserID).
+		Str("violation_type", payload.Type).
+		Interface("details", payload.Details).
+		Msg("violation reported")
+
+	// NOTE: In production, record violation and get count from service
+	// Example: count := r.examService.RecordViolation(r.examID, c.UserID, payload.Type, payload.Details)
+	violationCount := 1 // Placeholder
+
+	// Alert all controllers
+	r.BroadcastToControllers(NewViolationAlertMessage(
+		c.UserID,
+		c.UserName,
+		payload.Type,
+		violationCount,
+	))
+}
+
+// handleCameraStatus processes camera state change from participant
+func (r *Room) handleCameraStatus(c *Client, payload CameraStatusPayload) {
+	// Silently ignore if not a participant
+	if !c.IsParticipant() {
+		return
+	}
+
+	// Update client's camera state
+	c.SetCameraActive(payload.Active)
+
+	r.log.Debug().
+		Str("user_id", c.UserID).
+		Bool("camera_active", payload.Active).
+		Msg("camera status updated")
+
+	// Notify all controllers
+	r.BroadcastToControllers(NewCameraUpdateMessage(
+		c.UserID,
+		c.UserName,
+		payload.Active,
+	))
+}
+
+// handleCameraSnapshot relays camera image to controllers
+func (r *Room) handleCameraSnapshot(c *Client, payload CameraSnapshotPayload) {
+	// Silently ignore if not a participant
+	if !c.IsParticipant() {
+		return
+	}
+
+	// Check exam is live
+	r.mu.RLock()
+	state := r.state
+	r.mu.RUnlock()
+
+	if state != RoomStateLive {
+		return // Don't relay snapshots when exam not running
+	}
+
+	// Validate we have image data
+	if payload.ImageBase64 == "" {
+		return
+	}
+
+	// Relay snapshot to all controllers (for proctoring display)
+	// We create a custom message since this is high-frequency and specific
+	r.BroadcastToControllers(Message{
+		Type: "camera_snapshot",
+		Payload: map[string]interface{}{
+			"user_id":      c.UserID,
+			"name":         c.UserName,
+			"image_base64": payload.ImageBase64,
+		},
+	})
+}
 
 // =============================================================================
 // Client Registration
