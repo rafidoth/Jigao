@@ -1,6 +1,7 @@
 package exam
 
 import (
+	"encoding/json"
 	"sync"
 	"time"
 
@@ -82,3 +83,55 @@ func NewClient(
 		log:          log.With().Str("user_id", userID).Str("role", role).Logger(),
 	}
 }
+
+// =============================================================================
+// Read Pump
+// =============================================================================
+
+// ReadPump pumps messages from the WebSocket connection to the room.
+// This runs in a dedicated goroutine for each client.
+// The application ensures there is at most one reader on a connection by
+// executing all reads from this goroutine.
+func (c *Client) ReadPump() {
+	defer func() {
+		c.room.Unregister(c)
+		c.Close()
+	}()
+
+	c.conn.SetReadLimit(maxMessageSize)
+	if err := c.conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+		c.log.Error().Err(err).Msg("failed to set read deadline")
+		return
+	}
+
+	c.conn.SetPongHandler(func(string) error {
+		return c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	})
+
+	for {
+		_, messageBytes, err := c.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				c.log.Warn().Err(err).Msg("websocket unexpected close")
+			}
+			break
+		}
+
+		// Parse the raw message to get type
+		var raw RawMessage
+		if err := json.Unmarshal(messageBytes, &raw); err != nil {
+			c.log.Warn().Err(err).Msg("failed to parse message")
+			c.SendError("invalid message format", "INVALID_FORMAT")
+			continue
+		}
+
+		// Route message to room for handling
+		c.room.HandleMessage(c, raw)
+	}
+}
+
+// Close is a placeholder - full implementation in next commit
+func (c *Client) Close() {}
+
+// SendError is a placeholder - full implementation in next commit
+func (c *Client) SendError(message, code string) {}
