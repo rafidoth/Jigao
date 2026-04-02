@@ -14,6 +14,21 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const (
+	role_participant string = "participant"
+	role_controller  string = "controller"
+)
+
+const (
+	status_invited      string = "invited"
+	status_joined       string = "joined"
+	status_ready        string = "ready"
+	status_taking_exam  string = "taking_exam"
+	status_submitted    string = "submitted"
+	status_disconnected string = "disconnected"
+	status_terminated   string = "terminated"
+)
+
 type ExamService struct {
 	examRepo     *repository.ExamRepository
 	setRepo      *repository.SetRepository
@@ -265,6 +280,132 @@ func (s *ExamService) DetermineClientType(ctx context.Context, userID, examID st
 // ExamExists checks if an exam exists.
 func (s *ExamService) ExamExists(ctx context.Context, examID string) error {
 	return s.examRepo.IsExamExists(examID)
+}
+
+// JoinExam registers a participant for an exam.
+// Rules:
+// - private: only set owner/shared-access users can join, as participant
+// - public: anyone can join; owner/shared-access users are controller, others participant
+// - restricted: currently same as public until invite-list logic is added
+func (s *ExamService) JoinExam(ctx context.Context, userID, examID string) (*model.ExamJoinInfo, error) {
+	if examID == "" {
+		return nil, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil)
+	}
+
+	exam, err := s.examRepo.GetExamByExamId(examID)
+	if err != nil {
+		if err.Error() == "exam not found" {
+			return nil, errs.NewNotFoundError("Exam not found", false, nil)
+		}
+		return nil, fmt.Errorf("join exam: get exam: %w", err)
+	}
+
+	if exam.SessionStatus == "finished" {
+		return nil, errs.NewBadRequestError("exam already finished", false, nil, nil, nil)
+	}
+
+	setAccess, err := s.getSetAccessForUser(exam, userID)
+	if err != nil {
+		return nil, err
+	}
+	var role string
+	switch exam.Visibility {
+	case "private":
+		// users with set access can attend friendly-exam
+		// as being participant for group practice
+		if !setAccess.HasSetAccess {
+			return nil, errs.NewForbiddenError("you are not allowed to join this private exam", false)
+		}
+
+		role = role_participant
+		if err := s.examRepo.UpsertExamParticipant(examID, userID, status_joined, role_participant); err != nil {
+			return nil, fmt.Errorf("join exam: upsert participant: %w", err)
+		}
+	case "restricted":
+		if setAccess.HasSetAccess {
+			role = role_controller
+			if err := s.examRepo.UpsertExamParticipant(examID, userID, status_joined, role_controller); err != nil {
+				return nil, fmt.Errorf("join exam: upsert controller: %w", err)
+			}
+		} else {
+			status, err := s.examRepo.GetExamParticipantStatus(examID, userID)
+			if err != nil && status != "not_found" {
+				return nil, fmt.Errorf("join exam: get participant status: %w", err)
+			}
+			// user was invited
+			if status == status_invited {
+				role = role_participant
+				if err := s.examRepo.UpsertExamParticipant(examID, userID, status_joined, role_participant); err != nil {
+					return nil, fmt.Errorf("join exam: upsert invited participant: %w", err)
+				}
+			} else {
+				return nil, errs.NewForbiddenError("you are not allowed to join this restricted exam", false)
+			}
+		}
+	case "public":
+		if setAccess.HasSetAccess {
+			role = role_controller
+			if err := s.examRepo.UpsertExamParticipant(examID, userID, status_joined, role_controller); err != nil {
+				return nil, fmt.Errorf("join exam: upsert controller: %w", err)
+			}
+		} else {
+			role = role_participant
+			if err := s.examRepo.UpsertExamParticipant(examID, userID, status_joined, role_participant); err != nil {
+				return nil, fmt.Errorf("join exam: upsert participant: %w", err)
+			}
+		}
+	default:
+		return nil, errs.NewBadRequestError("invalid exam visibility", false, nil, nil, nil)
+	}
+
+	return &model.ExamJoinInfo{
+		ExamID:    examID,
+		Role:      role,
+		WsURL:     "",
+		Status:    exam.SessionStatus,
+		StartTime: exam.StartTime,
+		EndTime:   exam.EndTime,
+	}, nil
+}
+
+func (s *ExamService) getSetAccessForUser(exam model.Exam, userID string) (*model.SetAccessDetailsUser, error) {
+
+	ownerID, err := s.setRepo.GetOwnerUserId(exam.SetId)
+	if err != nil {
+		return nil, fmt.Errorf("join exam: get set owner: %w", err)
+	}
+
+	sharedUsers, err := s.setRepo.GetSharedAccessUsersList(exam.SetId)
+	if err != nil {
+		return nil, fmt.Errorf("join exam: check set access: %w", err)
+	}
+
+	// user is the owner
+	if ownerID == userID {
+		return &model.SetAccessDetailsUser{
+			OwnerID:      ownerID,
+			SharedUsers:  sharedUsers,
+			HasSetAccess: true,
+		}, nil
+	}
+
+	// user in shared users list
+	for _, user := range sharedUsers {
+		if userID == user.ID {
+			return &model.SetAccessDetailsUser{
+				OwnerID:      ownerID,
+				SharedUsers:  sharedUsers,
+				HasSetAccess: true,
+			}, nil
+		}
+	}
+
+	// user has no access to this set
+	return &model.SetAccessDetailsUser{
+		OwnerID:      ownerID,
+		SharedUsers:  sharedUsers,
+		HasSetAccess: false,
+	}, nil
 }
 
 // EnrichExamsWithCreatedBy adds the CreatedBy user info to each exam.
