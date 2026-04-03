@@ -2,10 +2,10 @@ package examWs
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
 	"github.com/rafidoth/onlyexams/internal/service"
 	"github.com/rs/zerolog"
@@ -20,14 +20,12 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// Handler provides HTTP endpoints for exam websocket operations.
 type ExamWsHandler struct {
 	manager *Manager
 	examSvc *service.ExamService
 	log     zerolog.Logger
 }
 
-// NewHandler creates a new websocket HTTP handler.
 func NewHandler(
 	manager *Manager,
 	examSvc *service.ExamService,
@@ -42,15 +40,15 @@ func NewHandler(
 
 // ServeWS upgrades HTTP requests to websocket and registers the client to an exam room.
 func (h *ExamWsHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
-	examID := chi.URLParam(r, "exam_id")
-	if examID == "" {
-		h.writeJSON(w, http.StatusBadRequest, map[string]string{"error": "exam_id is required"})
-		return
-	}
 
 	userID, ok := r.Context().Value("user-id").(string)
 	if !ok || userID == "" {
 		h.writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+		return
+	}
+	examID := r.URL.Query().Get("exam_id")
+	if examID == "" {
+		h.writeJSON(w, http.StatusBadRequest, map[string]string{"error": "exam_id is required"})
 		return
 	}
 
@@ -58,13 +56,11 @@ func (h *ExamWsHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 	if role == "" {
 		role = RoleParticipant
 	}
+
 	if role != RoleParticipant && role != RoleController {
 		h.writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid role"})
 		return
 	}
-
-	userName := r.URL.Query().Get("name")
-	userImageURL := r.URL.Query().Get("image_url")
 
 	examData, err := h.examSvc.GetExamByID(r.Context(), examID)
 	if err != nil {
@@ -79,34 +75,36 @@ func (h *ExamWsHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	room := h.manager.GetOrCreateRoom(&examData)
-	if room == nil {
-		_ = conn.Close()
-		h.writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "websocket manager unavailable"})
-		return
-	}
+	fmt.Println(examData, conn)
 
-	client := NewClient(
-		room,
-		conn,
-		userID,
-		examID,
-		role,
-		userName,
-		userImageURL,
-		h.log,
-	)
-
-	room.Register(client)
-
-	go client.WritePump()
-	go client.ReadPump()
-
-	h.log.Info().
-		Str("exam_id", examID).
-		Str("user_id", userID).
-		Str("role", role).
-		Msg("websocket client connected")
+	// room := h.manager.GetOrCreateRoom(&examData)
+	// if room == nil {
+	// 	_ = conn.Close()
+	// 	h.writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "websocket manager unavailable"})
+	// 	return
+	// }
+	//
+	// client := NewClient(
+	// 	room,
+	// 	conn,
+	// 	userID,
+	// 	examID,
+	// 	role,
+	// 	userName,
+	// 	userImageURL,
+	// 	h.log,
+	// )
+	//
+	// room.Register(client)
+	//
+	// go client.WritePump()
+	// go client.ReadPump()
+	//
+	// h.log.Info().
+	// 	Str("exam_id", examID).
+	// 	Str("user_id", userID).
+	// 	Str("role", role).
+	// 	Msg("websocket client connected")
 }
 
 // HandleStats returns hub stats as JSON.
