@@ -21,15 +21,19 @@ var upgrader = websocket.Upgrader{
 }
 
 // Handler provides HTTP endpoints for exam websocket operations.
-type Handler struct {
+type ExamWsHandler struct {
 	manager *Manager
 	examSvc *service.ExamService
 	log     zerolog.Logger
 }
 
 // NewHandler creates a new websocket HTTP handler.
-func NewHandler(manager *Manager, examSvc *service.ExamService, log zerolog.Logger) *Handler {
-	return &Handler{
+func NewHandler(
+	manager *Manager,
+	examSvc *service.ExamService,
+	log zerolog.Logger,
+) *ExamWsHandler {
+	return &ExamWsHandler{
 		manager: manager,
 		examSvc: examSvc,
 		log:     log.With().Str("component", "ws_handler").Logger(),
@@ -37,7 +41,7 @@ func NewHandler(manager *Manager, examSvc *service.ExamService, log zerolog.Logg
 }
 
 // ServeWS upgrades HTTP requests to websocket and registers the client to an exam room.
-func (h *Handler) ServeWS(w http.ResponseWriter, r *http.Request) {
+func (h *ExamWsHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 	examID := chi.URLParam(r, "exam_id")
 	if examID == "" {
 		h.writeJSON(w, http.StatusBadRequest, map[string]string{"error": "exam_id is required"})
@@ -106,7 +110,7 @@ func (h *Handler) ServeWS(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleStats returns hub stats as JSON.
-func (h *Handler) HandleStats(w http.ResponseWriter, r *http.Request) {
+func (h *ExamWsHandler) HandleStats(w http.ResponseWriter, r *http.Request) {
 	includeRooms := false
 	if raw := r.URL.Query().Get("include_rooms"); raw != "" {
 		parsed, err := strconv.ParseBool(raw)
@@ -121,7 +125,7 @@ func (h *Handler) HandleStats(w http.ResponseWriter, r *http.Request) {
 	h.writeJSON(w, http.StatusOK, stats)
 }
 
-func (h *Handler) writeJSON(w http.ResponseWriter, status int, payload interface{}) {
+func (h *ExamWsHandler) writeJSON(w http.ResponseWriter, status int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 

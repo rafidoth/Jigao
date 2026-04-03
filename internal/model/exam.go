@@ -84,6 +84,15 @@ type ExamUpdate struct {
 	MaxViolations     *int       `json:"max_violations,omitempty"`
 }
 
+type ExamJoinInfo struct {
+	ExamID    string    `json:"exam_id"`
+	Role      string    `json:"role"`
+	WsURL     string    `json:"ws_url"`
+	Status    string    `json:"status"`
+	StartTime time.Time `json:"start_time"`
+	EndTime   time.Time `json:"end_time"`
+}
+
 type EvaluatedAnswerType struct {
 	UserAnswer    string `json:"answer"`
 	IsCorrect     bool   `json:"is_correct"`

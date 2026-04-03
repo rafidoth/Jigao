@@ -10,7 +10,7 @@ import (
 	"github.com/rafidoth/onlyexams/internal/router"
 	"github.com/rafidoth/onlyexams/internal/server"
 	"github.com/rafidoth/onlyexams/internal/service"
-	"github.com/rafidoth/onlyexams/internal/websockets/examWs"
+	"github.com/rafidoth/onlyexams/internal/websockets"
 )
 
 func main() {
@@ -32,14 +32,14 @@ func main() {
 
 	svc := service.NewServices(repos, log)
 
-	handlers := handler.NewHandlers(svc, log)
+	wsManagers := websockets.NewManagers(log)
+	handlers := handler.NewHandlers(svc, wsManagers, log)
 
 	mux := router.New(srv, handlers)
 
 	srv.SetupHTTPServer(mux)
 
-	examWsManager := examWs.NewManager(log)
-	go examWsManager.Run()
+	go wsManagers.Exam.Run()
 
 	if err := srv.Start(); err != nil {
 		log.Error().Err(err).Msg("server stopped")

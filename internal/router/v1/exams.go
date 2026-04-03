@@ -3,9 +3,10 @@ package v1
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/rafidoth/onlyexams/internal/handler"
+	"github.com/rafidoth/onlyexams/internal/websockets/examWs"
 )
 
-func registerExamRoutes(r chi.Router, h *handler.ExamHandler) {
+func registerExamRoutes(r chi.Router, h *handler.ExamHandler, wsH *examWs.ExamWsHandler) {
 	r.Route("/exams", func(r chi.Router) {
 		// exam cruds
 		r.Get("/", h.GetExams)
@@ -16,5 +17,8 @@ func registerExamRoutes(r chi.Router, h *handler.ExamHandler) {
 		r.Delete("/{exam_id}", h.RemoveExam)
 		// exam room routes
 		r.Post("/join", h.JoinExam)
+		// exam ws route
+		r.Get("/ws/{exam_id}", wsH.ServeWS)
+
 	})
 }

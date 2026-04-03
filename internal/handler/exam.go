@@ -163,3 +163,36 @@ func (h *ExamHandler) RemoveExam(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// @Summary      Join an exam
+// @Description  Joins an exam by query parameter exam_id and returns the resolved role for websocket connection
+// @Tags         Exams
+// @Param        exam_id  query  string  true  "Exam ID"
+// @Success      200  {object}  model.ExamJoinInfo
+// @Failure      400  {object}  errs.HTTPError
+// @Failure      401  {object}  errs.HTTPError
+// @Failure      403  {object}  errs.HTTPError
+// @Failure      404  {object}  errs.HTTPError
+// @Failure      500  {object}  errs.HTTPError
+// @Router       /api/v1/exams/join [post]
+func (h *ExamHandler) JoinExam(w http.ResponseWriter, r *http.Request) {
+	uid, err := extractUserID(r)
+	if err != nil {
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "join exam: missing user-id")
+		return
+	}
+
+	examID := r.URL.Query().Get("exam_id")
+	if examID == "" {
+		writeError(h.log, w, errs.NewBadRequestError("exam_id is required", false, nil, nil, nil), "join exam: missing exam_id")
+		return
+	}
+
+	joinInfo, err := h.svc.JoinExam(r.Context(), uid, examID)
+	if err != nil {
+		writeError(h.log, w, err, "join exam failed")
+		return
+	}
+
+	writeJSON(h.log, w, http.StatusOK, joinInfo)
+}
