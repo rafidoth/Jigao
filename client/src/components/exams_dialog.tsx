@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { createExamApiPost } from "@/api/mutation";
 import { ExamsList } from "./exams_dialog/exams-list";
+import { RecentSelfTests } from "./exams_dialog/recent-self-tests";
 import {
     DescriptionField,
     DurationField,
@@ -270,6 +271,9 @@ export default function ExamsDialog({
                                 </PopoverContent>
                             </Popover>
                         </div>
+                    </div>
+                    <div>
+                        <RecentSelfTests set_id={set_id} />
                     </div>
                     <div>
                         <h3 className="text-base font-semibold mb-1">Scheduled Exams</h3>

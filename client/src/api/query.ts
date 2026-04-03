@@ -59,3 +59,8 @@ export const getSelfTestResult = async (selfTestId: string) => {
     const res = await api.get(`/api/v1/self-tests/result/${selfTestId}`);
     return res.data;
 };
+
+export const fetchRecentSelfTests = async (set_id: string) => {
+    const res = await api.get(`/api/v1/self-tests`, { params: { set_id } });
+    return res.data;
+};

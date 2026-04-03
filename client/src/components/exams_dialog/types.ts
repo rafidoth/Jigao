@@ -18,3 +18,9 @@ export interface ExamItem {
   owner_profile_image_url?: string;
   created_by?: ExamUser;
 }
+
+export interface SelfTestSubmission {
+  self_test_id: string;
+  set_id: string;
+  created_at: string;
+}
