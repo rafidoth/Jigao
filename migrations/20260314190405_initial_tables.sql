@@ -5,6 +5,10 @@ CREATE TYPE exam_start_mode AS ENUM (
   'lobby',
   'timed'
 );
+CREATE TYPE participant_role AS ENUM (
+    'controller',
+    'participant'
+);
 
 CREATE TYPE exam_session_status AS ENUM (
   'waiting',
@@ -13,6 +17,7 @@ CREATE TYPE exam_session_status AS ENUM (
 );
 
 CREATE TYPE participant_status AS ENUM (
+  'invited',
   'joined',
   'ready',
   'taking_exam',
@@ -135,6 +140,7 @@ CREATE TABLE IF NOT EXISTS exam_participants (
     exam_id UUID NOT NULL REFERENCES exams(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status participant_status NOT NULL DEFAULT 'joined',
+    role participant_role NOT NULL,
     camera_active BOOLEAN NOT NULL DEFAULT false,
     violation_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -223,6 +229,7 @@ DROP TABLE IF EXISTS choices;
 DROP TABLE IF EXISTS answers;
 DROP TABLE IF EXISTS questions;
 DROP TABLE IF EXISTS contexts;
+DROP TABLE IF EXISTS self_tests;
 DROP TABLE IF EXISTS sets;
 DROP TABLE IF EXISTS users;
 
@@ -231,5 +238,6 @@ DROP FUNCTION IF EXISTS update_updated_at CASCADE;
 
 DROP TYPE IF EXISTS violation_type;
 DROP TYPE IF EXISTS participant_status;
+DROP TYPE IF EXISTS participant_role;
 DROP TYPE IF EXISTS exam_session_status;
 DROP TYPE IF EXISTS exam_start_mode;
