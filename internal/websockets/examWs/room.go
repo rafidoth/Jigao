@@ -12,9 +12,9 @@ import (
 
 // Room represents a single exam session with connected clients
 type Room struct {
-	hub    *Hub
-	examID string
-	exam   *model.Exam
+	manager *Manager
+	examID  string
+	exam    *model.Exam
 
 	// Connected clients by role
 	controllers  map[string]*Client // userID → Client
@@ -44,7 +44,7 @@ type Room struct {
 }
 
 // NewRoom creates a new exam room
-func NewRoom(hub *Hub, exam *model.Exam, log zerolog.Logger) *Room {
+func NewRoom(manager *Manager, exam *model.Exam, log zerolog.Logger) *Room {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Determine initial state based on exam's session status
@@ -56,7 +56,7 @@ func NewRoom(hub *Hub, exam *model.Exam, log zerolog.Logger) *Room {
 	}
 
 	r := &Room{
-		hub:          hub,
+		manager:      manager,
 		examID:       exam.Id,
 		exam:         exam,
 		controllers:  make(map[string]*Client),

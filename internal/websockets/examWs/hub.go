@@ -9,8 +9,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Hub manages all exam rooms and coordinates client connections
-type Hub struct {
+// Manager manages all exam rooms and coordinates client connections
+type Manager struct {
 	rooms           map[string]*Room
 	mu              sync.RWMutex
 	roomRequests    chan roomRequest
@@ -21,35 +21,33 @@ type Hub struct {
 	log             zerolog.Logger
 }
 
-// roomRequest is used to safely create or get rooms from the Run goroutine
 type roomRequest struct {
 	exam   *model.Exam
 	result chan *Room
 }
 
-// NewHub creates a new Hub instance
-func NewHub(log zerolog.Logger) *Hub {
+func NewManager(log zerolog.Logger) *Manager {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	return &Hub{
+	return &Manager{
 		rooms:           make(map[string]*Room),
 		roomRequests:    make(chan roomRequest, 32),
 		done:            make(chan struct{}),
 		ctx:             ctx,
 		cancel:          cancel,
 		cleanupInterval: 5 * time.Minute,
-		log:             log.With().Str("component", "hub").Logger(),
+		log:             log.With().Str("component", "manager").Logger(),
 	}
 }
 
-func (h *Hub) Run() {
-	h.log.Info().Msg("hub started")
+func (h *Manager) Run() {
+	h.log.Info().Msg("Exam Socket Manager started")
 
 	cleanupTicker := time.NewTicker(h.cleanupInterval)
 	defer cleanupTicker.Stop()
 
 	defer func() {
-		h.log.Info().Msg("hub stopped")
+		h.log.Info().Msg("Exam Socket Manager stopped")
 	}()
 
 	for {
@@ -71,7 +69,7 @@ func (h *Hub) Run() {
 }
 
 // GetOrCreateRoom returns an existing room or creates a new one for the exam
-func (h *Hub) GetOrCreateRoom(exam *model.Exam) *Room {
+func (h *Manager) GetOrCreateRoom(exam *model.Exam) *Room {
 	// First check if room already exists (fast path with read lock)
 	h.mu.RLock()
 	if room, exists := h.rooms[exam.Id]; exists {
@@ -91,7 +89,7 @@ func (h *Hub) GetOrCreateRoom(exam *model.Exam) *Room {
 }
 
 // handleRoomRequest creates or retrieves a room (called from Run loop)
-func (h *Hub) handleRoomRequest(exam *model.Exam) *Room {
+func (h *Manager) handleRoomRequest(exam *model.Exam) *Room {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -117,14 +115,14 @@ func (h *Hub) handleRoomRequest(exam *model.Exam) *Room {
 }
 
 // GetRoom returns an existing room by exam ID, or nil if not found
-func (h *Hub) GetRoom(examID string) *Room {
+func (h *Manager) GetRoom(examID string) *Room {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	return h.rooms[examID]
 }
 
 // RemoveRoom removes a room from the hub (typically when exam is finished)
-func (h *Hub) RemoveRoom(examID string) {
+func (h *Manager) RemoveRoom(examID string) {
 	h.mu.Lock()
 	room, exists := h.rooms[examID]
 	if exists {
@@ -142,7 +140,7 @@ func (h *Hub) RemoveRoom(examID string) {
 }
 
 // cleanupEmptyRooms removes rooms with no connected clients and finished exams
-func (h *Hub) cleanupEmptyRooms() {
+func (h *Manager) cleanupEmptyRooms() {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -175,7 +173,7 @@ func (h *Hub) cleanupEmptyRooms() {
 
 // RegisterClient registers a client with the appropriate room
 // Returns the room the client was registered to, or nil if registration failed
-func (h *Hub) RegisterClient(client *Client, exam *model.Exam) *Room {
+func (h *Manager) RegisterClient(client *Client, exam *model.Exam) *Room {
 	room := h.GetOrCreateRoom(exam)
 	if room == nil {
 		h.log.Error().Str("exam_id", exam.Id).Msg("failed to get/create room")
@@ -187,21 +185,21 @@ func (h *Hub) RegisterClient(client *Client, exam *model.Exam) *Room {
 }
 
 // UnregisterClient unregisters a client from their room
-func (h *Hub) UnregisterClient(client *Client) {
+func (h *Manager) UnregisterClient(client *Client) {
 	if client.room != nil {
 		client.room.Unregister(client)
 	}
 }
 
 // RoomCount returns the number of active rooms
-func (h *Hub) RoomCount() int {
+func (h *Manager) RoomCount() int {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	return len(h.rooms)
 }
 
-// HubStats contains statistics about the hub's current state
-type HubStats struct {
+// ManagerStats contains statistics about the manager's current state
+type ManagerStats struct {
 	TotalRooms        int         `json:"total_rooms"`
 	TotalClients      int         `json:"total_clients"`
 	TotalControllers  int         `json:"total_controllers"`
@@ -218,12 +216,12 @@ type RoomStats struct {
 	Participants int    `json:"participants"`
 }
 
-// GetStats returns current statistics about the hub and its rooms
-func (h *Hub) GetStats(includeRooms bool) HubStats {
+// GetStats returns current statistics about the manager and its rooms
+func (h *Manager) GetStats(includeRooms bool) ManagerStats {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	stats := HubStats{
+	stats := ManagerStats{
 		TotalRooms: len(h.rooms),
 	}
 
@@ -259,8 +257,8 @@ func (h *Hub) GetStats(includeRooms bool) HubStats {
 }
 
 // Shutdown gracefully shuts down the hub and all rooms
-func (h *Hub) Shutdown() {
-	h.log.Info().Msg("shutting down hub")
+func (h *Manager) Shutdown() {
+	h.log.Info().Msg("shutting down manager")
 
 	// Signal done to stop the Run loop
 	close(h.done)
@@ -280,11 +278,11 @@ func (h *Hub) Shutdown() {
 		room.Shutdown()
 	}
 
-	h.log.Info().Int("rooms_closed", len(rooms)).Msg("hub shutdown complete")
+	h.log.Info().Int("rooms_closed", len(rooms)).Msg("manager shutdown complete")
 }
 
-// IsDone returns true if the hub has been shut down
-func (h *Hub) IsDone() bool {
+// IsDone returns true if the manager has been shut down
+func (h *Manager) IsDone() bool {
 	select {
 	case <-h.done:
 		return true

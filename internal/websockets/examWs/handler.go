@@ -15,22 +15,22 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		// NOTE: tighten this check for production origin policy.
+		// TODO check hard later -_-
 		return true
 	},
 }
 
 // Handler provides HTTP endpoints for exam websocket operations.
 type Handler struct {
-	hub     *Hub
+	manager *Manager
 	examSvc *service.ExamService
 	log     zerolog.Logger
 }
 
 // NewHandler creates a new websocket HTTP handler.
-func NewHandler(hub *Hub, examSvc *service.ExamService, log zerolog.Logger) *Handler {
+func NewHandler(manager *Manager, examSvc *service.ExamService, log zerolog.Logger) *Handler {
 	return &Handler{
-		hub:     hub,
+		manager: manager,
 		examSvc: examSvc,
 		log:     log.With().Str("component", "ws_handler").Logger(),
 	}
@@ -75,10 +75,10 @@ func (h *Handler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	room := h.hub.GetOrCreateRoom(&examData)
+	room := h.manager.GetOrCreateRoom(&examData)
 	if room == nil {
 		_ = conn.Close()
-		h.writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "websocket hub unavailable"})
+		h.writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "websocket manager unavailable"})
 		return
 	}
 
@@ -117,7 +117,7 @@ func (h *Handler) HandleStats(w http.ResponseWriter, r *http.Request) {
 		includeRooms = parsed
 	}
 
-	stats := h.hub.GetStats(includeRooms)
+	stats := h.manager.GetStats(includeRooms)
 	h.writeJSON(w, http.StatusOK, stats)
 }
 
