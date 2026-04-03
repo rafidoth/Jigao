@@ -17,8 +17,10 @@ func registerExamRoutes(r chi.Router, h *handler.ExamHandler, wsH *examWs.ExamWs
 		r.Delete("/{exam_id}", h.RemoveExam)
 		// exam room routes
 		r.Post("/join", h.JoinExam)
+	})
+	r.Route("/xmws", func(r chi.Router) {
 		// exam ws route
-		r.Get("/ws/{exam_id}", wsH.ServeWS)
+		r.Get("/", wsH.ServeWS)
 
 	})
 }

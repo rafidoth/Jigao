@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/rafidoth/onlyexams/internal/users"
 )
 
 type Set struct {
@@ -65,6 +66,12 @@ type QuestionWithAnswer struct {
 	Question Question
 	Answer   Answer
 	Choices  []Choice
+}
+
+type SetAccessDetailsUser struct {
+	OwnerID      string
+	SharedUsers  []users.User
+	HasSetAccess bool
 }
 
 // Deprecated: CompleteQuestion is superseded by QuestionResponse in http_responses.go.
