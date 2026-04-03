@@ -8,6 +8,8 @@ import (
 
 	"github.com/rafidoth/onlyexams/internal/errs"
 	"github.com/rafidoth/onlyexams/internal/service"
+	"github.com/rafidoth/onlyexams/internal/websockets"
+	"github.com/rafidoth/onlyexams/internal/websockets/examWs"
 	"github.com/rs/zerolog"
 )
 
@@ -16,16 +18,18 @@ type Handlers struct {
 	Set        *SetHandler
 	Question   *QuestionHandler
 	Exam       *ExamHandler
+	ExamWs     *examWs.ExamWsHandler
 	Submission *SubmissionHandler
 	SelfTest   *SelfTestHandler
 }
 
-func NewHandlers(svc *service.Services, log zerolog.Logger) *Handlers {
+func NewHandlers(svc *service.Services, wsm *websockets.Managers, log zerolog.Logger) *Handlers {
 	return &Handlers{
 		User:       NewUserHandler(svc.User, log.With().Str("handler", "user").Logger()),
 		Set:        NewSetHandler(svc.Question, log.With().Str("handler", "set").Logger()),
 		Question:   NewQuestionHandler(svc.Question, log.With().Str("handler", "question").Logger()),
 		Exam:       NewExamHandler(svc.Exam, log.With().Str("handler", "exam").Logger()),
+		ExamWs:     examWs.NewHandler(wsm.Exam, svc.Exam, log),
 		Submission: NewSubmissionHandler(svc.Exam, log.With().Str("handler", "submission").Logger()),
 		SelfTest:   NewSelfTestHandler(svc.SelfTest, log.With().Str("handler", "self_test").Logger()),
 	}
