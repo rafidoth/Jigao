@@ -75,18 +75,24 @@ func (r *ExamRepository) GetExamByExamId(exam_id string) (model.Exam, error) {
 		context.Background(),
 		`SELECT
 			id,
-			set_id,
 			user_id,
-			visibility,
-			description,
+			set_id,
 			title,
+			visibility,
+			COALESCE(description, '') AS description,
 			start_time,
 			(EXTRACT(EPOCH FROM duration)/60)::int AS duration,
 			(start_time + duration) AS end_time,
+			start_mode,
+			session_status,
+			invite_code,
+			proctoring_enabled,
+			camera_required,
+			max_violations,
 			created_at,
 			updated_at
-		 FROM exams
-		 WHERE id = $1`,
+		FROM exams
+		WHERE id = $1`,
 		exam_id,
 	)
 	if err != nil {
