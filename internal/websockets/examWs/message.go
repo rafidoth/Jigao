@@ -55,12 +55,11 @@ func NewAnswerSavedMessage(questionID string) Message {
 }
 
 // NewViolationAlertMessage creates violation alert for controllers
-func NewViolationAlertMessage(userID, name, violationType string, count int) Message {
+func NewViolationAlertMessage(userID, violationType string, count int) Message {
 	return Message{
 		Type: MsgTypeViolationAlert,
 		Payload: ViolationAlertPayload{
 			UserID:         userID,
-			Name:           name,
 			ViolationType:  violationType,
 			ViolationCount: count,
 		},
@@ -68,24 +67,23 @@ func NewViolationAlertMessage(userID, name, violationType string, count int) Mes
 }
 
 // NewCameraUpdateMessage creates camera status update for controllers
-func NewCameraUpdateMessage(userID, name string, active bool) Message {
+func NewCameraUpdateMessage(userID string, active bool) Message {
 	return Message{
 		Type: MsgTypeCameraUpdate,
 		Payload: CameraUpdatePayload{
 			UserID: userID,
-			Name:   name,
 			Active: active,
 		},
 	}
 }
 
 // NewWarningMessage creates warning message for participant
-func NewWarningMessage(message, from string) Message {
+func NewWarningMessage(message, fromUserID string) Message {
 	return Message{
 		Type: MsgTypeWarningReceived,
 		Payload: WarningPayload{
-			Message: message,
-			From:    from,
+			Message:    message,
+			FromUserId: fromUserID,
 		},
 	}
 }
@@ -101,25 +99,21 @@ func NewKickedMessage(reason string) Message {
 }
 
 // NewParticipantJoinedMessage creates participant joined message for controllers
-func NewParticipantJoinedMessage(userID, name, imageURL string) Message {
+func NewParticipantJoinedMessage(userID string) Message {
 	return Message{
 		Type: MsgTypeParticipantJoined,
 		Payload: ParticipantEventPayload{
-			UserID:   userID,
-			Name:     name,
-			ImageURL: imageURL,
+			UserID: userID,
 		},
 	}
 }
 
 // NewParticipantLeftMessage creates participant left message for controllers
-func NewParticipantLeftMessage(userID, name, imageURL string) Message {
+func NewParticipantLeftMessage(userID string) Message {
 	return Message{
 		Type: MsgTypeParticipantLeft,
 		Payload: ParticipantEventPayload{
-			UserID:   userID,
-			Name:     name,
-			ImageURL: imageURL,
+			UserID: userID,
 		},
 	}
 }

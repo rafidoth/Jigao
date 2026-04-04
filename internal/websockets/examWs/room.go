@@ -441,7 +441,6 @@ func (r *Room) handleSubmitExam(c *Client, payload SubmitExamPayload) {
 		Type: "participant_submitted",
 		Payload: map[string]interface{}{
 			"user_id": c.UserID,
-			"name":    c.UserName,
 		},
 	})
 }
@@ -475,7 +474,6 @@ func (r *Room) handleViolationReport(c *Client, payload ViolationReportPayload) 
 	// Alert all controllers
 	r.BroadcastToControllers(NewViolationAlertMessage(
 		c.UserID,
-		c.UserName,
 		payload.Type,
 		violationCount,
 	))
@@ -499,7 +497,6 @@ func (r *Room) handleCameraStatus(c *Client, payload CameraStatusPayload) {
 	// Notify all controllers
 	r.BroadcastToControllers(NewCameraUpdateMessage(
 		c.UserID,
-		c.UserName,
 		payload.Active,
 	))
 }
@@ -531,7 +528,6 @@ func (r *Room) handleCameraSnapshot(c *Client, payload CameraSnapshotPayload) {
 		Type: "camera_snapshot",
 		Payload: map[string]interface{}{
 			"user_id":      c.UserID,
-			"name":         c.UserName,
 			"image_base64": payload.ImageBase64,
 		},
 	})
@@ -633,7 +629,7 @@ func (r *Room) handleWarnParticipant(c *Client, payload WarnParticipantPayload) 
 	// Example: r.examService.RecordWarning(r.examID, payload.UserID, payload.Message, c.UserID)
 
 	// Send warning to the participant
-	participant.SendMessage(NewWarningMessage(payload.Message, c.UserName))
+	participant.SendMessage(NewWarningMessage(payload.Message, c.UserID))
 }
 
 // handleKickParticipant removes a participant from the exam
@@ -680,11 +676,9 @@ func (r *Room) handleKickParticipant(c *Client, payload KickParticipantPayload) 
 	r.BroadcastToControllers(Message{
 		Type: "participant_kicked",
 		Payload: map[string]interface{}{
-			"user_id":     payload.UserID,
-			"name":        participant.UserName,
-			"reason":      payload.Reason,
-			"kicked_by":   c.UserID,
-			"kicked_by_n": c.UserName,
+			"user_id":   payload.UserID,
+			"reason":    payload.Reason,
+			"kicked_by": c.UserID,
 		},
 	})
 }
@@ -792,8 +786,6 @@ func (r *Room) GetRoomStateSnapshot() RoomStatePayload {
 	for userID, client := range r.participants {
 		participants = append(participants, ParticipantSnapshot{
 			UserID:         userID,
-			Name:           client.UserName,
-			ImageURL:       client.UserImageURL,
 			Status:         "taking_exam", // TODO: Get from service
 			CameraActive:   client.GetCameraActive(),
 			ViolationCount: 0, // TODO: Get from service
@@ -812,16 +804,12 @@ func (r *Room) GetRoomStateSnapshot() RoomStatePayload {
 func (r *Room) notifyParticipantJoined(c *Client) {
 	r.BroadcastToControllers(NewParticipantJoinedMessage(
 		c.UserID,
-		c.UserName,
-		c.UserImageURL,
 	))
 }
 
 func (r *Room) notifyParticipantLeft(c *Client) {
 	r.BroadcastToControllers(NewParticipantLeftMessage(
 		c.UserID,
-		c.UserName,
-		c.UserImageURL,
 	))
 }
 

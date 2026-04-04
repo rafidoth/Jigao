@@ -75,15 +75,12 @@ type ExamEndsPayload struct {
 
 // ParticipantEventPayload is sent for join/leave events
 type ParticipantEventPayload struct {
-	UserID   string `json:"user_id"`
-	Name     string `json:"name"`
-	ImageURL string `json:"image_url,omitempty"`
+	UserID string `json:"user_id"`
 }
 
 // ViolationAlertPayload is sent to controllers when a violation occurs
 type ViolationAlertPayload struct {
 	UserID         string `json:"user_id"`
-	Name           string `json:"name"`
 	ViolationType  string `json:"violation_type"`
 	ViolationCount int    `json:"violation_count"`
 }
@@ -91,14 +88,13 @@ type ViolationAlertPayload struct {
 // CameraUpdatePayload is sent to controllers on camera state change
 type CameraUpdatePayload struct {
 	UserID string `json:"user_id"`
-	Name   string `json:"name"`
 	Active bool   `json:"active"`
 }
 
 // WarningPayload is sent to participant when warned by controller
 type WarningPayload struct {
-	Message string `json:"message"`
-	From    string `json:"from,omitempty"`
+	Message    string `json:"message"`
+	FromUserId string `json:"from,omitempty"`
 }
 
 // KickedPayload is sent to participant when kicked by controller
@@ -122,8 +118,6 @@ type RoomStatePayload struct {
 // ParticipantSnapshot represents a participant's current state
 type ParticipantSnapshot struct {
 	UserID         string `json:"user_id"`
-	Name           string `json:"name"`
-	ImageURL       string `json:"image_url"`
 	Status         string `json:"status"`
 	CameraActive   bool   `json:"camera_active"`
 	ViolationCount int    `json:"violation_count"`
