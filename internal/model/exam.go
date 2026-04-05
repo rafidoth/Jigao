@@ -17,7 +17,6 @@ type Exam struct {
 	DurationInMinutes int        `db:"duration" json:"duration"`
 	StartMode         string     `db:"start_mode" json:"start_mode"`
 	SessionStatus     string     `db:"session_status" json:"session_status"`
-	InviteCode        *string    `db:"invite_code" json:"invite_code"`
 	ProctoringEnabled bool       `db:"proctoring_enabled" json:"proctoring_enabled"`
 	CameraRequired    bool       `db:"camera_required" json:"camera_required"`
 	MaxViolations     *int       `db:"max_violations" json:"max_violations"`
@@ -87,7 +86,6 @@ type ExamUpdate struct {
 type ExamJoinInfo struct {
 	ExamID    string    `json:"exam_id"`
 	Role      string    `json:"role"`
-	WsURL     string    `json:"ws_url"`
 	Status    string    `json:"status"`
 	StartTime time.Time `json:"start_time"`
 	EndTime   time.Time `json:"end_time"`

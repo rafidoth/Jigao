@@ -361,7 +361,6 @@ func (s *ExamService) JoinExam(ctx context.Context, userID, examID string) (*mod
 	return &model.ExamJoinInfo{
 		ExamID:    examID,
 		Role:      role,
-		WsURL:     "",
 		Status:    exam.SessionStatus,
 		StartTime: exam.StartTime,
 		EndTime:   exam.EndTime,
