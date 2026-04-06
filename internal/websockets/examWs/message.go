@@ -12,14 +12,15 @@ func NewErrorMessage(message, code string) Message {
 }
 
 // NewOnJoinRoomMessage creates the initial join room message
-func NewOnJoinRoomMessage(status, time, title, role string) Message {
+func NewOnJoinRoomMessage(status, time, title, role string, participants []string) Message {
 	return Message{
 		Type: MsgTypeOnJoinRoom,
 		Payload: OnJoinRoomPayload{
-			ExamStatus: status,
-			Time:       time,
-			Title:      title,
-			Role:       role,
+			ExamStatus:   status,
+			Time:         time,
+			Title:        title,
+			Role:         role,
+			Participants: participants,
 		},
 	}
 }
@@ -50,6 +51,17 @@ func NewAnswerSavedMessage(questionID string) Message {
 		Type: MsgTypeAnswerSaved,
 		Payload: AnswerSavedPayload{
 			QuestionID: questionID,
+		},
+	}
+}
+
+// NewSubmitAcceptedMessage creates submit accepted ACK for participant
+func NewSubmitAcceptedMessage(examID, submittedAt string) Message {
+	return Message{
+		Type: MsgTypeSubmitAccepted,
+		Payload: SubmitAcceptedPayload{
+			ExamID:      examID,
+			SubmittedAt: submittedAt,
 		},
 	}
 }

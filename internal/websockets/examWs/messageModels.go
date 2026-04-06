@@ -14,6 +14,7 @@ const (
 	MsgTypeWarningReceived   = "warning-received"
 	MsgTypeKicked            = "kicked"
 	MsgTypeAnswerSaved       = "answer-saved"
+	MsgTypeSubmitAccepted    = "submit-accepted"
 	MsgTypeRoomState         = "room-state"
 	MsgTypeServerShutdown    = "server-shutdown"
 	MsgTypeError             = "error"
@@ -57,10 +58,11 @@ type RawMessage struct {
 
 // OnJoinRoomPayload is sent when a client first connects
 type OnJoinRoomPayload struct {
-	ExamStatus string `json:"examStatus"`
-	Time       string `json:"time,omitempty"` // ISO8601 - start_time if waiting, end_time if running
-	Title      string `json:"title"`
-	Role       string `json:"role"`
+	ExamStatus   string   `json:"examStatus"`
+	Time         string   `json:"time,omitempty"` // ISO8601 - start_time if waiting, end_time if running
+	Title        string   `json:"title"`
+	Role         string   `json:"role"`
+	Participants []string `json:"participants"`
 }
 
 // ExamStartsPayload is sent when exam transitions to live
@@ -105,6 +107,12 @@ type KickedPayload struct {
 // AnswerSavedPayload is ACK for answer save
 type AnswerSavedPayload struct {
 	QuestionID string `json:"question_id"`
+}
+
+// SubmitAcceptedPayload is sent when exam submission is accepted
+type SubmitAcceptedPayload struct {
+	ExamID      string `json:"exam_id"`
+	SubmittedAt string `json:"submitted_at"`
 }
 
 // RoomStatePayload is full state dump for controllers
