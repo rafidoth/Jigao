@@ -37,10 +37,6 @@ type Client struct {
 	ExamID string
 	Role   string // "controller" or "participant"
 
-	// User display info
-	UserName     string
-	UserImageURL string
-
 	// State
 	CameraActive bool
 	IsOnline     bool
@@ -58,7 +54,6 @@ func NewClient(
 	room *Room,
 	conn *websocket.Conn,
 	userID, examID, role string,
-	userName, userImageURL string,
 	log zerolog.Logger,
 ) *Client {
 	return &Client{
@@ -68,8 +63,6 @@ func NewClient(
 		UserID:       userID,
 		ExamID:       examID,
 		Role:         role,
-		UserName:     userName,
-		UserImageURL: userImageURL,
 		CameraActive: false,
 		IsOnline:     true,
 		log:          log.With().Str("user_id", userID).Str("role", role).Logger(),

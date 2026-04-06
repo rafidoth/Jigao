@@ -122,7 +122,6 @@ CREATE TABLE IF NOT EXISTS exams (
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     start_mode exam_start_mode NOT NULL DEFAULT 'lobby',
     session_status exam_session_status NOT NULL DEFAULT 'waiting',
-    invite_code TEXT UNIQUE,
     proctoring_enabled BOOLEAN NOT NULL DEFAULT true,
     camera_required BOOLEAN NOT NULL DEFAULT false,
     max_violations INTEGER,

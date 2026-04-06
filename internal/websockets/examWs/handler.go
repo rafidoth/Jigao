@@ -2,7 +2,6 @@ package examWs
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -75,36 +74,32 @@ func (h *ExamWsHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(examData, conn)
+	room := h.manager.GetOrCreateRoom(&examData)
+	if room == nil {
+		_ = conn.Close()
+		h.writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "websocket manager unavailable"})
+		return
+	}
 
-	// room := h.manager.GetOrCreateRoom(&examData)
-	// if room == nil {
-	// 	_ = conn.Close()
-	// 	h.writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "websocket manager unavailable"})
-	// 	return
-	// }
-	//
-	// client := NewClient(
-	// 	room,
-	// 	conn,
-	// 	userID,
-	// 	examID,
-	// 	role,
-	// 	userName,
-	// 	userImageURL,
-	// 	h.log,
-	// )
-	//
-	// room.Register(client)
-	//
-	// go client.WritePump()
-	// go client.ReadPump()
-	//
-	// h.log.Info().
-	// 	Str("exam_id", examID).
-	// 	Str("user_id", userID).
-	// 	Str("role", role).
-	// 	Msg("websocket client connected")
+	client := NewClient(
+		room,
+		conn,
+		userID,
+		examID,
+		role,
+		h.log,
+	)
+
+	room.Register(client)
+
+	go client.WritePump()
+	go client.ReadPump()
+
+	h.log.Info().
+		Str("exam_id", examID).
+		Str("user_id", userID).
+		Str("role", role).
+		Msg("websocket client connected")
 }
 
 // HandleStats returns hub stats as JSON.

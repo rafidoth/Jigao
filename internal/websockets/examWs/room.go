@@ -436,6 +436,9 @@ func (r *Room) handleSubmitExam(c *Client, payload SubmitExamPayload) {
 	// NOTE: In production, process submission via service layer
 	// Example: r.examService.SubmitExam(r.examID, c.UserID, payload.Answers)
 
+	// ACK participant so frontend can confidently transition
+	c.SendMessage(NewSubmitAcceptedMessage(r.examID, time.Now().UTC().Format(time.RFC3339)))
+
 	// Notify controllers about submission
 	r.BroadcastToControllers(Message{
 		Type: "participant_submitted",
@@ -759,7 +762,12 @@ func (r *Room) sendInitialState(c *Client) {
 		frontendStatus = "ended"
 	}
 
-	c.SendMessage(NewOnJoinRoomMessage(frontendStatus, timeStr, r.exam.Title, c.Role))
+	participants := make([]string, 0, len(r.participants))
+	for userID, _ := range r.participants {
+		participants = append(participants, userID)
+	}
+
+	c.SendMessage(NewOnJoinRoomMessage(frontendStatus, timeStr, r.exam.Title, c.Role, participants))
 }
 
 func (r *Room) sendRoomState(c *Client) {
