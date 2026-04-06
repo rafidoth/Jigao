@@ -1,6 +1,6 @@
 import RunningExam from "./RunningExamPage";
-import ExamPageWaitingUI from "./WaitingExamPage";
 import ExamPageEndedUI from "./exam-page-ended-ui";
+import FriendlyWaitingPage from "./friendly-waiting-page";
 import type { ExamStatus } from "./types";
 import type { Question } from "@/types/questions";
 
@@ -26,7 +26,7 @@ function FriendlyExamFlow({
   isConnected,
 }: FriendlyExamFlowProps) {
   if (examStatus === "waiting") {
-    return <ExamPageWaitingUI startTime={startTime} title={title || "Exam"} />;
+    return <FriendlyWaitingPage startTime={startTime} title={title || "Exam"} />;
   }
 
   if (examStatus === "running") {

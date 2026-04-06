@@ -1,8 +1,6 @@
-import { Globe } from "lucide-react";
-
 import RunningExam from "./RunningExamPage";
-import ExamPageWaitingUI from "./WaitingExamPage";
 import ExamPageEndedUI from "./exam-page-ended-ui";
+import PublicWaitingPage from "./public-waiting-page";
 import type { ExamStatus } from "./types";
 import type { Question } from "@/types/questions";
 
@@ -28,15 +26,7 @@ function PublicExamFlow({
   isConnected,
 }: PublicExamFlowProps) {
   if (examStatus === "waiting") {
-    return (
-      <div className="w-full max-w-4xl flex flex-col gap-4">
-        <div className="rounded-lg border border-sky-500/40 bg-sky-500/10 p-3 text-sm text-sky-700 flex items-center gap-2">
-          <Globe className="h-4 w-4" />
-          Public exam lobby is open. Keep this tab active until the session starts.
-        </div>
-        <ExamPageWaitingUI startTime={startTime} title={title || "Public exam"} />
-      </div>
-    );
+    return <PublicWaitingPage startTime={startTime} title={title || "Public exam"} />;
   }
 
   if (examStatus === "running") {
