@@ -27,6 +27,8 @@ import {
     getWsUrl,
     isJoinExamResponse,
     toExamUIStatus,
+} from "./ExamPageComponents/exam_utils";
+import {
     type JoinExamResponse,
     type SocketMessage,
 } from "./ExamPageComponents/exam-session.types";
