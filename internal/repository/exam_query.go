@@ -73,7 +73,21 @@ func (r *ExamRepository) GetExamByExamId(exam_id string) (model.Exam, error) {
 
 	rows, err := tx.Query(
 		context.Background(),
-		`SELECT
+		`WITH synced AS (
+			UPDATE exams
+			SET session_status = CASE
+				WHEN NOW() >= start_time + duration THEN 'finished'::exam_session_status
+				WHEN NOW() >= start_time THEN 'live'::exam_session_status
+				ELSE 'waiting'::exam_session_status
+			END
+			WHERE id = $1
+			  AND session_status IS DISTINCT FROM CASE
+				WHEN NOW() >= start_time + duration THEN 'finished'::exam_session_status
+				WHEN NOW() >= start_time THEN 'live'::exam_session_status
+				ELSE 'waiting'::exam_session_status
+			END
+		)
+		SELECT
 			id,
 			user_id,
 			set_id,
