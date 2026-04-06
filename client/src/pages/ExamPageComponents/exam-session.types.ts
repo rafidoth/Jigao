@@ -78,7 +78,6 @@ export type SocketMessage =
     | { type: "room-state"; payload: RoomStatePayload }
     | { type: "server-shutdown"; payload: ServerShutdownPayload }
     | { type: "error"; payload: SocketErrorPayload }
-    | { type: string; payload?: unknown };
 
 export type ServerToClientMessage = Extract<
     SocketMessage,
