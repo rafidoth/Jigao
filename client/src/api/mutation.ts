@@ -3,6 +3,14 @@ import type { SelfTestAnswer } from "@/types/questions";
 import { buildCreateQuestionPayload } from "@/components/create_new_question_popover/utils";
 
 import { api } from "./client";
+
+export type JoinExamResponse = {
+    exam_id: string;
+    role: "participant" | "controller";
+    status: "waiting" | "live" | "finished";
+    start_time: string;
+    end_time: string;
+};
 interface User {
     id: string;
     name: string | null;
@@ -96,6 +104,13 @@ export const createExamApiPost = async (variables: CreateExamVariables) => {
 export const deleteExamApi = async (exam_id: string) => {
     await api.delete(`/api/v1/exams/${exam_id}`);
     return { exam_id };
+};
+
+export const joinExamApiPost = async (exam_id: string): Promise<JoinExamResponse> => {
+    const res = await api.post(`/api/v1/exams/join`, null, {
+        params: { exam_id },
+    });
+    return res.data as JoinExamResponse;
 };
 
 export const addUserToAccessList = async ({

@@ -83,8 +83,8 @@ function App() {
                     <Route path="submissions/:exam_id" element={<Submission />} />
                     <Route path="selftest/new" element={<SelfTest />} />
                     <Route path="selftest/:self_test_submission_id" element={<SelfTestResult />} />
+                    <Route path="exam/:exam_id" element={<ExamPage />} />
                 </Route>
-                <Route path="exam/:exam_id" element={<ExamPage />} />
             </Routes>
         </BrowserRouter>
     );

@@ -5,6 +5,7 @@ export {
   getSet,
   getQuestionsByExamId,
   getExamById,
+  joinExam,
   fetchExamsApi,
   getExams,
   getUserFromEmail,

@@ -33,6 +33,11 @@ export const getExamById = async (exam_id: string | undefined) => {
     return res.data;
 };
 
+export const joinExam = async (exam_id: string) => {
+    const res = await api.post(`/api/v1/exams/join`, null, { params: { exam_id } });
+    return res.data;
+};
+
 export const fetchExamsApi = async (set_id: string) => {
     const res = await api.get("/api/v1/exams", { params: { set_id } });
     return res.data;
