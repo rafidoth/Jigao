@@ -200,9 +200,29 @@ func (r *ExamRepository) GetExamsListByUserId(user_id string) ([]model.Exam, err
 }
 
 func (r *ExamRepository) GetExamsListBySetId(set_id string) ([]model.Exam, error) {
-	rows, err := r.s.DB.Pool.Query(
+	tx, err := r.s.DB.Pool.Begin(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(context.Background())
+
+	rows, err := tx.Query(
 		context.Background(),
-		`SELECT
+		`WITH synced AS (
+			UPDATE exams
+			SET session_status = CASE
+				WHEN NOW() >= start_time + duration THEN 'finished'::exam_session_status
+				WHEN NOW() >= start_time THEN 'live'::exam_session_status
+				ELSE 'waiting'::exam_session_status
+			END
+			WHERE set_id = $1
+			  AND session_status IS DISTINCT FROM CASE
+				WHEN NOW() >= start_time + duration THEN 'finished'::exam_session_status
+				WHEN NOW() >= start_time THEN 'live'::exam_session_status
+				ELSE 'waiting'::exam_session_status
+			END
+		)
+		SELECT
 			id,
 			user_id,
 			set_id,
@@ -231,6 +251,10 @@ func (r *ExamRepository) GetExamsListBySetId(set_id string) ([]model.Exam, error
 
 	examsSlice, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Exam])
 	if err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(context.Background()); err != nil {
 		return nil, err
 	}
 
