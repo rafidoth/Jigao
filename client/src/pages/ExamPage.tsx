@@ -6,7 +6,7 @@ import ExamConnectingState from "./ExamPageComponents/exam-connecting-state";
 import ExamDetailsGate from "./ExamPageComponents/exam-details-gate";
 import ExamDetailsSkeleton from "./ExamPageComponents/exam-details-skeleton";
 import ExamLoadErrorAlert from "./ExamPageComponents/exam-load-error-alert";
-import ExamStageContent from "./ExamPageComponents/exam-stage-content";
+import ExamVisibilityStageContent from "./ExamPageComponents/exam-visibility-stage-content";
 import InvalidExamAlert from "./ExamPageComponents/invalid-exam-alert";
 import { useExamDetails } from "./ExamPageComponents/use-exam-details";
 import { useExamQuestions } from "./ExamPageComponents/use-exam-questions";
@@ -47,7 +47,8 @@ function ExamPage() {
         <div className="w-full min-h-screen flex justify-center px-4 py-8">
             {joinInfo ? (
                 <>
-                    <ExamStageContent
+                    <ExamVisibilityStageContent
+                        visibility={examData?.visibility}
                         examStatus={examStatus}
                         startTime={startTime}
                         endTime={endTime}

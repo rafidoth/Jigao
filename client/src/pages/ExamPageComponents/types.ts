@@ -10,3 +10,4 @@ export type ExamDetails = {
 };
 
 export type ExamStatus = "waiting" | "running" | "ended" | "";
+export type ExamVisibility = "private" | "restricted" | "public";
