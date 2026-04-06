@@ -73,12 +73,12 @@ func (r *ExamRepository) UpsertExamParticipant(examID, userID, status, role stri
 	_, err := r.s.DB.Pool.Exec(
 		context.Background(),
 		`INSERT INTO exam_participants (exam_id, user_id, status, role)
-		 VALUES ($1, $2, $3, $4)
-		 ON CONFLICT (exam_id, user_id)
-		 DO UPDATE SET
-			status = EXCLUDED.status,
-			role = EXCLUDED.role
-			updated_at = NOW()`,
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (exam_id, user_id)
+         DO UPDATE SET
+            status = EXCLUDED.status,
+            role = EXCLUDED.role,
+            updated_at = NOW()`,
 		examID,
 		userID,
 		status,
