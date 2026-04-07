@@ -4,7 +4,7 @@ import NewSet from "./pages/NewSet.tsx";
 import SetList from "./pages/SetList.tsx";
 import ExistingSet from "./pages/ExistingSet.tsx";
 import useThemeStore from "./store/themeStore";
-import ExamPage from "./pages/ExamPage.tsx";
+import ExamPage from "./pages/ExamPage/index.tsx";
 import { useEffect } from "react";
 import { useClerk, useSession, useUser } from "@clerk/clerk-react";
 import useAuthStore from "./store/authStore.ts";
