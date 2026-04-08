@@ -6,10 +6,6 @@ import { getWsUrl, WS_RECONNECT_ATTEMPTS, WS_RECONNECT_INTERVAL } from "../const
 import { useExamStore } from "../store/examStore";
 import type { SocketMessage } from "../types";
 
-/**
- * WebSocket connection hook for exam sessions.
- * Automatically connects when examId and role are available.
- */
 export function useExamSocket() {
     const { session } = useSession();
 
@@ -45,6 +41,12 @@ export function useExamSocket() {
     // Build WebSocket URL
     const wsUrl = shouldConnect && examId && role ? getWsUrl(examId, role) : null;
     console.log("wsUrl ", wsUrl)
+    // const options = useMemo(() => ({
+    //     queryParams: tokenRef.current ? { token: `Bearer ${token}` } : {},
+    //     shouldReconnect: () => phase === "lobby" || phase === "running",
+    //     reconnectAttempts: WS_RECONNECT_ATTEMPTS,
+    //     reconnectInterval: WS_RECONNECT_INTERVAL,
+    // }), [token, phase]);
 
     // WebSocket connection
     const { sendJsonMessage, readyState, lastJsonMessage } = useWebSocket(
