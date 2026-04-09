@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 
 import { ANSWER_SYNC_DEBOUNCE_MS, MSG_ANSWER_UPDATE, MSG_SUBMIT_EXAM } from "../constants";
-import { useExamStore } from "../store/examStore";
-import { useExamSocket } from "./useExamSocket";
+import { useExamStore, useSendSocketMessage } from "../store/examStore";
 
 /**
  * Hook for managing exam answers with debounced sync to server.
@@ -14,7 +13,8 @@ import { useExamSocket } from "./useExamSocket";
  * - Pending sync tracking
  */
 export function useExamAnswers() {
-  const { send, isConnected } = useExamSocket();
+  const isConnected = useExamStore((s) => s.isConnected);
+  const send = useSendSocketMessage();
 
   // Get state from store
   const examId = useExamStore((s) => s.examId);

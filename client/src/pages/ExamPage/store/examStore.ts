@@ -29,6 +29,7 @@ const initialState = {
 
     role: null,
     isConnected: false,
+    socketSender: null,
 
     warnings: [] as Warning[],
     kickReason: null,
@@ -119,6 +120,19 @@ export const useExamStore = create<ExamStore>((set, get) => ({
     // Connection status
     setConnected: (connected: boolean) => {
         set({ isConnected: connected });
+    },
+
+    setSocketSender: (sender) => {
+        set({ socketSender: sender });
+    },
+
+    sendSocketMessage: (type: string, payload: unknown) => {
+        const sender = get().socketSender;
+        if (!sender) {
+            console.warn("Cannot send message: WebSocket sender unavailable");
+            return;
+        }
+        sender(type, payload);
     },
 
     // Handle socket messages
@@ -300,6 +314,7 @@ export const useStartTime = () => useExamStore((s) => s.startTime);
 export const useEndTime = () => useExamStore((s) => s.endTime);
 export const useExamRole = () => useExamStore((s) => s.role);
 export const useIsConnected = () => useExamStore((s) => s.isConnected);
+export const useSendSocketMessage = () => useExamStore((s) => s.sendSocketMessage);
 export const useWarnings = () => useExamStore((s) => s.warnings);
 export const useKickReason = () => useExamStore((s) => s.kickReason);
 export const useAnswers = () => useExamStore((s) => s.answers);

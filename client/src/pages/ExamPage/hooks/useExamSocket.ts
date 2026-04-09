@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "@clerk/clerk-react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
@@ -14,67 +14,62 @@ export function useExamSocket() {
     const role = useExamStore((s) => s.role);
     const phase = useExamStore((s) => s.phase);
     const setConnected = useExamStore((s) => s.setConnected);
+    const setSocketSender = useExamStore((s) => s.setSocketSender);
     const handleSocketMessage = useExamStore((s) => s.handleSocketMessage);
 
-    // Token state
-    const tokenRef = useRef<string | null>(null);
+    const [token, setToken] = useState<string | null>(null);
 
     // Fetch token on session change
     useEffect(() => {
         if (!session) {
-            tokenRef.current = null;
+            setToken(null);
             return;
         }
 
-        session.getToken().then((token) => {
-            tokenRef.current = token;
-        });
+        let cancelled = false;
+
+        session
+            .getToken()
+            .then((nextToken) => {
+                if (!cancelled) {
+                    setToken(nextToken ?? null);
+                }
+            })
+            .catch((error) => {
+                console.error("Failed to get auth token for exam socket:", error);
+                if (!cancelled) {
+                    setToken(null);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [session]);
 
     // Determine if we should connect
     const shouldConnect =
         examId !== null &&
         role !== null &&
-        tokenRef.current !== null &&
+        token !== null &&
         (phase === "lobby" || phase === "running");
 
     // Build WebSocket URL
     const wsUrl = shouldConnect && examId && role ? getWsUrl(examId, role) : null;
-    console.log("wsUrl ", wsUrl)
-    // const options = useMemo(() => ({
-    //     queryParams: tokenRef.current ? { token: `Bearer ${token}` } : {},
-    //     shouldReconnect: () => phase === "lobby" || phase === "running",
-    //     reconnectAttempts: WS_RECONNECT_ATTEMPTS,
-    //     reconnectInterval: WS_RECONNECT_INTERVAL,
-    // }), [token, phase]);
+
+    const options = useMemo(() => ({
+        queryParams: token ? { token: `Bearer ${token}` } : undefined,
+        shouldReconnect: () => phase === "lobby" || phase === "running",
+        reconnectAttempts: WS_RECONNECT_ATTEMPTS,
+        reconnectInterval: WS_RECONNECT_INTERVAL,
+    }), [phase, token]);
 
     // WebSocket connection
     const { sendJsonMessage, readyState, lastJsonMessage } = useWebSocket(
         wsUrl,
-        {
-            queryParams: tokenRef.current ? { token: `Bearer ${tokenRef.current}` } : {},
-            shouldReconnect: () => phase === "lobby" || phase === "running",
-            reconnectAttempts: WS_RECONNECT_ATTEMPTS,
-            reconnectInterval: WS_RECONNECT_INTERVAL,
-        },
+        options,
         shouldConnect,
     );
-
-    // Update connection status in store
-    useEffect(() => {
-        setConnected(readyState === ReadyState.OPEN);
-    }, [readyState, setConnected]);
-
-    // Handle incoming messages
-    useEffect(() => {
-        if (lastJsonMessage === null) return;
-
-        try {
-            handleSocketMessage(lastJsonMessage as SocketMessage);
-        } catch (error) {
-            console.error("Failed to handle socket message:", error);
-        }
-    }, [lastJsonMessage, handleSocketMessage]);
 
     // Send message helper
     const send = useCallback(
@@ -87,6 +82,29 @@ export function useExamSocket() {
         },
         [readyState, sendJsonMessage],
     );
+
+    // Update connection status in store
+    useEffect(() => {
+        setConnected(readyState === ReadyState.OPEN);
+    }, [readyState, setConnected]);
+
+    useEffect(() => {
+        setSocketSender(send);
+        return () => {
+            setSocketSender(null);
+        };
+    }, [send, setSocketSender]);
+
+    // Handle incoming messages
+    useEffect(() => {
+        if (lastJsonMessage === null) return;
+
+        try {
+            handleSocketMessage(lastJsonMessage as SocketMessage);
+        } catch (error) {
+            console.error("Failed to handle socket message:", error);
+        }
+    }, [lastJsonMessage, handleSocketMessage]);
 
     return {
         send,

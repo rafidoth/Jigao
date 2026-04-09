@@ -21,17 +21,20 @@ export function toExamVisibility(apiVisibility?: string): ExamVisibility {
 }
 
 
-export type SessionStatus = "waiting" | "live" | "finished";
+export type SessionStatus = "waiting" | "live" | "finished" | "running" | "ended";
 
-// Convert backend status to exam phase
 export function sessionStatusToPhase(status: SessionStatus): ExamPhase {
     switch (status) {
         case "waiting":
             return "lobby";
         case "live":
+        case "running":
             return "running";
         case "finished":
+        case "ended":
             return "ended";
+        default:
+            return "error";
     }
 }
 
@@ -216,6 +219,7 @@ export interface ExamState {
     // Session state
     role: ExamRole | null;
     isConnected: boolean;
+    socketSender: ((type: string, payload: unknown) => void) | null;
 
     // Participant state
     warnings: Warning[];
@@ -237,6 +241,8 @@ export interface ExamActions {
 
     // Connection
     setConnected: (connected: boolean) => void;
+    setSocketSender: (sender: ((type: string, payload: unknown) => void) | null) => void;
+    sendSocketMessage: (type: string, payload: unknown) => void;
 
     // Socket message handling
     handleSocketMessage: (msg: SocketMessage) => void;
