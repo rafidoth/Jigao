@@ -754,20 +754,12 @@ func (r *Room) sendInitialState(c *Client) {
 		timeStr = r.endsAt.Format(time.RFC3339)
 	}
 
-	// Map internal state to frontend expected format
-	frontendStatus := state
-	if state == RoomStateLive {
-		frontendStatus = "running"
-	} else if state == RoomStateFinished {
-		frontendStatus = "ended"
-	}
-
 	participants := make([]string, 0, len(r.participants))
 	for userID, _ := range r.participants {
 		participants = append(participants, userID)
 	}
 
-	c.SendMessage(NewOnJoinRoomMessage(frontendStatus, timeStr, r.exam.Title, c.Role, participants))
+	c.SendMessage(NewOnJoinRoomMessage(state, timeStr, r.exam.Title, c.Role, participants))
 }
 
 func (r *Room) sendRoomState(c *Client) {
