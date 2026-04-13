@@ -2,6 +2,7 @@ package examWs
 
 import (
 	"context"
+	"sort"
 	"sync"
 	"time"
 
@@ -46,6 +47,8 @@ func (h *Manager) Run() {
 	cleanupTicker := time.NewTicker(h.cleanupInterval)
 	defer cleanupTicker.Stop()
 
+	go h.logStatusLoop(60 * time.Second)
+
 	defer func() {
 		h.log.Info().Msg("Exam Socket Manager stopped")
 	}()
@@ -65,6 +68,89 @@ func (h *Manager) Run() {
 		case <-cleanupTicker.C:
 			h.cleanupEmptyRooms()
 		}
+	}
+}
+
+func (h *Manager) logStatusLoop(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-h.ctx.Done():
+			return
+		case <-h.done:
+			return
+		case <-ticker.C:
+			h.logHubStatus()
+		}
+	}
+}
+
+func (h *Manager) logHubStatus() {
+	h.mu.RLock()
+	totalRooms := len(h.rooms)
+	totalControllers := 0
+	totalParticipants := 0
+
+	type roomLogSnapshot struct {
+		examID       string
+		examTitle    string
+		state        string
+		controllers  []string
+		participants []string
+	}
+
+	rooms := make([]roomLogSnapshot, 0, len(h.rooms))
+
+	for examID, room := range h.rooms {
+		room.mu.RLock()
+
+		controllers := make([]string, 0, len(room.controllers))
+		for userID := range room.controllers {
+			controllers = append(controllers, userID)
+		}
+
+		participants := make([]string, 0, len(room.participants))
+		for userID := range room.participants {
+			participants = append(participants, userID)
+		}
+
+		sort.Strings(controllers)
+		sort.Strings(participants)
+
+		totalControllers += len(controllers)
+		totalParticipants += len(participants)
+
+		rooms = append(rooms, roomLogSnapshot{
+			examID:       examID,
+			examTitle:    room.exam.Title,
+			state:        room.state,
+			controllers:  controllers,
+			participants: participants,
+		})
+
+		room.mu.RUnlock()
+	}
+	h.mu.RUnlock()
+
+	h.log.Info().
+		Int("total_rooms", totalRooms).
+		Int("total_clients", totalControllers+totalParticipants).
+		Int("total_controllers", totalControllers).
+		Int("total_participants", totalParticipants).
+		Msg("hub status snapshot")
+
+	for _, room := range rooms {
+		h.log.Info().
+			Str("exam_id", room.examID).
+			Str("exam_title", room.examTitle).
+			Str("state", room.state).
+			Int("controller_count", len(room.controllers)).
+			Int("participant_count", len(room.participants)).
+			Strs("controllers", room.controllers).
+			Strs("participants", room.participants).
+			Msg("hub room snapshot")
 	}
 }
 
