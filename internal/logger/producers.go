@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/newrelic/go-agent/v3/integrations/logcontext-v2/zerologWriter"
 	"github.com/newrelic/go-agent/v3/newrelic"
@@ -56,6 +57,9 @@ func NewLoggerWithService(cfg *config.ObservabilityConfig, loggerService *Logger
 	} else {
 		// Development mode - use console writer
 		consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "2006-01-02 15:04:05"}
+		consoleWriter.FormatFieldValue = func(i interface{}) string {
+			return strings.ToUpper(fmt.Sprintf("%s\n", i))
+		}
 		writer = consoleWriter
 	}
 
