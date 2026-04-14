@@ -128,17 +128,59 @@ function LoadingExistingSet() {
 }
 
 function ErrorExistingSet({ message }: { message?: string }) {
+    const isAccessDenied =
+        message ===
+        "Sorry, you don't have access to this question set. Please contact the set owner if you think this is a mistake.";
+
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-6">
-            <Alert variant="destructive">
+            <Alert variant={isAccessDenied ? "default" : "destructive"}>
                 <InfoIcon className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
+                <AlertTitle>{isAccessDenied ? "Access denied" : "Error"}</AlertTitle>
                 <AlertDescription>
-                    Error loading questions{message ? `: ${message}` : ""}
+                    {isAccessDenied
+                        ? message
+                        : `Error loading questions${message ? `: ${message}` : ""}`}
                 </AlertDescription>
             </Alert>
         </div>
     );
+}
+
+function getErrorDetails(error: unknown): { isForbidden: boolean; message: string } {
+    if (!error || typeof error !== "object") {
+        return { isForbidden: false, message: "" };
+    }
+
+    const errorWithMessage = error as { message?: unknown };
+    const response = (error as { response?: unknown }).response;
+
+    if (!response || typeof response !== "object") {
+        return {
+            isForbidden: false,
+            message:
+                typeof errorWithMessage.message === "string"
+                    ? errorWithMessage.message
+                    : "",
+        };
+    }
+
+    const status = (response as { status?: unknown }).status;
+    const data = (response as { data?: unknown }).data;
+    const code =
+        data && typeof data === "object"
+            ? (data as { code?: unknown }).code
+            : undefined;
+
+    const isForbidden = status === 403 || code === "FORBIDDEN";
+
+    return {
+        isForbidden,
+        message:
+            typeof errorWithMessage.message === "string"
+                ? errorWithMessage.message
+                : "",
+    };
 }
 
 function ExistingSet() {
@@ -185,11 +227,16 @@ function ExistingSet() {
     }
 
     if (isSetError || isQuestionsError) {
-        const setMessage = setError instanceof Error ? setError.message : "";
-        const questionMessage =
-            questionsError instanceof Error ? questionsError.message : "";
-        const message =
-            setMessage || questionMessage || "";
+        const setErrorDetails = getErrorDetails(setError);
+        const questionsErrorDetails = getErrorDetails(questionsError);
+
+        const isForbidden =
+            setErrorDetails.isForbidden || questionsErrorDetails.isForbidden;
+
+        const message = isForbidden
+            ? "Sorry, you don't have access to this question set. Please contact the set owner if you think this is a mistake."
+            : setErrorDetails.message || questionsErrorDetails.message || "";
+
         return <ErrorExistingSet message={message} />;
     }
 
