@@ -143,7 +143,6 @@ export const useExamStore = create<ExamStore>((set, get) => ({
             case "on-join-room": {
                 const { examStatus, time, title } = msg.payload;
                 const nextPhase = sessionStatusToPhase(examStatus);
-
                 const updates: Partial<typeof state> = {
                     phase: nextPhase,
                     title: title || state.title,
@@ -158,6 +157,18 @@ export const useExamStore = create<ExamStore>((set, get) => ({
                         } else {
                             updates.endTime = date;
                         }
+                    }
+                }
+
+                if (nextPhase === "running") {
+                    if (state.examId) {
+                        getQuestionsByExamId(state.examId)
+                            .then((questions) => {
+                                set({ questions });
+                            })
+                            .catch((err) => {
+                                console.error("Failed to fetch questions:", err);
+                            });
                     }
                 }
 
