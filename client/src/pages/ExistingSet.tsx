@@ -4,6 +4,7 @@ import { useParams } from "react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { getSet, getQuestions } from "@/api/query";
+import { getErrorMessage, isForbiddenError } from "@/api/error";
 import { Info as InfoIcon } from "lucide-react";
 import useExistingSetStore from "../store/existingSetStore.ts";
 import type { Question } from "@/types/questions";
@@ -147,40 +148,15 @@ function ErrorExistingSet({ message }: { message?: string }) {
     );
 }
 
-function getErrorDetails(error: unknown): { isForbidden: boolean; message: string } {
-    if (!error || typeof error !== "object") {
-        return { isForbidden: false, message: "" };
+const ACCESS_DENIED_MESSAGE =
+    "Sorry, you don't have access to this question set. Please contact the set owner if you think this is a mistake.";
+
+function queryRetryPolicy(failureCount: number, error: unknown): boolean {
+    if (isForbiddenError(error)) {
+        return false;
     }
 
-    const errorWithMessage = error as { message?: unknown };
-    const response = (error as { response?: unknown }).response;
-
-    if (!response || typeof response !== "object") {
-        return {
-            isForbidden: false,
-            message:
-                typeof errorWithMessage.message === "string"
-                    ? errorWithMessage.message
-                    : "",
-        };
-    }
-
-    const status = (response as { status?: unknown }).status;
-    const data = (response as { data?: unknown }).data;
-    const code =
-        data && typeof data === "object"
-            ? (data as { code?: unknown }).code
-            : undefined;
-
-    const isForbidden = status === 403 || code === "FORBIDDEN";
-
-    return {
-        isForbidden,
-        message:
-            typeof errorWithMessage.message === "string"
-                ? errorWithMessage.message
-                : "",
-    };
+    return failureCount < 2;
 }
 
 function ExistingSet() {
@@ -192,11 +168,13 @@ function ExistingSet() {
                 queryKey: ["set", set_id],
                 queryFn: () => getSet(set_id as string),
                 staleTime: 5 * 60 * 1000,
+                retry: queryRetryPolicy,
             },
             {
                 queryKey: ["questions", set_id],
                 queryFn: () => getQuestions(set_id as string),
                 staleTime: 5 * 60 * 1000,
+                retry: queryRetryPolicy,
             },
         ],
     });
@@ -227,15 +205,10 @@ function ExistingSet() {
     }
 
     if (isSetError || isQuestionsError) {
-        const setErrorDetails = getErrorDetails(setError);
-        const questionsErrorDetails = getErrorDetails(questionsError);
-
-        const isForbidden =
-            setErrorDetails.isForbidden || questionsErrorDetails.isForbidden;
-
+        const isForbidden = isForbiddenError(setError) || isForbiddenError(questionsError);
         const message = isForbidden
-            ? "Sorry, you don't have access to this question set. Please contact the set owner if you think this is a mistake."
-            : setErrorDetails.message || questionsErrorDetails.message || "";
+            ? ACCESS_DENIED_MESSAGE
+            : getErrorMessage(setError) || getErrorMessage(questionsError) || "";
 
         return <ErrorExistingSet message={message} />;
     }
