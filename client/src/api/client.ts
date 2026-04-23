@@ -1,4 +1,5 @@
 import axios from "axios";
+import { normalizeApiError } from "./error";
 
 type TokenGetter = () => Promise<string | null>;
 let getToken: TokenGetter | null = null;
@@ -23,3 +24,8 @@ api.interceptors.request.use(async (config) => {
 
     return config;
 });
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => Promise.reject(normalizeApiError(error)),
+);
