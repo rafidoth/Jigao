@@ -418,3 +418,5 @@ func (s *ExamService) EnrichExamsWithCreatedBy(examsList []model.Exam) {
 		examsList[i].CreatedBy = user
 	}
 }
+
+// func (s* ExamService) SubmitExam

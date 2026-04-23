@@ -35,7 +35,7 @@ export const WS_RECONNECT_ATTEMPTS = 5;
 export const WS_RECONNECT_INTERVAL = 1500;
 
 // Answer Sync Configuration
-export const ANSWER_SYNC_DEBOUNCE_MS = 500;
+export const ANSWER_SYNC_DEBOUNCE_MS = 5000;
 
 // Local Storage Keys
 export const getAnswersStorageKey = (examId: string) => `exam-${examId}-answers`;

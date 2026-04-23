@@ -127,7 +127,8 @@ export interface KickedPayload {
 }
 
 export interface AnswerSavedPayload {
-    question_id: string;
+    saved_count: number;
+    question_ids: string[];
 }
 
 export interface SubmitAcceptedPayload {
@@ -161,8 +162,7 @@ export interface SocketErrorPayload {
 
 // Client to Server Payloads
 export interface AnswerUpdatePayload {
-    question_id: string;
-    answer: string;
+    answers: Record<string, string>;
 }
 
 export interface SubmitExamPayload {

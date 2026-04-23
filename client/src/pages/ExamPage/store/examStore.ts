@@ -221,7 +221,9 @@ export const useExamStore = create<ExamStore>((set, get) => ({
                 // Remove from pending syncs
                 const { pendingSyncs } = state;
                 const next = new Set(pendingSyncs);
-                next.delete(msg.payload.question_id);
+                for (const questionId of msg.payload.question_ids) {
+                    next.delete(questionId);
+                }
                 set({ pendingSyncs: next });
                 break;
             }
