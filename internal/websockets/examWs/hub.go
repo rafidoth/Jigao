@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/rafidoth/onlyexams/internal/model"
+	"github.com/rafidoth/onlyexams/internal/service"
 	"github.com/rs/zerolog"
 )
 
@@ -20,6 +21,7 @@ type Manager struct {
 	cancel          context.CancelFunc
 	cleanupInterval time.Duration
 	log             zerolog.Logger
+	examService     *service.ExamService
 }
 
 type roomRequest struct {
@@ -27,7 +29,7 @@ type roomRequest struct {
 	result chan *Room
 }
 
-func NewManager(log zerolog.Logger) *Manager {
+func NewManager(log zerolog.Logger, exam *service.ExamService) *Manager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &Manager{
@@ -38,6 +40,7 @@ func NewManager(log zerolog.Logger) *Manager {
 		cancel:          cancel,
 		cleanupInterval: 5 * time.Minute,
 		log:             log.With().Str("component", "manager").Logger(),
+		examService:     exam,
 	}
 }
 

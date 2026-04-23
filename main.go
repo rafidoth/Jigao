@@ -32,7 +32,7 @@ func main() {
 
 	svc := service.NewServices(repos, log)
 
-	wsManagers := websockets.NewManagers(log)
+	wsManagers := websockets.NewManagers(log, svc.Exam)
 	handlers := handler.NewHandlers(svc, wsManagers, log)
 
 	mux := router.New(srv, handlers)
