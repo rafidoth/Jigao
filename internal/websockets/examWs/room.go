@@ -378,7 +378,7 @@ func (r *Room) HandleMessage(c *Client, raw RawMessage) {
 func (r *Room) handleAnswerUpdate(c *Client, payload AnswerUpdatePayload) {
 	// Only participants can submit answers
 	if !c.IsParticipant() {
-		c.SendError("only participants can submit answers", "UNAUTHORIZED")
+		c.SendError("only participants can update answers", "UNAUTHORIZED")
 		return
 	}
 
@@ -393,21 +393,39 @@ func (r *Room) handleAnswerUpdate(c *Client, payload AnswerUpdatePayload) {
 	}
 
 	// Validate payload
-	if payload.QuestionID == "" {
-		c.SendError("question_id is required", "INVALID_PAYLOAD")
+	if len(payload.Answers) == 0 {
+		c.SendError("answers is required", "INVALID_PAYLOAD")
 		return
+	}
+
+	for questionID := range payload.Answers {
+		if questionID == "" {
+			c.SendError("answers contains empty question_id", "INVALID_PAYLOAD")
+			return
+		}
 	}
 
 	r.log.Debug().
 		Str("user_id", c.UserID).
-		Str("question_id", payload.QuestionID).
+		Int("answer_count", len(payload.Answers)).
 		Msg("answer update received")
 
-	// NOTE: In production, save to database/Redis here via service layer
-	// Example: r.examService.SaveAnswer(r.examID, c.UserID, payload.QuestionID, payload.Answer)
+	if err := r.manager.examService.UpdateExamDraft(r.examID, c.UserID, payload.Answers); err != nil {
+		r.log.Error().
+			Err(err).
+			Str("user_id", c.UserID).
+			Int("answer_count", len(payload.Answers)).
+			Msg("failed to update exam draft")
+		c.SendError("failed to save answer draft", "DRAFT_SAVE_FAILED")
+		return
+	}
 
 	// Send ACK back to participant
-	c.SendMessage(NewAnswerSavedMessage(payload.QuestionID))
+	savedQuestionIDs := []string{}
+	for questionID := range payload.Answers {
+		savedQuestionIDs = append(savedQuestionIDs, questionID)
+	}
+	c.SendMessage(NewAnswerSavedMessage(savedQuestionIDs))
 }
 
 // handleSubmitExam processes final exam submission from participant

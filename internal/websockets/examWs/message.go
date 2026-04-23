@@ -46,11 +46,12 @@ func NewExamEndsMessage(endTime string) Message {
 }
 
 // NewAnswerSavedMessage creates answer saved ACK
-func NewAnswerSavedMessage(questionID string) Message {
+func NewAnswerSavedMessage(questionIDs []string) Message {
 	return Message{
 		Type: MsgTypeAnswerSaved,
 		Payload: AnswerSavedPayload{
-			QuestionID: questionID,
+			Saved_count: len(questionIDs),
+			QuestionIDs: questionIDs,
 		},
 	}
 }
