@@ -104,9 +104,10 @@ type KickedPayload struct {
 	Reason string `json:"reason,omitempty"`
 }
 
-// AnswerSavedPayload is ACK for answer save
+// AnswerSavedPayload is ACK for answer draft (selection) save
 type AnswerSavedPayload struct {
-	QuestionID string `json:"question_id"`
+	Saved_count int      `json:"saved_count"`
+	QuestionIDs []string `json:"question_ids"`
 }
 
 // SubmitAcceptedPayload is sent when exam submission is accepted
@@ -143,14 +144,11 @@ type ServerShutdownPayload struct {
 	Message string `json:"message"`
 }
 
-// =============================================================================
 // Inbound Payloads (Client → Server)
-// =============================================================================
 
 // AnswerUpdatePayload is sent when participant saves an answer
 type AnswerUpdatePayload struct {
-	QuestionID string `json:"question_id"`
-	Answer     string `json:"answer"`
+	Answers map[string]string `json:"answers"`
 }
 
 // SubmitExamPayload is sent when participant submits exam
