@@ -6,36 +6,91 @@ An AI-powered exam and question generation platform that helps users create, man
 
 Jigao streamlines the exam preparation process by leveraging AI to automatically generate practice questions from user-provided content. Whether you're a student preparing for exams or an educator creating assessments, Jigao transforms your study materials into interactive quizzes with immediate feedback and scoring.
 
-## Features
+## Feature List 
 
-### Question Generation
-- **AI-Powered Generation** - Automatically generate questions from your notes, textbooks, or any text content
-- **Multiple Question Types** - Support for MCQ, True/False, Fill in the Blanks, and Short Answer questions
-- **Configurable Difficulty** - Choose between Easy, Medium, and Hard difficulty levels
-- **Auto-Generated Explanations** - Each answer includes detailed explanations for better learning
+# Questions Making & Organization
 
-### Question Sets Management
-- Create, update, and organize question sets
-- Visibility controls: Public, Private, or Restricted
-- Share sets with other users via access control
-- Store original context for future question generation
+#### Making question sets and managing them
 
-### Exams
-- Create exams from existing question sets
-- Schedule exams with specific start times and duration
-- Real-time exam sessions via WebSocket
-- Live exam status tracking (waiting, running, ended)
-- Support for multiple participants
+1. Creating Empty Question Set
+2. Deleting Question Set
+3. Updating Question Set Properties
+4. Filtering sets 
+    - Created By
+    - Visibility
+5. Searching Sets
+    - use @ to get sets created by persons
+    - search title text
+6. Sorting Sets
+    - Last Modified
+    - Visibility
 
-### Submissions & Grading
-- Real-time answer submission during exams
-- Automatic evaluation and scoring
-- Detailed answer sheets with correct/incorrect indicators
-- Comprehensive explanations for review
+#### Question Set Access
 
-### User Management
-- Secure authentication via Clerk
-- User profiles with personalized settings
+1. Share Access of a Question Set with other User 
+    - it gives **Access** to managing exams under this question set also.
+    - Send Invite by User’s email
+    
+    **Use Case** : Two or more teacher can collaboratively build a question set, be controller of exams, monitor students exam etc. 
+    
+
+#### Questions Management
+
+1. Add new question to a set . Currently 4 types that covers most. 
+    - Multiple Choice Questions ( Single Correct Answer)  **Auto Gradable**
+    - Fill In the Blanks ( Multiple Correct answer acceptance) **Auto Gradable**
+    - True False **Auto Gradable**
+    - Short Question Answer **Not Auto Gradable**
+2. Remove a question
+3. Edit Question Properties (Question Text, Difficulty, Choices, Answer Explanation, Reordering)
+
+# Real Time Exam
+
+#### Friendly Exam
+
+group of honest learners (ideally 2-5 people) who all have access to a particular question set. Now they want to conduct an exam among themselves. As they all have question set access they can view the questions if they want (that’s not fair though) but it creates a same page understanding between them. 
+
+- Only Users having set access can attend
+- No monitoring system, so everyone is participant
+
+#### Protected Exam
+
+- Two types of user role :
+    - **Controller** : Monitors Exam (Users who have set access)
+    - **Participant** : Attend Exam ( Users invited or join request accepted by any controller to attend exam)
+- Participants are invited by monitors via mentioning user(email)
+- Participants can send **Exam Join Request** from exam page and Request can be accepted by any controller.
+
+#### Public Exam
+
+(almost same as Protected Exams, Roles are same)
+
+- any one can join (no request system or invite system)
+
+#### Exam Monitoring System
+
+1. Participant leaving Exam Tab Count
+2. Participant Using operating system (get the idea of participant using desktop or not)
+3. participant’s window size
+4. participant’s screen share view (no persistent recording)
+5. participant’s web cam view (no persistent recording)
+
+# Practice Tests (Self Tests)
+
+1. Practice Test for individuals who has access to a set or created one
+2. not shared between multiple users
+
+# AI Assistance
+
+1. Question set generation from pdf or prompts
+2. In a question set AI assistant can add or edit questions by following prompt instructions (no access to remove)
+3. Grading Non deterministic questions like short question based on estimated answer or general knowledge
+
+# Users
+
+- Google Login Flow (OAuth Flow)
+    
+    (currently connected with clerk auth
 
 ## Tech Stack
 
