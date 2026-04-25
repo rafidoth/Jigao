@@ -1,10 +1,16 @@
 # Jigao
+Jigao is a collaborative, AI-enhanced examination platform designed for modern educators and learners who demand both flexibility and integrity. Unlike traditional rigid quiz tools, Jigao bridges the gap between honest, peer-to-peer learning and secure, proctored assessments.
 
-An AI-powered exam and question generation platform that helps users create, manage, and take practice exams based on their notes and study materials.
+Built for adaptability, Jigao allows educators to create dynamic question sets, collaborate with co-teachers, manage access permissions, and conduct exams in three distinct modes : Friendly, Protected, and Public—each tailored for different trust levels and monitoring requirements.
 
-## Overview
+With integrated AI assistance for question generation, auto-grading of objective items, and assisted grading for short answers, Jigao reduces administrative overhead while maintaining academic excellence. Whether you need a no-stakes practice test for an individual student or a live-monitored exam with screen and webcam oversight, Jigao provides a unified, real-time environment that respects both honesty and accountability.
 
-Jigao streamlines the exam preparation process by leveraging AI to automatically generate practice questions from user-provided content. Whether you're a student preparing for exams or an educator creating assessments, Jigao transforms your study materials into interactive quizzes with immediate feedback and scoring.
+
+# Tech
+Backend : Golang, Chi Router, pgx (PostgreSQL), Gorilla WS, Zerolog
+Frontend : React 19, Vite, React Router v7, React Query, Tailwind, Shadcn 
+Landing Page : Nextjs
+
 
 ## Feature List 
 
@@ -91,45 +97,6 @@ group of honest learners (ideally 2-5 people) who all have access to a particula
 - Google Login Flow (OAuth Flow)
     
     (currently connected with clerk auth
-
-## Tech Stack
-
-### Backend
-| Component | Technology |
-|-----------|------------|
-| Language | Go 1.24 |
-| HTTP Router | chi |
-| Database | PostgreSQL (Neon) |
-| WebSocket | gorilla/websocket |
-| Authentication | Clerk |
-| gRPC | google.golang.org/grpc |
-
-### Frontend (React App)
-| Component | Technology |
-|-----------|------------|
-| Framework | React 19 |
-| Build Tool | Vite |
-| Routing | React Router v7 |
-| State Management | Zustand |
-| Data Fetching | TanStack React Query |
-| Styling | TailwindCSS |
-| UI Components | Radix UI |
-| Animation | Framer Motion |
-| Authentication | Clerk React |
-
-### AI Service
-| Component | Technology |
-|-----------|------------|
-| Runtime | Node.js (TypeScript) |
-| Framework | Express |
-| AI/LLM | LangChain + Groq |
-| Schema Validation | Zod |
-
-### Landing Page
-| Component | Technology |
-|-----------|------------|
-| Framework | Next.js |
-| Styling | TailwindCSS |
 
 
 ## Migrations
