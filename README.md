@@ -8,7 +8,11 @@ With integrated AI assistance for question generation, auto-grading of objective
 
 # Tech
 Backend : Golang, Chi Router, pgx (PostgreSQL), Gorilla WS, Zerolog
+
+
 Frontend : React 19, Vite, React Router v7, React Query, Tailwind, Shadcn 
+
+
 Landing Page : Nextjs
 
 
