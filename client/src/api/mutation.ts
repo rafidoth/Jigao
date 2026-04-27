@@ -23,6 +23,11 @@ export const createNewSetPost = async () => {
     return res.data;
 };
 
+export const deleteSetApi = async (set_id: string | number) => {
+    const res = await api.delete(`/api/v1/sets/${set_id}`);
+    return res.data;
+};
+
 export const userOnLogin = async (user: User) => {
     const res = await api.post(`/api/v1/users`, user);
     return res.data;

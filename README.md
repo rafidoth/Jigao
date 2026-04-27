@@ -1,9 +1,7 @@
 # Jigao
-Jigao is a collaborative, AI-enhanced examination platform designed for modern educators and learners who demand both flexibility and integrity. Unlike traditional rigid quiz tools, Jigao bridges the gap between honest, peer-to-peer learning and secure, proctored assessments.
+Jigao is a collaborative, AI enhanced examination platform designed for modern educators and learners who demand both flexibility and integrity. Unlike traditional rigid quiz tools, Jigao bridges the gap between honest, peer-to-peer learning and secure, proctored assessments.
 
-Built for adaptability, Jigao allows educators to create dynamic question sets, collaborate with co-teachers, manage access permissions, and conduct exams in three distinct modes : Friendly, Protected, and Public—each tailored for different trust levels and monitoring requirements.
-
-With integrated AI assistance for question generation, auto-grading of objective items, and assisted grading for short answers, Jigao reduces administrative overhead while maintaining academic excellence. Whether you need a no-stakes practice test for an individual student or a live-monitored exam with screen and webcam oversight, Jigao provides a unified, real-time environment that respects both honesty and accountability.
+Built for adaptability, Jigao allows educators to create dynamic question sets, collaborate with co-teachers, manage access permissions, and conduct exams in three distinct modes : Friendly, Protected, and Public each tailored for different trust levels and monitoring requirements.
 
 
 # Tech

@@ -150,7 +150,7 @@ func (h *SetHandler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 	}
 	setID := chi.URLParam(r, "set_id")
 
-	deleted, err := h.svc.DeleteSetWithContext(r.Context(), uid, setID)
+	deleted, err := h.svc.DeleteSet(r.Context(), uid, setID)
 	if err != nil {
 		writeError(h.log, w, err, "delete set failed")
 		return

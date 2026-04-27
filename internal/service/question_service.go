@@ -153,8 +153,8 @@ func (s *QuestionService) UpdateSet(ctx context.Context, userID, setID, visibili
 	return updated, nil
 }
 
-// DeleteSetWithContext deletes a set and its associated context.
-func (s *QuestionService) DeleteSetWithContext(ctx context.Context, userID, setID string) (*model.Set, error) {
+// DeleteSet deletes a set and its associated context.
+func (s *QuestionService) DeleteSet(ctx context.Context, userID, setID string) (*model.Set, error) {
 	s.log.Info().Str("user_id", userID).Str("set_id", setID).Msg("delete set request")
 
 	qSet := &model.Set{
@@ -167,9 +167,6 @@ func (s *QuestionService) DeleteSetWithContext(ctx context.Context, userID, setI
 		s.log.Error().Err(err).Str("user_id", userID).Str("set_id", setID).Msg("failed to delete set")
 		return nil, fmt.Errorf("delete set: %w", err)
 	}
-
-	// Best-effort context deletion — set might not have a context row.
-	_ = s.setRepo.DeleteSetContext(setID)
 
 	s.log.Info().Str("user_id", userID).Str("set_id", setID).Msg("set deleted")
 
