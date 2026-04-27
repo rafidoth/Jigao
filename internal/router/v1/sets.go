@@ -7,7 +7,7 @@ import (
 
 func registerSetRoutes(r chi.Router, h *handler.SetHandler) {
 	r.Route("/sets", func(r chi.Router) {
-		r.Get("/", h.GetRecentSets)
+		r.Get("/", h.GetSetList)
 		r.Post("/", h.CreateNewSet)
 		r.Get("/{set_id}", h.GetASet)
 		r.Put("/{set_id}", h.UpdateASet)

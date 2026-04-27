@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/rafidoth/onlyexams/internal/model"
@@ -134,6 +135,110 @@ func (r *SetRepository) GetRecentSets(limit int, user_id string) ([]*model.Set, 
 		return nil, fmt.Errorf("GetRecentSets tx: %w", err)
 	}
 	return recentSets, nil
+}
+
+func (r *SetRepository) ListSets(
+	requesterID string,
+	createdBy string,
+	visibility string,
+	limit int,
+	sortBy string,
+	order string,
+) ([]*model.Set, error) {
+	var setsOut []*model.Set
+
+	err := r.txDB(func(tx pgx.Tx) error {
+		if limit <= 0 {
+			return fmt.Errorf("limit must be greater than 0")
+		}
+
+		sortBy = strings.TrimSpace(sortBy)
+		if sortBy == "" {
+			sortBy = "last_modified"
+		}
+
+		order = strings.TrimSpace(order)
+		if order == "" {
+			order = "desc"
+		}
+
+		orderSQL := "DESC"
+		if order == "asc" {
+			orderSQL = "ASC"
+		}
+
+		var orderByClause string
+		switch sortBy {
+		case "visibility":
+			orderByClause = fmt.Sprintf(
+				"ORDER BY CASE filtered.visibility WHEN 'private' THEN 1 WHEN 'restricted' THEN 2 WHEN 'public' THEN 3 ELSE 4 END %s, filtered.updated_at DESC, filtered.id ASC",
+				orderSQL,
+			)
+		case "last_modified":
+			orderByClause = fmt.Sprintf("ORDER BY filtered.updated_at %s, filtered.id ASC", orderSQL)
+		default:
+			return fmt.Errorf("unsupported sort: %s", sortBy)
+		}
+
+		query := `
+			WITH accessible AS (
+				SELECT *
+				FROM sets
+				WHERE user_id = $1
+
+				UNION
+
+				SELECT s.*
+				FROM sets s
+				JOIN shared_set_users ssu ON s.id = ssu.set_id
+				WHERE ssu.user_id = $1
+			),
+			filtered AS (
+				SELECT *
+				FROM accessible
+				WHERE 1=1`
+
+		args := []any{requesterID}
+		idx := 2
+
+		if strings.TrimSpace(createdBy) != "" {
+			query += fmt.Sprintf(" AND user_id = $%d", idx)
+			args = append(args, createdBy)
+			idx++
+		}
+
+		if strings.TrimSpace(visibility) != "" {
+			query += fmt.Sprintf(" AND visibility = $%d", idx)
+			args = append(args, visibility)
+			idx++
+		}
+
+		query += fmt.Sprintf("\n\t\t\t)\n\t\t\tSELECT *\n\t\t\tFROM filtered\n\t\t\t%s\n\t\t\tLIMIT $%d", orderByClause, idx)
+		args = append(args, limit)
+
+		rows, err := tx.Query(context.Background(), query, args...)
+		if err != nil {
+			return fmt.Errorf("query list sets: %w", err)
+		}
+
+		sets, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Set])
+		if err != nil {
+			return fmt.Errorf("collect list sets: %w", err)
+		}
+
+		for i := range sets {
+			setsOut = append(setsOut, &sets[i])
+		}
+
+		r.s.Logger.Info().Int("count", len(setsOut)).Msg("Success: listed sets")
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("ListSets tx: %w", err)
+	}
+
+	return setsOut, nil
 }
 
 func (r *SetRepository) CreateNewSet(qSet *model.Set) (*model.Set, error) {
