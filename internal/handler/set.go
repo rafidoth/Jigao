@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -164,76 +163,52 @@ func (h *SetHandler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 	writeJSON(h.log, w, http.StatusOK, resp{ID: setID, Title: deleted.Title})
 }
 
-// GetRecentSets handles GET /sets/?recent=N — returns sets with filtering and sorting.
+// GetSetList handles GET /sets/? — returns sets with filtering and cursor pagination.
 //
 // @Summary      Get sets
-// @Description  Returns accessible sets (owned + shared) with optional filtering and sorting
+// @Description  Returns accessible sets (owned + shared) with optional filtering and pagination
 // @Tags         Sets
 // @Produce      json
-// @Param        recent      query     int     true   "Number of sets to return"
-// @Param        created_by  query     string  false  "Filter by creator user ID"
-// @Param        visibility  query     string  false  "Filter by visibility: private|restricted|public"
-// @Param        sort        query     string  false  "Sort by: last_modified|visibility (default: last_modified)"
-// @Param        order       query     string  false  "Sort order: asc|desc (default: desc)"
-// @Success      200     {array}   service.SetWithOwner
-// @Failure      400     {object}  errs.HTTPError
-// @Failure      401     {object}  errs.HTTPError
-// @Failure      500     {object}  errs.HTTPError
-// @Router       /api/v1/sets/ [get]
+// @Param        created_by   query     string  false  "Filter by creator user ID"
+// @Param        visibility   query     string  false  "Filter by visibility: private|restricted|public"
+// @Param        last_seen_id query    string  false  "Cursor: ID of last seen set"
+// @Success     200       {object}  object{sets=[]service.SetWithOwner,next_last_seen_id=string|null}
+// @Failure     400       {object}  errs.HTTPError
+// @Failure     401       {object}  errs.HTTPError
+// @Failure     500       {object}  errs.HTTPError
+// @Router      /api/v1/sets/ [get]
 func (h *SetHandler) GetSetList(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "get recent sets: missing user-id")
+		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "get sets: missing user-id")
 		return
 	}
 	query := r.URL.Query()
-	limitStr := query.Get("recent")
-	if limitStr == "" {
-		writeError(h.log, w, errs.NewBadRequestError("'recent' query parameter is required", false, nil, nil, nil), "get recent sets: missing limit")
-		return
-	}
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil {
-		writeError(h.log, w, errs.NewBadRequestError("'recent' must be an integer", false, nil, nil, nil), "get recent sets: invalid limit")
-		return
-	}
-	if limit <= 0 {
-		writeError(h.log, w, errs.NewBadRequestError("'recent' must be greater than 0", false, nil, nil, nil), "get recent sets: non-positive limit")
-		return
-	}
 
 	createdBy := strings.TrimSpace(query.Get("created_by"))
 	visibility := strings.TrimSpace(query.Get("visibility"))
+
 	if visibility != "" && visibility != "private" && visibility != "restricted" && visibility != "public" {
-		writeError(h.log, w, errs.NewBadRequestError("'visibility' must be one of: private, restricted, public", false, nil, nil, nil), "get recent sets: invalid visibility")
+		writeError(h.log, w, errs.NewBadRequestError("'visibility' must be one of: private, restricted, public", false, nil, nil, nil), "get sets: invalid visibility")
 		return
 	}
 
-	sortBy := strings.TrimSpace(query.Get("sort"))
-	if sortBy == "" {
-		sortBy = "last_modified"
-	}
-	if sortBy != "last_modified" && sortBy != "visibility" {
-		writeError(h.log, w, errs.NewBadRequestError("'sort' must be one of: last_modified, visibility", false, nil, nil, nil), "get recent sets: invalid sort")
-		return
-	}
+	lastSeenID := strings.TrimSpace(query.Get("last_seen_id"))
 
-	order := strings.TrimSpace(query.Get("order"))
-	if order == "" {
-		order = "desc"
-	}
-	if order != "asc" && order != "desc" {
-		writeError(h.log, w, errs.NewBadRequestError("'order' must be one of: asc, desc", false, nil, nil, nil), "get recent sets: invalid order")
-		return
-	}
-
-	results, err := h.svc.ListSetsWithOwners(r.Context(), uid, createdBy, visibility, limit, sortBy, order)
+	results, nextLastSeenID, err := h.svc.ListSetsWithOwnersCursor(r.Context(), uid, createdBy, visibility, lastSeenID)
 	if err != nil {
-		writeError(h.log, w, err, "get recent sets failed")
+		writeError(h.log, w, err, "get sets failed")
 		return
 	}
 
-	writeJSON(h.log, w, http.StatusOK, results)
+	type resp struct {
+		Sets           []service.SetWithOwner `json:"sets"`
+		NextLastSeenID *string                `json:"next_last_seen_id"`
+	}
+	writeJSON(h.log, w, http.StatusOK, resp{
+		Sets:           results,
+		NextLastSeenID: nextLastSeenID,
+	})
 }
 
 // GetSetAccessList handles GET /sets/access_list/{set_id} — returns owner + shared users.

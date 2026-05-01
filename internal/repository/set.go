@@ -241,6 +241,100 @@ func (r *SetRepository) ListSets(
 	return setsOut, nil
 }
 
+const pageSize = 15
+
+func (r *SetRepository) ListSetsWithCursor(
+	requesterID string,
+	createdBy string,
+	visibility string,
+	lastSeenID string,
+) ([]*model.Set, *string, error) {
+	var setsOut []*model.Set
+
+	err := r.txDB(func(tx pgx.Tx) error {
+		orderByClause := "ORDER BY updated_at DESC, id ASC"
+		keysetPredicate := "(updated_at, id) < (SELECT (updated_at, id) FROM sets WHERE id = $1)"
+
+		baseQuery := `
+			WITH accessible_sets AS (
+				SELECT *
+				FROM sets
+				WHERE user_id = $1
+
+				UNION
+
+				SELECT s.*
+				FROM sets s
+				JOIN shared_set_users ssu ON s.id = ssu.set_id
+				WHERE ssu.user_id = $1
+			),
+			filtered AS (
+				SELECT *
+				FROM accessible_sets
+				WHERE 1=1`
+
+		args := []any{requesterID}
+		idx := 2
+
+		if strings.TrimSpace(createdBy) != "" {
+			baseQuery += fmt.Sprintf(" AND user_id = $%d", idx)
+			args = append(args, createdBy)
+			idx++
+		}
+
+		if strings.TrimSpace(visibility) != "" {
+			baseQuery += fmt.Sprintf(" AND visibility = $%d", idx)
+			args = append(args, visibility)
+			idx++
+		}
+
+		if strings.TrimSpace(lastSeenID) != "" {
+			args = append(args, lastSeenID)
+			baseQuery += fmt.Sprintf(
+				"\n\t\t\t)\n\t\t\tSELECT *\n\t\t\tFROM filtered\n\t\t\tWHERE %s\n\t\t\t%s\n\t\t\tLIMIT $%d",
+				keysetPredicate,
+				orderByClause,
+				idx,
+			)
+		} else {
+			baseQuery += fmt.Sprintf(
+				"\n\t\t\t)\n\t\t\tSELECT *\n\t\t\tFROM filtered\n\t\t\t%s\n\t\t\tLIMIT $%d",
+				orderByClause,
+				idx,
+			)
+		}
+		args = append(args, pageSize)
+
+		rows, err := tx.Query(context.Background(), baseQuery, args...)
+		if err != nil {
+			return fmt.Errorf("query list sets with cursor: %w", err)
+		}
+
+		sets, err := pgx.CollectRows(rows, pgx.RowToStructByName[model.Set])
+		if err != nil {
+			return fmt.Errorf("collect list sets: %w", err)
+		}
+
+		for i := range sets {
+			setsOut = append(setsOut, &sets[i])
+		}
+
+		r.s.Logger.Info().Int("count", len(setsOut)).Msg("Success: listed sets with cursor")
+		return nil
+	})
+
+	if err != nil {
+		return nil, nil, fmt.Errorf("ListSetsWithCursor tx: %w", err)
+	}
+
+	var nextID *string
+	if len(setsOut) > 0 {
+		nextID = &setsOut[len(setsOut)-1].ID
+	}
+
+	return setsOut, nextID, nil
+}
+
 func (r *SetRepository) CreateNewSet(qSet *model.Set) (*model.Set, error) {
 	var set model.Set
 	err := r.txDB(func(tx pgx.Tx) error {
