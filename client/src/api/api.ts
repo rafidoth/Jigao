@@ -1,4 +1,5 @@
 export {
+  getSetsPage,
   getRecentSets,
   getUsersWithAccess,
   getQuestions,

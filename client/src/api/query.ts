@@ -1,11 +1,45 @@
 import type { Exam } from "@/features/exams/types";
 import type { User as AccessUser } from "@/components/add_people_access_popover/types";
+import type {
+    SetListApiResponse,
+    SetVisibilityFilter,
+} from "@/pages/set_list/types";
 import { api } from "./client";
 
 
+interface GetSetsPageParams {
+    createdBy?: string;
+    visibility?: SetVisibilityFilter;
+    lastSeenId?: string | null;
+}
+
+export const getSetsPage = async (
+    params: GetSetsPageParams = {},
+): Promise<SetListApiResponse> => {
+    const queryParams: Record<string, string> = {};
+    const createdBy = params.createdBy?.trim() ?? "";
+    const visibility = params.visibility?.trim() ?? "";
+    const lastSeenId = params.lastSeenId?.trim() ?? "";
+
+    if (createdBy) {
+        queryParams.created_by = createdBy;
+    }
+
+    if (visibility && visibility !== "all") {
+        queryParams.visibility = visibility;
+    }
+
+    if (lastSeenId) {
+        queryParams.last_seen_id = lastSeenId;
+    }
+
+    const res = await api.get(`/api/v1/sets/`, { params: queryParams });
+    return res.data as SetListApiResponse;
+};
+
 export const getRecentSets = async () => {
-    const res = await api.get(`/api/v1/sets?recent=10`);
-    return res.data;
+    const res = await getSetsPage();
+    return res.sets;
 };
 
 export const getUsersWithAccess = async (setId: string | number) => {
