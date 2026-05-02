@@ -28,10 +28,39 @@ func (a *AuthMiddleware) Apply(r *chi.Mux) {
 	if a.srv.Config.Auth.SecretKey == "" {
 		a.srv.Logger.Warn().Msg("CLERK_SECRET_KEY is not set")
 	}
-	clerk.SetKey(a.srv.Config.Auth.SecretKey)
 
-	r.Use(skipAuthPaths(clerkhttp.RequireHeaderAuthorization()))
-	r.Use(skipAuthPaths(a.clerkAuth))
+	// auth bypass for testing
+	if a.srv.Config.Primary.Env == "development_unsafe" {
+		r.Use(a.bypassAuth)
+	} else {
+
+		clerk.SetKey(a.srv.Config.Auth.SecretKey)
+
+		r.Use(skipAuthPaths(clerkhttp.RequireHeaderAuthorization()))
+		r.Use(skipAuthPaths(a.clerkAuth))
+	}
+
+}
+
+func (a *AuthMiddleware) bypassAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		if token == "Bearer life_is_unfair" {
+			test_user_id := "user_3CIufotyuPeCLN0vgU0efMHyCTS"
+			ctx := context.WithValue(r.Context(), "user-id", test_user_id)
+			ctx = context.WithValue(ctx, "user-details", test_user_id)
+			a.srv.Logger.Info().
+				Str("user-id", test_user_id).
+				Str("route", r.URL.Path).
+				Msg("Authenticated user")
+			next.ServeHTTP(w, r.WithContext(ctx))
+		} else {
+			a.srv.Logger.Info().
+				Str("route", r.URL.Path).
+				Msg("Neither Authenticated nor bypassed")
+			next.ServeHTTP(w, r)
+		}
+	})
 }
 
 func skipAuthPaths(mw func(http.Handler) http.Handler) func(http.Handler) http.Handler {
