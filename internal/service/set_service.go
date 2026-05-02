@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/rafidoth/onlyexams/internal/model"
 	"github.com/rafidoth/onlyexams/internal/users"
@@ -189,13 +190,27 @@ func (s *QuestionService) ListSetsWithOwners(
 func (s *QuestionService) ListSetsWithOwnersCursor(
 	ctx context.Context,
 	requesterID,
-	createdBy,
+	createdByEmail,
 	visibility,
 	lastSeenID string,
 ) ([]SetWithOwner, *string, error) {
+	var (
+		createdByUser *users.User
+		createdByID   string
+	)
+
+	if email := strings.TrimSpace(createdByEmail); email != "" {
+		usr, err := s.userRepo.GetUserFromEmail(email)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed createdBy user: %w", err)
+		}
+		createdByUser = &usr
+		createdByID = usr.ID
+	}
+
 	sets, nextID, err := s.setRepo.ListSetsWithCursor(
 		requesterID,
-		createdBy,
+		createdByID,
 		visibility,
 		lastSeenID,
 	)
@@ -205,11 +220,21 @@ func (s *QuestionService) ListSetsWithOwnersCursor(
 
 	results := make([]SetWithOwner, 0, len(sets))
 	for _, set := range sets {
-		owner, err := s.userRepo.GetUserFromId(set.UserId)
-		if err != nil {
-			return nil, nil, fmt.Errorf("get owner for set %s: %w", set.ID, err)
+		if createdByUser != nil {
+			results = append(results, SetWithOwner{
+				Set:   *set,
+				Owner: *createdByUser,
+			})
+		} else {
+			owner, err := s.userRepo.GetUserFromId(set.UserId)
+			if err != nil {
+				return nil, nil, fmt.Errorf("get owner for set %s: %w", set.ID, err)
+			}
+			results = append(results, SetWithOwner{
+				Set:   *set,
+				Owner: owner,
+			})
 		}
-		results = append(results, SetWithOwner{Set: *set, Owner: owner})
 	}
 
 	return results, nextID, nil

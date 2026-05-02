@@ -68,7 +68,12 @@ func (r *UserRepository) GetUserFromEmail(email string) (users.User, error) {
 			"SELECT id, email, name, image_url FROM users WHERE email = $1",
 			email,
 		)
-		if scanErr := row.Scan(&user.ID, &user.Email, &user.Name, &user.ImageURL); scanErr != nil {
+		if scanErr := row.Scan(
+			&user.ID,
+			&user.Email,
+			&user.Name,
+			&user.ImageURL,
+		); scanErr != nil {
 			return fmt.Errorf("query user by email: %w", scanErr)
 		}
 		return nil

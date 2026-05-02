@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/mail"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -169,7 +170,7 @@ func (h *SetHandler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 // @Description  Returns accessible sets (owned + shared) with optional filtering and pagination
 // @Tags         Sets
 // @Produce      json
-// @Param        created_by   query     string  false  "Filter by creator user ID"
+// @Param        created_by   query     string  false  "Filter by creator email"
 // @Param        visibility   query     string  false  "Filter by visibility: private|restricted|public"
 // @Param        last_seen_id query    string  false  "Cursor: ID of last seen set"
 // @Success     200       {object}  object{sets=[]service.SetWithOwner,next_last_seen_id=string|null}
@@ -180,22 +181,53 @@ func (h *SetHandler) DeleteASet(w http.ResponseWriter, r *http.Request) {
 func (h *SetHandler) GetSetList(w http.ResponseWriter, r *http.Request) {
 	uid, err := extractUserID(r)
 	if err != nil {
-		writeError(h.log, w, errs.NewUnauthorizedError("Unauthorized", false), "get sets: missing user-id")
+		writeError(
+			h.log, w, errs.NewUnauthorizedError("Unauthorized", false),
+			"get sets: missing user-id",
+		)
 		return
 	}
 	query := r.URL.Query()
 
 	createdBy := strings.TrimSpace(query.Get("created_by"))
 	visibility := strings.TrimSpace(query.Get("visibility"))
+	if createdBy != "" {
+		parsed, parseErr := mail.ParseAddress(createdBy)
+		if parseErr != nil || parsed.Address != createdBy {
+			writeError(
+				h.log, w,
+				errs.NewBadRequestError(
+					"'created_by' must be a valid email address",
+					false, nil, nil, nil,
+				), "get sets: invalid created_by",
+			)
+			return
+		}
+	}
 
-	if visibility != "" && visibility != "private" && visibility != "restricted" && visibility != "public" {
-		writeError(h.log, w, errs.NewBadRequestError("'visibility' must be one of: private, restricted, public", false, nil, nil, nil), "get sets: invalid visibility")
+	if visibility != "" &&
+		visibility != "private" &&
+		visibility != "restricted" &&
+		visibility != "public" {
+		writeError(
+			h.log, w,
+			errs.NewBadRequestError(
+				"'visibility' must be one of: private, restricted, public",
+				false, nil, nil, nil,
+			), "get sets: invalid visibility")
 		return
 	}
 
 	lastSeenID := strings.TrimSpace(query.Get("last_seen_id"))
 
-	results, nextLastSeenID, err := h.svc.ListSetsWithOwnersCursor(r.Context(), uid, createdBy, visibility, lastSeenID)
+	results, nextLastSeenID, err := h.svc.ListSetsWithOwnersCursor(
+		r.Context(),
+		uid,
+		createdBy,
+		visibility,
+		lastSeenID,
+	)
+
 	if err != nil {
 		writeError(h.log, w, err, "get sets failed")
 		return

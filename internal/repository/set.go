@@ -245,7 +245,7 @@ const pageSize = 15
 
 func (r *SetRepository) ListSetsWithCursor(
 	requesterID string,
-	createdBy string,
+	createdByUserId string,
 	visibility string,
 	lastSeenID string,
 ) ([]*model.Set, *string, error) {
@@ -276,9 +276,12 @@ func (r *SetRepository) ListSetsWithCursor(
 		args := []any{requesterID}
 		idx := 2
 
-		if strings.TrimSpace(createdBy) != "" {
-			baseQuery += fmt.Sprintf(" AND user_id = $%d", idx)
-			args = append(args, createdBy)
+		if strings.TrimSpace(createdByUserId) != "" {
+			baseQuery += fmt.Sprintf(
+				" AND user_id = $%d",
+				idx,
+			)
+			args = append(args, createdByUserId) // created by is an email value
 			idx++
 		}
 
