@@ -109,6 +109,8 @@ function SetList() {
     const [visibilityInput, setVisibilityInput] = useState<SetVisibilityFilter>("all");
     const [createdBy, setCreatedBy] = useState("");
     const [visibility, setVisibility] = useState<SetVisibilityFilter>("all");
+    const [searchInput, setSearchInput] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
 
     const {
         data,
@@ -155,7 +157,17 @@ function SetList() {
         return normalized.map(normalizeSetItem);
     }, [data]);
 
-    const hasAnyItems = items.length > 0;
+    const filteredItems = useMemo(() => {
+        const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+
+        if (!normalizedSearchTerm) {
+            return items;
+        }
+
+        return items.filter(({ set }) => set.title.toLowerCase().includes(normalizedSearchTerm));
+    }, [items, searchTerm]);
+
+    const hasAnyItems = filteredItems.length > 0;
 
     if (isSetsLoading) return <LoadingSetList />;
 
@@ -176,6 +188,11 @@ function SetList() {
             return;
         }
         await fetchNextPage();
+    };
+
+    const handleSearchChange = (value: string) => {
+        setSearchInput(value);
+        setSearchTerm(value);
     };
 
     if (isError) {
@@ -212,6 +229,12 @@ function SetList() {
             <div className="hidden md:flex flex-col gap-2 mb-10">
                 <h2 className="text-sm sm:text-2xl md:text-3xl font-bold my-2">My Sets</h2>
                 <div className="flex flex-wrap items-center gap-2">
+                    <Input
+                        value={searchInput}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        placeholder="Search by title"
+                        className="w-[220px]"
+                    />
                     <SetFiltersPopover
                         createdByInput={createdByInput}
                         visibilityInput={visibilityInput}
@@ -232,15 +255,22 @@ function SetList() {
             </div>
 
             <ScrollArea className="h-[calc(100vh-100px)] pr-2">
-                <div className="md:hidden mb-4 flex items-center justify-between gap-2">
-                    <h2 className="text-base font-bold">My Sets</h2>
-                    <SetFiltersPopover
-                        createdByInput={createdByInput}
-                        visibilityInput={visibilityInput}
-                        onChangeCreatedByInput={setCreatedByInput}
-                        onChangeVisibilityInput={setVisibilityInput}
-                        onApplyFilters={handleApplyFilters}
-                        onClearFilters={handleClearFilters}
+                <div className="md:hidden mb-4 flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                        <h2 className="text-base font-bold">My Sets</h2>
+                        <SetFiltersPopover
+                            createdByInput={createdByInput}
+                            visibilityInput={visibilityInput}
+                            onChangeCreatedByInput={setCreatedByInput}
+                            onChangeVisibilityInput={setVisibilityInput}
+                            onApplyFilters={handleApplyFilters}
+                            onClearFilters={handleClearFilters}
+                        />
+                    </div>
+                    <Input
+                        value={searchInput}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        placeholder="Search by title"
                     />
                 </div>
 
@@ -255,18 +285,20 @@ function SetList() {
 
                 {!hasAnyItems ? (
                     <div className="rounded-md border p-6 text-sm text-muted-foreground">
-                        No sets found for the selected filters.
+                        {searchTerm.trim()
+                            ? "No sets found for the selected filters and title search."
+                            : "No sets found for the selected filters."}
                     </div>
                 ) : (
                     <>
                         <SetListDesktop
-                            items={items}
+                            items={filteredItems}
                             onOpenSet={handleOpenSet}
                             onDeleteSet={handleDeleteSet}
                             deletingSetId={deletingSetId}
                         />
                         <SetListMobile
-                            items={items}
+                            items={filteredItems}
                             onOpenSet={handleOpenSet}
                             onDeleteSet={handleDeleteSet}
                             deletingSetId={deletingSetId}

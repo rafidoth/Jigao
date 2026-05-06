@@ -16,11 +16,16 @@ type Config struct {
 	Server        ServerConfig         `koanf:"server" validate:"required"`
 	Database      DatabaseConfig       `koanf:"database" validate:"required"`
 	Auth          AuthConfig           `koanf:"auth" validate:"required"`
+	AI            AiConfig             `koanf:"ai" validate:"required"`
 	Observability *ObservabilityConfig `koanf:"observability"`
 }
 
 type Primary struct {
 	Env string `koanf:"env" validate:"required"`
+}
+
+type AiConfig struct {
+	GROQ_KEY string `koanf:"groq_api_key" validate:"required"`
 }
 
 type ServerConfig struct {

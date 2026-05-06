@@ -30,7 +30,7 @@ func main() {
 
 	repos := repository.NewRepositories(srv)
 
-	svc := service.NewServices(repos, log)
+	svc := service.NewServices(repos, log, cfg)
 
 	wsManagers := websockets.NewManagers(log, svc.Exam)
 	handlers := handler.NewHandlers(svc, wsManagers, log)
