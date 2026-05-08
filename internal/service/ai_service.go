@@ -1,43 +1,6 @@
 package service
 
-import (
-	"context"
-
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-	"github.com/rafidoth/onlyexams/internal/config"
-	"github.com/rs/zerolog"
-)
-
-type AI struct {
-	log zerolog.Logger
-	cfg *config.Config
-}
-
-func NewAI(logger zerolog.Logger, cfg *config.Config) *AI {
-	return &AI{
-		log: logger,
-		cfg: cfg,
-	}
-}
-
-func (ai *AI) CompleteChat(
-	ctx context.Context,
-	messages []openai.ChatCompletionMessageParamUnion,
-	tools []openai.ChatCompletionToolUnionParam,
-) (*openai.ChatCompletion, error) {
-	client := openai.NewClient(
-		option.WithAPIKey(ai.cfg.AI.GROQ_KEY),
-		option.WithBaseURL("https://api.groq.com/openai/v1"),
-	)
-	params := openai.ChatCompletionNewParams{
-		Messages: messages,
-		Tools:    tools,
-	}
-
-	completion, err := client.Chat.Completions.New(ctx, params)
-	return completion, err
-}
+import "github.com/rs/zerolog"
 
 // prompt := `
 // 	You are a question maker assistant. You have four tools. Follow these rules:
@@ -62,3 +25,7 @@ func (ai *AI) CompleteChat(
 // 		".
 //
 // `
+
+type AI_service struct {
+	log zerolog.Logger
+}

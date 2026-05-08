@@ -25,7 +25,8 @@ type Primary struct {
 }
 
 type AiConfig struct {
-	GROQ_KEY string `koanf:"groq_api_key" validate:"required"`
+	GROQ_KEY      string `koanf:"groq_api_key" validate:"required"`
+	GROQ_BASE_URL string `koanf:"groq_base_url" validate:"required"`
 }
 
 type ServerConfig struct {
