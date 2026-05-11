@@ -5,6 +5,7 @@ import (
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/packages/param"
 	"github.com/rafidoth/onlyexams/internal/config"
 )
 
@@ -29,6 +30,11 @@ func (ai *AI) CompleteChat(
 	params := openai.ChatCompletionNewParams{
 		Messages: messages,
 		Tools:    tools,
+		ToolChoice: openai.ChatCompletionToolChoiceOptionUnionParam{
+			OfAuto: param.Opt[string]{
+				Value: "required",
+			},
+		},
 	}
 
 	completion, err := ai.client.Chat.Completions.New(ctx, params)

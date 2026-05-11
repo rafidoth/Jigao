@@ -1,17 +1,19 @@
 package service
 
 import (
+	"github.com/rafidoth/onlyexams/internal/ai"
 	"github.com/rafidoth/onlyexams/internal/config"
 	"github.com/rafidoth/onlyexams/internal/repository"
 	"github.com/rs/zerolog"
 )
 
 type Services struct {
-	User     *UserService
-	Question *QuestionService
-	Exam     *ExamService
-	SelfTest *SelfTestService
-	Ai       *AI
+	User           *UserService
+	Question       *QuestionService
+	Exam           *ExamService
+	SelfTest       *SelfTestService
+	AIConversation *AIConversationService
+	Ai             *ai.AI
 }
 
 func NewServices(
@@ -42,6 +44,10 @@ func NewServices(
 			repos.Question,
 			log.With().Str("service", "self_test").Logger(),
 		),
-		Ai: NewAI(log, cfg),
+		AIConversation: NewAIConversationService(
+			repos.AIConversations,
+			log.With().Str("service", "ai_conversation").Logger(),
+		),
+		Ai: ai.NewAI(cfg),
 	}
 }

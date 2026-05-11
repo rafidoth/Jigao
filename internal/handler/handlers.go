@@ -14,24 +14,26 @@ import (
 )
 
 type Handlers struct {
-	User       *UserHandler
-	Set        *SetHandler
-	Question   *QuestionHandler
-	Exam       *ExamHandler
-	ExamWs     *examWs.ExamWsHandler
-	Submission *SubmissionHandler
-	SelfTest   *SelfTestHandler
+	User           *UserHandler
+	Set            *SetHandler
+	Question       *QuestionHandler
+	Exam           *ExamHandler
+	ExamWs         *examWs.ExamWsHandler
+	Submission     *SubmissionHandler
+	SelfTest       *SelfTestHandler
+	AIConversation *AIConversationHandler
 }
 
 func NewHandlers(svc *service.Services, wsm *websockets.Managers, log zerolog.Logger) *Handlers {
 	return &Handlers{
-		User:       NewUserHandler(svc.User, log.With().Str("handler", "user").Logger()),
-		Set:        NewSetHandler(svc.Question, log.With().Str("handler", "set").Logger()),
-		Question:   NewQuestionHandler(svc.Question, log.With().Str("handler", "question").Logger()),
-		Exam:       NewExamHandler(svc.Exam, log.With().Str("handler", "exam").Logger()),
-		ExamWs:     examWs.NewHandler(wsm.Exam, svc.Exam, log),
-		Submission: NewSubmissionHandler(svc.Exam, log.With().Str("handler", "submission").Logger()),
-		SelfTest:   NewSelfTestHandler(svc.SelfTest, log.With().Str("handler", "self_test").Logger()),
+		User:           NewUserHandler(svc.User, log.With().Str("handler", "user").Logger()),
+		Set:            NewSetHandler(svc.Question, log.With().Str("handler", "set").Logger()),
+		Question:       NewQuestionHandler(svc.Question, log.With().Str("handler", "question").Logger()),
+		Exam:           NewExamHandler(svc.Exam, log.With().Str("handler", "exam").Logger()),
+		ExamWs:         examWs.NewHandler(wsm.Exam, svc.Exam, log),
+		Submission:     NewSubmissionHandler(svc.Exam, log.With().Str("handler", "submission").Logger()),
+		SelfTest:       NewSelfTestHandler(svc.SelfTest, log.With().Str("handler", "self_test").Logger()),
+		AIConversation: NewAIConversationHandler(svc.AIConversation, log.With().Str("handler", "ai_conversation").Logger()),
 	}
 }
 

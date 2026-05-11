@@ -13,4 +13,5 @@ func RegisterV1Routes(r chi.Router, h *handler.Handlers) {
 	registerExamRoutes(r, h.Exam, h.ExamWs)
 	registerSubmissionRoutes(r, h.Submission)
 	registerSelfTestRoutes(r, h.SelfTest)
+	registerAIConversationRoutes(r, h.AIConversation)
 }
